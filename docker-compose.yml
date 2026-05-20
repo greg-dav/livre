@@ -1,0 +1,13 @@
+services:
+  livre:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - livre_data:/data
+    environment:
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+    restart: unless-stopped
+
+volumes:
+  livre_data:
