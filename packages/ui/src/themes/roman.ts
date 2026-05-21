@@ -1,12 +1,15 @@
-import type { DefaultTheme } from 'styled-components'
+import type { DefaultTheme } from 'styled-components';
 
 const shared = {
   fontDisplay: "'Cormorant Garamond', Georgia, serif",
   fontBody: "'Lora', Georgia, serif",
   fontUi: "'Outfit', system-ui, sans-serif",
-}
+  textOnColor: '#FFFFFF',
+  textOnColorMuted: 'rgba(255, 255, 255, 0.6)',
+  spacing: (n: number) => `${n * 0.25}rem`,
+};
 
-export const lightTheme: DefaultTheme = {
+export const romanLight: DefaultTheme = {
   ...shared,
   bg: '#F7F5F0',
   bgSurface: '#EFEDE7',
@@ -14,9 +17,9 @@ export const lightTheme: DefaultTheme = {
   textMuted: '#6B6860',
   accent: '#A67C00',
   border: '#DDD9D0',
-}
+};
 
-export const darkTheme: DefaultTheme = {
+export const romanDark: DefaultTheme = {
   ...shared,
   bg: '#13120F',
   bgSurface: '#1E1C18',
@@ -24,4 +27,4 @@ export const darkTheme: DefaultTheme = {
   textMuted: '#8A8780',
   accent: '#C9980A',
   border: '#2E2C27',
-}
+};

@@ -1,0 +1,55 @@
+import styled from 'styled-components';
+
+export const Card = styled('article')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(5),
+  background: theme.bgSurface,
+  border: `1px solid ${theme.border}`,
+  borderRadius: '10px',
+  padding: theme.spacing(5),
+}));
+
+export const CoverThumb = styled('div')<{ $color: string }>(({ $color }) => ({
+  width: '64px',
+  height: '96px',
+  background: $color,
+  borderRadius: '4px',
+  flexShrink: 0,
+}));
+
+export const Body = styled('div')({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.3125rem',
+  minWidth: 0,
+});
+
+export const ProgressSection = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1.5),
+  marginTop: theme.spacing(0.5),
+}));
+
+export const LogButton = styled('button')(({ theme }) => ({
+  width: theme.spacing(9),
+  height: theme.spacing(9),
+  flexShrink: 0,
+  alignSelf: 'center',
+  border: `1px solid ${theme.border}`,
+  borderRadius: '6px',
+  background: 'transparent',
+  cursor: 'pointer',
+  color: theme.textMuted,
+  fontSize: '1.25rem',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  '&:hover': {
+    borderColor: theme.textMuted,
+    color: theme.text,
+  },
+}));

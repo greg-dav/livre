@@ -2,7 +2,7 @@ services:
   livre:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - livre_data:/data
     environment:
