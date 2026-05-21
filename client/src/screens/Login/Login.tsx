@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as Form from '@radix-ui/react-form';
 import { Text, Logo, Button, Input, Card, FormRoot, FormField, FormLabel } from '@livre/primitives';
 import { api } from '../../lib/api';
-import { useLoginMutation } from '../../hooks/auth';
+import { useLoginMutation } from './useLoginMutation';
 import { Page } from './Login.styles';
 
 /**

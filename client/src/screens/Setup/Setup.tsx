@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Form from '@radix-ui/react-form';
 import {
   Text,
@@ -10,7 +12,8 @@ import {
   FormField,
   FormLabel,
 } from '@livre/primitives';
-import { useRegisterMutation } from '../../hooks/auth';
+import { api } from '../../lib/api';
+import { useRegisterMutation } from './useRegisterMutation';
 import { Page } from './Setup.styles';
 
 /**
@@ -20,7 +23,14 @@ import { Page } from './Setup.styles';
  * Password confirmation is validated client-side via Radix Form's match function.
  */
 export const Setup = () => {
+  const navigate = useNavigate();
   const mutation = useRegisterMutation();
+
+  useEffect(() => {
+    api.auth.status().then(({ hasUsers }) => {
+      if (hasUsers) navigate('/login', { replace: true });
+    });
+  }, [navigate]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -14,6 +14,14 @@ export const Content = styled('main')(({ theme }) => ({
   gap: theme.spacing(6),
 }));
 
+export const TopBar = styled('header')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: `${theme.spacing(4)} ${theme.spacing(6)}`,
+  borderBottom: `1px solid ${theme.border}`,
+}));
+
 export const BookGrid = styled('section')(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',

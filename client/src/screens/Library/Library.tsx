@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { BookCard } from '@livre/primitives';
-import {
-  Nav,
-  AppHeader,
-  CurrentlyReadingCard,
-  ShelfTabs,
-  type ShelfStatus,
-} from '../../components';
-import { Page, Content, BookGrid } from './Library.styles';
+import { Logo } from '@livre/primitives';
+import { CurrentlyReadingCard, ShelfTabs, UserMenu, type ShelfStatus } from '../../components';
+import { Page, TopBar, Content, BookGrid } from './Library.styles';
 
 const CURRENTLY_READING = {
   title: 'Blood Meridian',
@@ -32,17 +27,15 @@ const BOOKS = [
   { id: 6, title: 'The Myth of Sisyphus', author: 'Camus', coverColor: '#2A2A2A', rating: 4 },
 ];
 
-interface LibraryProps {
-  onToggleTheme?: () => void;
-}
-
-export const Library = ({ onToggleTheme }: LibraryProps) => {
+export const Library = () => {
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
 
   return (
     <Page>
-      <Nav active="library" onNavigate={() => {}} />
-      <AppHeader onToggleTheme={onToggleTheme} />
+      <TopBar>
+        <Logo />
+        <UserMenu />
+      </TopBar>
       <Content>
         <CurrentlyReadingCard {...CURRENTLY_READING} />
         <ShelfTabs active={activeShelf} counts={SHELF_COUNTS} onChange={setActiveShelf} />
