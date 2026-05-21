@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       '@livre/ui': path.resolve(__dirname, '../fe-libs/ui/src'),
       '@livre/primitives': path.resolve(__dirname, '../fe-libs/primitives/src'),
+      '@livre/types': path.resolve(__dirname, '../shared/src'),
     },
   },
   server: {

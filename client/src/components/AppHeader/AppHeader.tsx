@@ -1,5 +1,5 @@
-import { Text } from '@livre/primitives';
-import { Header, WordmarkDot, Actions, IconButton } from './AppHeader.styles';
+import { Logo } from '@livre/primitives';
+import { Header, Actions, IconButton } from './AppHeader.styles';
 
 interface AppHeaderProps {
   onToggleTheme?: () => void;
@@ -12,9 +12,7 @@ interface AppHeaderProps {
  */
 export const AppHeader = ({ onToggleTheme }: AppHeaderProps) => (
   <Header>
-    <Text variant="h2" as="span">
-      livre<WordmarkDot>.</WordmarkDot>
-    </Text>
+    <Logo />
     <Actions>
       <IconButton aria-label="Add book">+</IconButton>
       <IconButton aria-label="Toggle theme" onClick={onToggleTheme}>

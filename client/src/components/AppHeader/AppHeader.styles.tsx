@@ -8,10 +8,6 @@ export const Header = styled('header')(({ theme }) => ({
   borderBottom: `1px solid ${theme.border}`,
 }));
 
-export const WordmarkDot = styled('span')(({ theme }) => ({
-  color: theme.accent,
-}));
-
 export const Actions = styled('div')(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(1.5),
