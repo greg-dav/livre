@@ -1,36 +1,49 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
-
-if (!process.env.JWT_SECRET) {
-  console.error('Fatal: JWT_SECRET is not set');
-  process.exit(1);
-}
+import { env } from './env';
 
 import './db';
 
-import authRoutes from './routes/auth';
-import booksRoutes from './routes/books';
-import shelvesRoutes from './routes/shelves';
-import logRoutes from './routes/log';
+import { errorHandler } from './lib/route';
+import { UsersRepository } from './repositories/UsersRepository';
+import { AuthService } from './services/AuthService';
+import { createAuthRouter } from './routes/auth';
+import { createBooksRouter } from './routes/books';
+import { createShelvesRouter } from './routes/shelves';
+import { createLogRouter } from './routes/log';
 
-const isProd = process.env.NODE_ENV === 'production';
-const PORT = process.env.PORT ?? 3001;
+const usersRepository = new UsersRepository();
+const authService = new AuthService(usersRepository);
 
 const app = express();
 
-if (!isProd) {
+app.use(helmet());
+
+if (env.NODE_ENV !== 'production') {
   app.use(cors({ origin: 'http://localhost:5173' }));
 }
 
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/books', booksRoutes);
-app.use('/api/shelves', shelvesRoutes);
-app.use('/api/log', logRoutes);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
 
-if (isProd) {
+app.use('/api/auth', authLimiter, createAuthRouter(authService));
+app.use('/api/books', createBooksRouter());
+app.use('/api/shelves', createShelvesRouter());
+app.use('/api/log', createLogRouter());
+
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+app.use(errorHandler);
+
+if (env.NODE_ENV === 'production') {
   const clientDir = path.join(__dirname, '..', 'public');
   app.use(express.static(clientDir));
   app.get('*', (_req, res) => {
@@ -38,6 +51,6 @@ if (isProd) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`Livre running on port ${PORT} [${isProd ? 'production' : 'development'}]`);
+app.listen(env.PORT, () => {
+  console.log(`Livre running on port ${env.PORT} [${env.NODE_ENV}]`);
 });

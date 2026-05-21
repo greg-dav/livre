@@ -1,10 +1,44 @@
 import { Router } from 'express';
+import {
+  authResponseSchema,
+  instanceStatusSchema,
+  userSchema,
+  registerBodySchema,
+  loginBodySchema,
+} from '@livre/types';
+import { requireAuth } from '../middleware/auth';
+import { SchemaRouter } from '../lib/SchemaRouter';
+import { type AuthService } from '../services/AuthService';
 
-const router = Router();
+export function createAuthRouter(service: AuthService): Router {
+  const open = new SchemaRouter();
+  const authed = new SchemaRouter().use(requireAuth);
 
-// POST /api/auth/login
-router.post('/login', (_req, res) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+  open.get('/status', instanceStatusSchema, (respond) => {
+    respond(service.getStatus());
+  });
 
-export default router;
+  open.post(
+    '/register',
+    registerBodySchema,
+    authResponseSchema,
+    async ({ username, password }, respond) => {
+      respond(await service.register(username, password), 201);
+    }
+  );
+
+  open.post(
+    '/login',
+    loginBodySchema,
+    authResponseSchema,
+    async ({ username, password }, respond) => {
+      respond(await service.login(username, password));
+    }
+  );
+
+  authed.get('/me', userSchema, (respond, req) => {
+    respond(userSchema.parse(req.user));
+  });
+
+  return Router().use(open.router).use(authed.router);
+}

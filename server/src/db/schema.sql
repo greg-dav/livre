@@ -2,13 +2,15 @@ PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS users (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  username     TEXT    NOT NULL UNIQUE,
-  password_hash TEXT   NOT NULL,
-  is_admin     INTEGER NOT NULL DEFAULT 0,
-  theme        TEXT    NOT NULL DEFAULT 'roman-light',
-  created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-  last_login   TEXT
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  username      TEXT    NOT NULL UNIQUE,
+  password_hash TEXT    NOT NULL,
+  is_admin      INTEGER NOT NULL DEFAULT 0,
+  theme         TEXT    NOT NULL DEFAULT 'roman-light',
+  public_key    TEXT,
+  private_key   TEXT,
+  created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+  last_login    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS books (

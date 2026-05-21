@@ -1,11 +1,14 @@
-import { Router } from 'express';
+import { type Router } from 'express';
 import { requireAuth } from '../middleware/auth';
+import { SchemaRouter } from '../lib/SchemaRouter';
 
-const router = Router();
+export function createBooksRouter(): Router {
+  const router = new SchemaRouter().use(requireAuth);
 
-// GET /api/books/search?q=
-router.get('/search', requireAuth, (_req, res) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+  // GET /api/books/search?q=
+  router.router.get('/search', (_req, res) => {
+    res.status(501).json({ error: 'Not implemented' });
+  });
 
-export default router;
+  return router.router;
+}
