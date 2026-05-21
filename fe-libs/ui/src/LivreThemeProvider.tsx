@@ -1,3 +1,9 @@
+/**
+ * Must wrap the entire app exactly once. Applies theme tokens to styled-components and injects
+ * global CSS resets. Defaults to 'roman-light'; pass `theme` to let the user's saved preference
+ * override it. Never nest a second instance — tokens will shadow unpredictably.
+ */
+
 import type { ReactNode } from 'react';
 import { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { themes, type ThemeName } from './themes';

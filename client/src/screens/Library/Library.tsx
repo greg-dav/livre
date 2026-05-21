@@ -24,47 +24,12 @@ const SHELF_COUNTS: Record<ShelfStatus, number> = {
 };
 
 const BOOKS = [
-  {
-    id: 1,
-    title: 'The Sun Also Rises',
-    author: 'Hemingway',
-    coverColor: '#3730A3',
-    rating: 4,
-    pageCount: 251,
-  },
-  {
-    id: 2,
-    title: 'Infinite Jest',
-    author: 'D.F. Wallace',
-    coverColor: '#14532D',
-    rating: 4,
-    pageCount: 1079,
-  },
-  {
-    id: 3,
-    title: 'Post Office',
-    author: 'Bukowski',
-    coverColor: '#7F1D1D',
-    rating: 4,
-    pageCount: 320,
-  },
-  { id: 4, title: '1984', author: 'Orwell', coverColor: '#365314', rating: 5, pageCount: 328 },
-  {
-    id: 5,
-    title: 'The Catcher in the Rye',
-    author: 'Salinger',
-    coverColor: '#1E3A5F',
-    rating: 5,
-    pageCount: 277,
-  },
-  {
-    id: 6,
-    title: 'The Myth of Sisyphus',
-    author: 'Camus',
-    coverColor: '#2A2A2A',
-    rating: 4,
-    pageCount: 212,
-  },
+  { id: 1, title: 'The Sun Also Rises', author: 'Hemingway', coverColor: '#3730A3', rating: 4 },
+  { id: 2, title: 'Infinite Jest', author: 'D.F. Wallace', coverColor: '#14532D', rating: 4 },
+  { id: 3, title: 'Post Office', author: 'Bukowski', coverColor: '#7F1D1D', rating: 4 },
+  { id: 4, title: '1984', author: 'Orwell', coverColor: '#365314', rating: 5 },
+  { id: 5, title: 'The Catcher in the Rye', author: 'Salinger', coverColor: '#1E3A5F', rating: 5 },
+  { id: 6, title: 'The Myth of Sisyphus', author: 'Camus', coverColor: '#2A2A2A', rating: 4 },
 ];
 
 interface LibraryProps {

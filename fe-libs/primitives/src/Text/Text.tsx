@@ -28,24 +28,10 @@ export interface TextProps {
 }
 
 /**
- * Text
- *
- * The single source of truth for all typography — font family, size, and weight.
- * Never reference these properties directly in component or styles files.
- *
- * Heading variants (h1–h6): Cormorant Garamond, italic.
- * Body variants (body1, body2): Lora. body1 is the larger leading size.
- * UI variants (ui-lg, ui-md, ui-sm, ui-xs): Outfit.
- * label: Outfit, small, bold, uppercase — for eyebrow labels and tab copy.
- *
- * Renders the semantically correct element by default.
- * Use `as` to override (e.g. render h3 style as a <p>).
- *
- * @example
- * <Text variant="h3">Blood Meridian</Text>
- * <Text variant="body1" color="muted">A novel by Cormac McCarthy</Text>
- * <Text variant="label" color="accent">Currently Reading</Text>
- * <Text variant="ui-xs" color="onColor" as="span">Hemingway</Text>
+ * The single source of truth for all typography. Every string rendered in the UI must go through
+ * this component — never set font-family, font-size, or font-weight in a styles file. The variant
+ * encodes both the visual role and the correct semantic element; use `as` only when the semantics
+ * must differ from the visual (e.g. an h3-styled subheading inside an already-h2 section).
  */
 export const Text = ({ variant, color = 'default', as, children, className }: TextProps) => (
   <StyledText

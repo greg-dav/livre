@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   username     TEXT    NOT NULL UNIQUE,
   password_hash TEXT   NOT NULL,
   is_admin     INTEGER NOT NULL DEFAULT 0,
-  theme        TEXT    NOT NULL DEFAULT 'light',
+  theme        TEXT    NOT NULL DEFAULT 'roman-light',
   created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
   last_login   TEXT
 );

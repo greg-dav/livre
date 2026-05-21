@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 
+if (!process.env.JWT_SECRET) {
+  console.error('Fatal: JWT_SECRET is not set');
+  process.exit(1);
+}
+
 import './db';
 
 import authRoutes from './routes/auth';

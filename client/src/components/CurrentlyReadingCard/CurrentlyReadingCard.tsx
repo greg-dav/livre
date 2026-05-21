@@ -1,3 +1,9 @@
+/**
+ * Prominent card for the book currently in progress. Designed to sit above the shelf grid as a
+ * focal point, not inside it. The log button is the primary call-to-action for recording a
+ * reading session — keep it wired to the log route, not to local UI state.
+ */
+
 import { Text, ProgressBar } from '@livre/primitives';
 import { Card, CoverThumb, Body, ProgressSection, LogButton } from './CurrentlyReadingCard.styles';
 

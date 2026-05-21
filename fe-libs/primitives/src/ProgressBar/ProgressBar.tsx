@@ -5,15 +5,9 @@ interface ProgressBarProps {
 }
 
 /**
- * ProgressBar
- *
- * Thin horizontal bar representing a completion percentage.
- * Value is clamped to [0, 100] — no need to guard upstream.
- *
- * @param value - Percentage complete, 0–100.
- *
- * @example
- * <ProgressBar value={42} />
+ * Thin reading-progress indicator. Value is clamped internally to [0, 100], so callers don't need
+ * to guard against out-of-range percentages. Sized to sit inline with `ui-sm` text in a progress
+ * section — don't use it as a standalone full-width element.
  */
 export const ProgressBar = ({ value }: ProgressBarProps) => (
   <Track>

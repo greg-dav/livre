@@ -1,3 +1,9 @@
+/**
+ * Filters the book grid by shelf status. Purely presentational — active state and counts come
+ * from the parent so this component stays in sync with the data layer without owning any state
+ * itself.
+ */
+
 import { Text } from '@livre/primitives';
 import { TabRow, Tab, Badge } from './ShelfTabs.styles';
 

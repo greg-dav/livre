@@ -6,17 +6,9 @@ interface StarRatingProps {
 }
 
 /**
- * StarRating
- *
- * Read-only star display for book ratings.
- * Renders filled (★) and empty (★, dimmed) glyphs from 1–max.
- *
- * @param value - Number of filled stars.
- * @param max   - Total stars to render. Defaults to 5.
- *
- * @example
- * <StarRating value={4} />     // ★★★★☆
- * <StarRating value={0} />     // ☆☆☆☆☆
+ * Display-only star rating. Use this instead of raw ★ glyphs to guarantee consistent sizing,
+ * spacing, and the filled/empty color semantics from the theme. Not interactive — if you need
+ * an input, build a separate RatingInput component rather than adding click handling here.
  */
 export const StarRating = ({ value, max = 5 }: StarRatingProps) => (
   <Row>

@@ -1,3 +1,9 @@
+/**
+ * Primary navigation between top-level sections of the app. Tab state is controlled externally
+ * so the active route can be derived from the router rather than local state. Not for contextual
+ * or in-page navigation — those belong closer to the content they affect.
+ */
+
 import { Text } from '@livre/primitives';
 import { Bar, Tabs, Tab, AvatarButton } from './Nav.styles';
 

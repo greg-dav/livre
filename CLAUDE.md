@@ -136,9 +136,20 @@ To add a theme: add an entry to the registry in `fe-libs/ui/src/themes/index.ts`
 
 ## Comments
 
-Default to **no comments**. Only add one when the WHY is non-obvious — a hidden constraint, a workaround, a subtle invariant. Never comment what the code does; well-named identifiers do that.
+Default to **no comments**. Only add one when the WHY is non-obvious — a hidden constraint, a workaround, a subtle invariant. Never comment what the code does; well-named identifiers do that. Inline comments are one short line maximum.
 
-No multi-line comment blocks. One short line maximum.
+### Component JSDoc
+
+Every component gets a JSDoc block. Keep it declarative: explain the component's purpose, intended usage context, and any constraints on how it should be used. Explain the WHY behind design decisions — not the HOW, which the code already shows. No `@param` or `@returns` tags; the TypeScript interface documents props. 2–4 sentences.
+
+```tsx
+/**
+ * Filters the book grid by shelf status. Purely presentational — active state and counts come
+ * from the parent so this component stays in sync with the data layer without owning any state
+ * itself.
+ */
+export const ShelfTabs = ...
+```
 
 ## Node version
 
