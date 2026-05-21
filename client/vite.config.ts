@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@livre/ui': path.resolve(__dirname, '../packages/ui/src'),
-      '@livre/primitives': path.resolve(__dirname, '../packages/primitives/src'),
+      '@livre/ui': path.resolve(__dirname, '../fe-libs/ui/src'),
+      '@livre/primitives': path.resolve(__dirname, '../fe-libs/primitives/src'),
     },
   },
   server: {

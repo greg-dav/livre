@@ -16,10 +16,10 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@livre/primitives": ["../packages/primitives/src"],
-      "@livre/ui": ["../packages/ui/src"]
+      "@livre/primitives": ["../fe-libs/primitives/src"],
+      "@livre/ui": ["../fe-libs/ui/src"]
     }
   },
-  "include": ["src", "../packages/ui/src/styled.d.ts"],
+  "include": ["src", "../fe-libs/ui/src/styled.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

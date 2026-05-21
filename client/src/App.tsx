@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { LivreThemeProvider, type ThemeName } from '@livre/ui';
-import Library from './screens/Library/Library';
+import { Library } from './screens';
 
-const App = () => {
+export const App = () => {
   const [theme, setTheme] = useState<ThemeName>('roman-light');
 
   return (
@@ -13,5 +13,3 @@ const App = () => {
     </LivreThemeProvider>
   );
 };
-
-export default App;

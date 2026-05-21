@@ -13,7 +13,7 @@ const NAV_TABS: { id: NavPage; label: string }[] = [
   { id: 'search', label: 'Search' },
 ];
 
-const Nav = ({ active, onNavigate }: NavProps) => (
+export const Nav = ({ active, onNavigate }: NavProps) => (
   <Bar>
     <Tabs>
       {NAV_TABS.map(({ id, label }) => (
@@ -27,5 +27,3 @@ const Nav = ({ active, onNavigate }: NavProps) => (
     <AvatarButton aria-label="Account" />
   </Bar>
 );
-
-export default Nav;

@@ -9,7 +9,7 @@ Livre is an open-source, self-hosted reading tracker. Three tenets: **Privacy, O
 - **Frontend**: React 19, Vite 5, TypeScript, styled-components v6
 - **Backend**: Node.js (Express), TypeScript via `tsx` in dev / `tsc` in prod
 - **Database**: SQLite via `better-sqlite3` — requires **Node 20 LTS** (incompatible with Node 26+)
-- **Monorepo**: npm workspaces — `client`, `server`, `packages/*`
+- **Monorepo**: npm workspaces — `client`, `server`, `fe-libs/*`
 - **UI primitives**: Radix UI (installed in `@livre/primitives`)
 
 ## Package hierarchy
@@ -22,7 +22,7 @@ Livre is an open-source, self-hosted reading tracker. Three tenets: **Privacy, O
 client            ← app screens and components
 ```
 
-- `DefaultTheme` is declared **exactly once**: `packages/ui/src/styled.d.ts`. Never declare it anywhere else.
+- `DefaultTheme` is declared **exactly once**: `fe-libs/ui/src/styled.d.ts`. Never declare it anywhere else.
 - Never import theme types or tokens directly in `client` — use `@livre/ui` exports.
 
 ## styled-components rules
@@ -95,16 +95,17 @@ Use `as` to override the rendered element without changing styles:
 
 - Component styles live in a `.styles.tsx` sibling: `Button/Button.tsx` + `Button/Button.styles.tsx`
 - **No per-component barrel files** (`Button/index.ts` etc.) — they clutter the tree
+- Directory-level barrels are fine: `components/index.ts`, `screens/index.ts`
 - All package exports live in the package-level `src/index.ts`
 - Screens (`client/src/screens/`) and components (`client/src/components/`) are separate directories
 
 ## Component conventions
 
 - Const-based functional components only — no class components
-- Default export for the component, named exports for types:
+- Named exports only — no `export default` anywhere:
   ```ts
+  export const BookCard = (props: BookCardProps) => { ... };
   export type { BookCardProps };
-  export default BookCard;
   ```
 - No prop destructuring in the type definition — keep interface and destructuring separate
 
@@ -131,7 +132,7 @@ Common values: `spacing(1)` = 4px · `spacing(2)` = 8px · `spacing(4)` = 16px �
 
 Themes are named in French — `roman-light`, `roman-dark` (roman = French for novel).
 
-To add a theme: add an entry to the registry in `packages/ui/src/themes/index.ts`. `ThemeName` is derived automatically via `keyof typeof themes`.
+To add a theme: add an entry to the registry in `fe-libs/ui/src/themes/index.ts`. `ThemeName` is derived automatically via `keyof typeof themes`.
 
 ## Comments
 

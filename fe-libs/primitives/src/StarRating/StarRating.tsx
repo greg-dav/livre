@@ -18,7 +18,7 @@ interface StarRatingProps {
  * <StarRating value={4} />     // ★★★★☆
  * <StarRating value={0} />     // ☆☆☆☆☆
  */
-const StarRating = ({ value, max = 5 }: StarRatingProps) => (
+export const StarRating = ({ value, max = 5 }: StarRatingProps) => (
   <Row>
     {Array.from({ length: max }, (_, i) => (
       <Star key={i} $filled={i < value}>
@@ -27,5 +27,3 @@ const StarRating = ({ value, max = 5 }: StarRatingProps) => (
     ))}
   </Row>
 );
-
-export default StarRating;

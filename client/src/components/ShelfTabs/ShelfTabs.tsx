@@ -15,7 +15,7 @@ const TABS: { id: ShelfStatus; label: string }[] = [
   { id: 'dnf', label: 'DNF' },
 ];
 
-const ShelfTabs = ({ active, counts, onChange }: ShelfTabsProps) => (
+export const ShelfTabs = ({ active, counts, onChange }: ShelfTabsProps) => (
   <TabRow>
     {TABS.map(({ id, label }) => (
       <Tab key={id} $active={active === id} onClick={() => onChange(id)}>
@@ -31,5 +31,3 @@ const ShelfTabs = ({ active, counts, onChange }: ShelfTabsProps) => (
     ))}
   </TabRow>
 );
-
-export default ShelfTabs;

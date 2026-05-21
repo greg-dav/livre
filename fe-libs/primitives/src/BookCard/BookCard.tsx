@@ -1,5 +1,5 @@
-import Text from '../Text/Text';
-import StarRating from '../StarRating/StarRating';
+import { Text } from '../Text/Text';
+import { StarRating } from '../StarRating/StarRating';
 import { Card, Cover, FaceImage, Face, Meta } from './BookCard.styles';
 
 export interface BookCardProps {
@@ -12,7 +12,7 @@ export interface BookCardProps {
   onClick?: () => void;
 }
 
-const BookCard = ({
+export const BookCard = ({
   title,
   author,
   coverUrl,
@@ -46,5 +46,3 @@ const BookCard = ({
     </Meta>
   </Card>
 );
-
-export default BookCard;

@@ -15,10 +15,8 @@ interface ProgressBarProps {
  * @example
  * <ProgressBar value={42} />
  */
-const ProgressBar = ({ value }: ProgressBarProps) => (
+export const ProgressBar = ({ value }: ProgressBarProps) => (
   <Track>
     <Fill $value={value} />
   </Track>
 );
-
-export default ProgressBar;

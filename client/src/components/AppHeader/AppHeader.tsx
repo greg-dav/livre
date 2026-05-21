@@ -5,7 +5,7 @@ interface AppHeaderProps {
   onToggleTheme?: () => void;
 }
 
-const AppHeader = ({ onToggleTheme }: AppHeaderProps) => (
+export const AppHeader = ({ onToggleTheme }: AppHeaderProps) => (
   <Header>
     <Text variant="h2" as="span">
       livre<WordmarkDot>.</WordmarkDot>
@@ -18,5 +18,3 @@ const AppHeader = ({ onToggleTheme }: AppHeaderProps) => (
     </Actions>
   </Header>
 );
-
-export default AppHeader;

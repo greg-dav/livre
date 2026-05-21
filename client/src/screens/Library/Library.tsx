@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { BookCard } from '@livre/primitives';
-import Nav from '../../components/Nav/Nav';
-import AppHeader from '../../components/AppHeader/AppHeader';
-import CurrentlyReadingCard from '../../components/CurrentlyReadingCard/CurrentlyReadingCard';
-import ShelfTabs, { type ShelfStatus } from '../../components/ShelfTabs/ShelfTabs';
+import {
+  Nav,
+  AppHeader,
+  CurrentlyReadingCard,
+  ShelfTabs,
+  type ShelfStatus,
+} from '../../components';
 import { Page, Content, BookGrid } from './Library.styles';
 
 const CURRENTLY_READING = {
@@ -68,7 +71,7 @@ interface LibraryProps {
   onToggleTheme?: () => void;
 }
 
-const Library = ({ onToggleTheme }: LibraryProps) => {
+export const Library = ({ onToggleTheme }: LibraryProps) => {
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
 
   return (
@@ -87,5 +90,3 @@ const Library = ({ onToggleTheme }: LibraryProps) => {
     </Page>
   );
 };
-
-export default Library;

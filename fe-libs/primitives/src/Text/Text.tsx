@@ -47,7 +47,7 @@ export interface TextProps {
  * <Text variant="label" color="accent">Currently Reading</Text>
  * <Text variant="ui-xs" color="onColor" as="span">Hemingway</Text>
  */
-const Text = ({ variant, color = 'default', as, children, className }: TextProps) => (
+export const Text = ({ variant, color = 'default', as, children, className }: TextProps) => (
   <StyledText
     as={as ?? defaultElement[variant]}
     $variant={variant}
@@ -57,5 +57,3 @@ const Text = ({ variant, color = 'default', as, children, className }: TextProps
     {children}
   </StyledText>
 );
-
-export default Text;

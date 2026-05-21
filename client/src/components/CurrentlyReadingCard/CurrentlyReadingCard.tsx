@@ -10,7 +10,7 @@ interface CurrentlyReadingCardProps {
   onLog?: () => void;
 }
 
-const CurrentlyReadingCard = ({
+export const CurrentlyReadingCard = ({
   title,
   author,
   coverColor = '#1a1a1a',
@@ -42,5 +42,3 @@ const CurrentlyReadingCard = ({
     </LogButton>
   </Card>
 );
-
-export default CurrentlyReadingCard;

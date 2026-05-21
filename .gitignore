@@ -1,6 +1,4 @@
-node_modules/
-client/node_modules/
-server/node_modules/
+**/node_modules/
 server/public/
 *.db
 *.db-shm
@@ -8,3 +6,6 @@ server/public/
 .env
 .env.local
 dist/
+*.tsbuildinfo
+client/vite.config.js
+client/vite.config.d.ts
