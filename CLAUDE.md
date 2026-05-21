@@ -9,8 +9,9 @@ Livre is an open-source, self-hosted reading tracker. Three tenets: **Privacy, O
 - **Frontend**: React 19, Vite 5, TypeScript, styled-components v6
 - **Backend**: Node.js (Express), TypeScript via `tsx` in dev / `tsc` in prod
 - **Database**: SQLite via `better-sqlite3` — requires **Node 20 LTS** (incompatible with Node 26+)
-- **Monorepo**: npm workspaces — `client`, `server`, `fe-libs/*`
+- **Monorepo**: npm workspaces — `client`, `server`, `shared`, `fe-libs/*`
 - **UI primitives**: Radix UI (installed in `@livre/primitives`)
+- **Shared types**: `@livre/types` (`shared/`) — Zod schemas and inferred TypeScript types consumed by both client and server
 
 ## Package hierarchy
 
@@ -152,6 +153,64 @@ Every component gets a JSDoc block. Keep it declarative: explain the component's
  */
 export const ShelfTabs = ...
 ```
+
+## Backend architecture
+
+### Three-layer structure
+
+```
+routes/      ← thin HTTP layer; validates input/output shapes, delegates to services
+services/    ← business logic; no HTTP concerns, no SQL
+repositories/← all database access; Zod validation at the DB boundary
+```
+
+Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`.
+
+### Dependency injection
+
+Classes receive dependencies via constructor; nothing self-instantiates. `server/src/index.ts` is the **composition root** — the only place the dependency graph is wired:
+
+```ts
+const usersRepository = new UsersRepository();
+const authService = new AuthService(usersRepository);
+app.use('/api/auth', createAuthRouter(authService));
+```
+
+Route files export factory functions (`createAuthRouter(service)`) rather than pre-built routers.
+
+### File naming
+
+Class files in `server/` use **PascalCase matching the exported class**: `UsersRepository.ts`, `AuthService.ts`, `SchemaRouter.ts`. All other server files are lowercase (`route.ts`, `env.ts`, `index.ts`).
+
+### better-sqlite3 prepared statements
+
+Prepare statements once at class construction time — never inside a method. Group them into a private `query` / `mutation` object:
+
+```ts
+private readonly query = {
+  findByName: db.prepare('SELECT ...'),
+};
+private readonly mutation = (() => {
+  const insert = db.prepare('INSERT ...');   // closure-scoped, not exposed
+  return {
+    create: db.transaction((data) => { ... insert.run(...) ... }),
+  };
+})();
+```
+
+## Type safety
+
+Never use `as` casts or `!` non-null assertions. Use Zod `.parse()` to narrow unknown values:
+
+```ts
+// correct
+const user = userSchema.parse(jwt.verify(token, secret));
+
+// never
+const user = jwt.verify(token, secret) as User;
+```
+
+Environment variables are validated at startup in `server/src/env.ts` and exported as a typed `env` object — never read `process.env` directly elsewhere.
 
 ## Node version
 
