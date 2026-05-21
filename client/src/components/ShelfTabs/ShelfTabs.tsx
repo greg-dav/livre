@@ -1,9 +1,3 @@
-/**
- * Filters the book grid by shelf status. Purely presentational — active state and counts come
- * from the parent so this component stays in sync with the data layer without owning any state
- * itself.
- */
-
 import { Text } from '@livre/primitives';
 import { TabRow, Tab, Badge } from './ShelfTabs.styles';
 
@@ -21,6 +15,11 @@ const TABS: { id: ShelfStatus; label: string }[] = [
   { id: 'dnf', label: 'DNF' },
 ];
 
+/**
+ * Filters the book grid by shelf status. Purely presentational — active state and counts come
+ * from the parent so this component stays in sync with the data layer without owning any state
+ * itself.
+ */
 export const ShelfTabs = ({ active, counts, onChange }: ShelfTabsProps) => (
   <TabRow>
     {TABS.map(({ id, label }) => (

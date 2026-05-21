@@ -1,9 +1,3 @@
-/**
- * The standard unit of the book grid. Renders a cover image when available, falling back to a
- * styled "face" showing title and author on a solid color background. Designed for grid layouts
- * with a fixed column width — not suited for list rows or detail views.
- */
-
 import { Text } from '../Text/Text';
 import { StarRating } from '../StarRating/StarRating';
 import { Card, Cover, FaceImage, Face, Meta } from './BookCard.styles';
@@ -17,6 +11,11 @@ export interface BookCardProps {
   onClick?: () => void;
 }
 
+/**
+ * The standard unit of the book grid. Renders a cover image when available, falling back to a
+ * styled "face" showing title and author on a solid color background. Designed for grid layouts
+ * with a fixed column width — not suited for list rows or detail views.
+ */
 export const BookCard = ({
   title,
   author,
