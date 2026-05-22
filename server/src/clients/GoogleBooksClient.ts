@@ -56,18 +56,15 @@ function mapVolume(v: GoogleVolume): BookSearchResult {
     v.volumeInfo.industryIdentifiers?.find((i) => i.type === 'ISBN_10')?.identifier;
 
   const imgs = v.volumeInfo.imageLinks;
-  // Google returns http image URLs — upgrade to https
   const toHttps = (url: string) => url.replace('http://', 'https://');
-  // The zoom param in the thumbnail URL controls resolution (1=128px, 3=575px, 5=1280px).
-  // Larger imageLinks keys are absent on search results, so we derive sizes from zoom instead.
-  const setZoom = (url: string, zoom: number) => url.replace(/([?&]zoom=)\d+/, `$1${zoom}`);
+  // Only use URLs the API explicitly returned — absent keys mean that size doesn't exist for this
+  // book, and any URL we construct for it will return Google's "image not available" placeholder.
   const rawThumb = imgs?.thumbnail ?? imgs?.smallThumbnail;
-  const thumbnail = rawThumb ? toHttps(setZoom(rawThumb, 1)) : undefined;
+  const thumbnail = rawThumb ? toHttps(rawThumb) : undefined;
   const largeThumbnail = rawThumb
-    ? toHttps(
-        imgs?.extraLarge ?? imgs?.large ?? imgs?.medium ?? imgs?.small ?? setZoom(rawThumb, 3)
-      )
+    ? toHttps(imgs?.extraLarge ?? imgs?.large ?? imgs?.medium ?? imgs?.small ?? rawThumb)
     : undefined;
+  const fullThumbnail = rawThumb ? toHttps(imgs?.extraLarge ?? imgs?.large ?? rawThumb) : undefined;
 
   return {
     googleId: v.id,
@@ -81,6 +78,7 @@ function mapVolume(v: GoogleVolume): BookSearchResult {
     language: v.volumeInfo.language,
     thumbnail,
     largeThumbnail,
+    fullThumbnail,
     isbn,
   };
 }

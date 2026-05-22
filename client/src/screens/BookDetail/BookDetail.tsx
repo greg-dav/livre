@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Text } from '@livre/primitives';
+import { Text, Lightbox } from '@livre/primitives';
 import { type BookSearchResult } from '@livre/types';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
@@ -61,7 +61,14 @@ export const BookDetail = () => {
     <Layout>
       <Hero>
         {coverSrc ? (
-          <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />
+          <Lightbox
+            srcs={[book.fullThumbnail, book.largeThumbnail, coverSrc].filter(
+              (s): s is string => !!s
+            )}
+            alt={book.title}
+          >
+            <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />
+          </Lightbox>
         ) : (
           <CoverPlaceholder />
         )}

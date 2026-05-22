@@ -13,6 +13,7 @@ export const Cover = styled('img')({
   objectFit: 'cover',
   borderRadius: '4px',
   flexShrink: 0,
+  cursor: 'pointer',
 });
 
 export const CoverPlaceholder = styled('div')(({ theme }) => ({
