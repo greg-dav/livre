@@ -11,6 +11,8 @@ import { errorHandler } from './lib/route';
 import { UsersRepository } from './repositories/UsersRepository';
 import { ConfigRepository } from './repositories/ConfigRepository';
 import { SetupRepository } from './repositories/SetupRepository';
+import { BooksRepository } from './repositories/BooksRepository';
+import { UserBooksRepository } from './repositories/UserBooksRepository';
 import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
 import { AuthService } from './services/AuthService';
 import { BooksService } from './services/BooksService';
@@ -22,9 +24,11 @@ import { createLogRouter } from './routes/log';
 const usersRepository = new UsersRepository();
 const configRepository = new ConfigRepository();
 const setupRepository = new SetupRepository();
+const booksRepository = new BooksRepository();
+const userBooksRepository = new UserBooksRepository();
 const googleBooksProvider = new GoogleBooksProvider(configRepository);
 const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
-const booksService = new BooksService(googleBooksProvider);
+const booksService = new BooksService(googleBooksProvider, booksRepository, userBooksRepository);
 
 const app = express();
 
@@ -45,7 +49,7 @@ const authLimiter = rateLimit({
 
 app.use('/api/auth', authLimiter, createAuthRouter(authService));
 app.use('/api/books', createBooksRouter(booksService));
-app.use('/api/shelves', createShelvesRouter());
+app.use('/api/shelves', createShelvesRouter(booksService));
 app.use('/api/log', createLogRouter());
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

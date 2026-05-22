@@ -11,3 +11,23 @@ export { apiErrorSchema } from './schemas/api';
 export type { ApiError } from './schemas/api';
 export { bookSearchResultSchema, bookSearchResponseSchema } from './schemas/books';
 export type { BookSearchResult, BookSearchResponse } from './schemas/books';
+export {
+  shelfStatusSchema,
+  shelfEntrySchema,
+  shelfCountsSchema,
+  shelfResponseSchema,
+  saveBookBodySchema,
+  saveBookResponseSchema,
+  libraryEntrySchema,
+  libraryResponseSchema,
+} from './schemas/shelves';
+export type {
+  ShelfStatus,
+  ShelfEntry,
+  ShelfCounts,
+  ShelfResponse,
+  SaveBookBody,
+  SaveBookResponse,
+  LibraryEntry,
+  LibraryResponse,
+} from './schemas/shelves';

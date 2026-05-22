@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Text } from '../Text/Text';
 import { StarRating } from '../StarRating/StarRating';
-import { Card, Cover, FaceImage, Face, Meta, BookGrid } from './BookCard.styles';
+import { Card, Cover, FaceImage, Face, Meta, BookGrid, Spine } from './BookCard.styles';
 
 export { BookGrid };
 
@@ -11,6 +11,9 @@ export interface BookCardProps {
   coverUrl?: string;
   coverColor?: string;
   rating?: number;
+  inLibrary?: boolean;
+  /** When provided, shows as vertical text along the cover spine on hover. */
+  spineLabel?: string;
   onClick?: () => void;
 }
 
@@ -26,6 +29,8 @@ export const BookCard = ({
   coverUrl,
   coverColor = '#2a2a2a',
   rating,
+  inLibrary,
+  spineLabel,
   onClick,
 }: BookCardProps) => {
   const [imgError, setImgError] = useState(false);
@@ -37,7 +42,7 @@ export const BookCard = ({
 
   return (
     <Card onClick={onClick}>
-      <Cover $color={coverColor}>
+      <Cover $color={coverColor} $inLibrary={inLibrary}>
         {coverUrl && !imgError ? (
           <FaceImage src={coverUrl} alt={title} onError={() => setImgError(true)} />
         ) : (
@@ -49,6 +54,13 @@ export const BookCard = ({
               {author}
             </Text>
           </Face>
+        )}
+        {spineLabel && (
+          <Spine>
+            <Text variant="label" color="onColor">
+              {spineLabel}
+            </Text>
+          </Spine>
         )}
       </Cover>
       <Meta>

@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Text, Lightbox, Loader } from '@livre/primitives';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Text, Button, DropdownMenu, Lightbox, Loader } from '@livre/primitives';
+import { shelfStatusSchema, type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
 import {
   Hero,
+  CoverWrapper,
   Cover,
   CoverPlaceholder,
   HeroMeta,
@@ -20,6 +22,13 @@ import {
   MetaValue,
 } from './BookDetail.styles';
 
+const STATUS_LABELS: Record<ShelfStatus, string> = {
+  want: 'Want to Read',
+  reading: 'Currently Reading',
+  read: 'Read',
+  dnf: 'Did Not Finish',
+};
+
 /**
  * Full detail view for a single book. Always fetches the full volume by ID — search results only
  * carry small thumbnails, so we need the individual endpoint for high-res covers. Author names
@@ -27,12 +36,36 @@ import {
  */
 export const BookDetail = () => {
   const { googleId } = useParams<{ googleId: string }>();
+  const queryClient = useQueryClient();
 
   const { data: book } = useQuery({
     queryKey: ['books', 'detail', googleId],
     queryFn: () => api.books.getById(googleId!),
     enabled: !!googleId,
   });
+
+  const { data: libraryIds } = useQuery({
+    queryKey: ['library'],
+    queryFn: () => api.books.library(),
+    staleTime: Infinity,
+  });
+
+  const savedStatus = useMemo(
+    () => libraryIds?.find((e) => e.googleId === googleId)?.status ?? null,
+    [libraryIds, googleId]
+  );
+
+  const { mutate: save, isPending: isSaving } = useMutation({
+    mutationFn: (status: ShelfStatus) => {
+      if (!googleId) throw new Error('No book ID');
+      return api.books.save(googleId, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
   const [coverIndex, setCoverIndex] = useState(0);
   const coverSrcs = [book?.largeThumbnail, book?.thumbnail].filter((u): u is string => !!u);
   const coverSrc = coverSrcs[coverIndex];
@@ -54,11 +87,10 @@ export const BookDetail = () => {
     <Layout>
       <Hero>
         {coverSrc ? (
-          <Lightbox
-            srcs={[book.largeThumbnail, book.thumbnail].filter((s): s is string => !!s)}
-            alt={book.title}
-          >
-            <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />
+          <Lightbox srcs={coverSrcs} alt={book.title}>
+            <CoverWrapper $inLibrary={savedStatus !== null}>
+              <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />
+            </CoverWrapper>
           </Lightbox>
         ) : (
           <CoverPlaceholder />
@@ -86,6 +118,21 @@ export const BookDetail = () => {
               ))}
             </Byline>
           )}
+          <DropdownMenu
+            trigger={
+              <Button variant="secondary" size="sm" disabled={isSaving}>
+                <Text variant="label" color="default">
+                  {savedStatus ? STATUS_LABELS[savedStatus] : 'Add to library'}
+                </Text>
+              </Button>
+            }
+          >
+            {shelfStatusSchema.options.map((status) => (
+              <DropdownMenu.Item key={status} onSelect={() => save(status)}>
+                <Text variant="ui-sm">{STATUS_LABELS[status]}</Text>
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu>
         </HeroMeta>
       </Hero>
 

@@ -1,13 +1,22 @@
 import { Text, ProgressBar } from '@livre/primitives';
-import { Card, CoverThumb, Body, ProgressSection, LogButton } from './CurrentlyReadingCard.styles';
+import {
+  Card,
+  CoverThumb,
+  CoverThumbImg,
+  Body,
+  ProgressSection,
+  LogButton,
+} from './CurrentlyReadingCard.styles';
 
 interface CurrentlyReadingCardProps {
   title: string;
   author: string;
+  coverUrl?: string;
   coverColor?: string;
-  progress: number;
+  progress?: number;
   startedDate: string;
   onLog?: () => void;
+  onClick?: () => void;
 }
 
 /**
@@ -18,13 +27,17 @@ interface CurrentlyReadingCardProps {
 export const CurrentlyReadingCard = ({
   title,
   author,
+  coverUrl,
   coverColor = '#1a1a1a',
   progress,
   startedDate,
   onLog,
+  onClick,
 }: CurrentlyReadingCardProps) => (
-  <Card>
-    <CoverThumb $color={coverColor} />
+  <Card $clickable={!!onClick} onClick={onClick}>
+    <CoverThumb $color={coverColor}>
+      {coverUrl && <CoverThumbImg src={coverUrl} alt={title} />}
+    </CoverThumb>
     <Body>
       <Text variant="label" color="accent">
         Currently Reading
@@ -36,14 +49,22 @@ export const CurrentlyReadingCard = ({
         {author}
       </Text>
       <ProgressSection>
-        <ProgressBar value={progress} />
+        {progress !== undefined && <ProgressBar value={progress} />}
         <Text variant="ui-sm" color="muted">
           Started {startedDate}
         </Text>
       </ProgressSection>
     </Body>
-    <LogButton onClick={onLog} aria-label="Log progress">
-      +
-    </LogButton>
+    {onLog && (
+      <LogButton
+        onClick={(e) => {
+          e.stopPropagation();
+          onLog();
+        }}
+        aria-label="Log progress"
+      >
+        +
+      </LogButton>
+    )}
   </Card>
 );

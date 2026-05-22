@@ -6,6 +6,10 @@ import {
   apiErrorSchema,
   bookSearchResponseSchema,
   bookSearchResultSchema,
+  saveBookResponseSchema,
+  shelfResponseSchema,
+  libraryResponseSchema,
+  type ShelfStatus,
 } from '@livre/types';
 
 export type { User } from '@livre/types';
@@ -58,5 +62,15 @@ export const api = {
     byAuthor: (name: string) =>
       request(`/books/author/${encodeURIComponent(name)}`, bookSearchResponseSchema),
     getById: (id: string) => request(`/books/${encodeURIComponent(id)}`, bookSearchResultSchema),
+    library: () => request('/books/library', libraryResponseSchema),
+    save: (googleId: string, status: ShelfStatus) =>
+      request(`/books/${encodeURIComponent(googleId)}/save`, saveBookResponseSchema, {
+        method: 'POST',
+        body: JSON.stringify({ status }),
+      }),
+  },
+  shelves: {
+    getByStatus: (status: ShelfStatus) =>
+      request(`/shelves/${encodeURIComponent(status)}`, shelfResponseSchema),
   },
 };

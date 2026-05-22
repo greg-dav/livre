@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { LivreThemeProvider, type ThemeName } from '@livre/ui';
+import { PrimitivesGlobalStyle } from '@livre/primitives';
 
 interface ThemeState {
   theme: ThemeName;
@@ -30,7 +31,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <LivreThemeProvider theme={theme}>{children}</LivreThemeProvider>
+      <LivreThemeProvider theme={theme}>
+        <PrimitivesGlobalStyle />
+        {children}
+      </LivreThemeProvider>
     </ThemeContext.Provider>
   );
 };

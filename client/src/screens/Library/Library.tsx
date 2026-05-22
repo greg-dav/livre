@@ -1,48 +1,66 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookCard, BookGrid } from '@livre/primitives';
+import { useQuery } from '@tanstack/react-query';
+import { BookCard, BookGrid, Loader } from '@livre/primitives';
 import { Layout, CurrentlyReadingCard, ShelfTabs, type ShelfStatus } from '../../components';
+import { api } from '../../lib/api';
 
-const CURRENTLY_READING = {
-  title: 'Blood Meridian',
-  author: 'Cormac McCarthy',
-  coverColor: '#1C1C1C',
-  progress: 42,
-  startedDate: 'March 12',
-};
-
-const SHELF_COUNTS: Record<ShelfStatus, number> = {
-  read: 24,
-  want: 41,
-  dnf: 3,
-};
-
-const BOOKS = [
-  { id: 1, title: 'The Sun Also Rises', author: 'Hemingway', coverColor: '#3730A3', rating: 4 },
-  { id: 2, title: 'Infinite Jest', author: 'D.F. Wallace', coverColor: '#14532D', rating: 4 },
-  { id: 3, title: 'Post Office', author: 'Bukowski', coverColor: '#7F1D1D', rating: 4 },
-  { id: 4, title: '1984', author: 'Orwell', coverColor: '#365314', rating: 5 },
-  { id: 5, title: 'The Catcher in the Rye', author: 'Salinger', coverColor: '#1E3A5F', rating: 5 },
-  { id: 6, title: 'The Myth of Sisyphus', author: 'Camus', coverColor: '#2A2A2A', rating: 4 },
-];
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
 /**
  * Main authenticated screen. Shows the currently reading card, shelf filter tabs, and the book
- * grid. All data here is static placeholder — will be replaced with real shelf queries.
+ * grid. Shelf data is live from the API — tab counts stay in sync because every shelf response
+ * includes counts for all statuses.
  */
 export const Library = () => {
   const navigate = useNavigate();
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
 
+  const { data: readingData } = useQuery({
+    queryKey: ['shelves', 'reading'],
+    queryFn: () => api.shelves.getByStatus('reading'),
+  });
+
+  const { data } = useQuery({
+    queryKey: ['shelves', activeShelf],
+    queryFn: () => api.shelves.getByStatus(activeShelf),
+  });
+
+  const readingEntries = readingData?.entries ?? [];
+  const tabCounts = data
+    ? { read: data.counts.read, want: data.counts.want, dnf: data.counts.dnf }
+    : { read: 0, want: 0, dnf: 0 };
+
   return (
     <Layout>
-      <CurrentlyReadingCard {...CURRENTLY_READING} />
-      <ShelfTabs active={activeShelf} counts={SHELF_COUNTS} onChange={setActiveShelf} />
-      <BookGrid>
-        {BOOKS.map((book) => (
-          <BookCard key={book.id} {...book} onClick={() => navigate(`/book/${book.id}`)} />
-        ))}
-      </BookGrid>
+      {readingEntries.map((entry) => (
+        <CurrentlyReadingCard
+          key={entry.userBookId}
+          title={entry.title}
+          author={entry.authors.join(', ')}
+          coverUrl={entry.coverUrl ?? undefined}
+          startedDate={formatDate(entry.addedDate)}
+          onClick={entry.googleId ? () => navigate(`/book/${entry.googleId}`) : undefined}
+        />
+      ))}
+      <ShelfTabs active={activeShelf} counts={tabCounts} onChange={setActiveShelf} />
+      {!data ? (
+        <Loader />
+      ) : (
+        <BookGrid>
+          {data.entries.map((entry) => (
+            <BookCard
+              key={entry.userBookId}
+              title={entry.title}
+              author={entry.authors.join(', ')}
+              coverUrl={entry.coverUrl ?? undefined}
+              rating={entry.rating ?? undefined}
+              onClick={entry.googleId ? () => navigate(`/book/${entry.googleId}`) : undefined}
+            />
+          ))}
+        </BookGrid>
+      )}
     </Layout>
   );
 };

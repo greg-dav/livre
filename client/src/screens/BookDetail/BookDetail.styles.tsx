@@ -7,17 +7,25 @@ export const Hero = styled('div')(({ theme }) => ({
   alignItems: 'flex-start',
 }));
 
+export const CoverWrapper = styled('div')<{ $inLibrary?: boolean }>(({ $inLibrary, theme }) => ({
+  position: 'relative',
+  flexShrink: 0,
+  lineHeight: 0,
+  borderRadius: '4px',
+  overflow: 'hidden',
+  cursor: 'pointer',
+  boxShadow: $inLibrary ? `0 0 0 2px ${theme.accent}` : undefined,
+}));
+
 export const Cover = styled('img')({
-  width: '128px',
+  width: 'clamp(155px, 16vw, 200px)',
   aspectRatio: '2 / 3',
   objectFit: 'cover',
-  borderRadius: '4px',
-  flexShrink: 0,
-  cursor: 'pointer',
+  display: 'block',
 });
 
 export const CoverPlaceholder = styled('div')(({ theme }) => ({
-  width: '128px',
+  width: 'clamp(155px, 16vw, 200px)',
   aspectRatio: '2 / 3',
   borderRadius: '4px',
   flexShrink: 0,

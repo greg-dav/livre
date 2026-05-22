@@ -64,3 +64,21 @@ export const StatusRow = styled('li')(({ theme }) => ({
   padding: `${theme.spacing(3)} ${theme.spacing(3)}`,
   textAlign: 'center',
 }));
+
+export const SectionLabel = styled('li')(({ theme }) => ({
+  padding: `${theme.spacing(3)} ${theme.spacing(3)} ${theme.spacing(1)}`,
+}));
+
+export const SectionDivider = styled('li')(({ theme }) => ({
+  height: '1px',
+  background: theme.border,
+  margin: `${theme.spacing(1)} 0`,
+}));
+
+export const ShelfBadge = styled('span')(({ theme }) => ({
+  padding: `0 ${theme.spacing(2)}`,
+  borderRadius: theme.spacing(1),
+  background: theme.bgSurface,
+  border: `1px solid ${theme.border}`,
+  flexShrink: 0,
+}));

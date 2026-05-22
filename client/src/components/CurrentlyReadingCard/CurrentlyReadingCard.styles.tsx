@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
-export const Card = styled('article')(({ theme }) => ({
+export const Card = styled('article')<{ $clickable?: boolean }>(({ theme, $clickable }) => ({
+  cursor: $clickable ? 'pointer' : 'default',
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(5),
@@ -16,7 +17,15 @@ export const CoverThumb = styled('div')<{ $color: string }>(({ $color }) => ({
   background: $color,
   borderRadius: '4px',
   flexShrink: 0,
+  overflow: 'hidden',
 }));
+
+export const CoverThumbImg = styled('img')({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  display: 'block',
+});
 
 export const Body = styled('div')({
   flex: 1,

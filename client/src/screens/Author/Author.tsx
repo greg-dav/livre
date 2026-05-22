@@ -1,8 +1,17 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Text, BookCard, BookGrid, Loader } from '@livre/primitives';
+import { type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
+
+const STATUS_LABELS: Record<ShelfStatus, string> = {
+  want: 'Want to Read',
+  reading: 'Currently Reading',
+  read: 'Read',
+  dnf: 'Did Not Finish',
+};
 
 /**
  * All books by a single author, fetched via a Google Books author search. Navigated to by
@@ -18,6 +27,22 @@ export const Author = () => {
     queryFn: () => api.books.byAuthor(name!),
     enabled: !!name,
   });
+
+  const { data: libraryData } = useQuery({
+    queryKey: ['library'],
+    queryFn: () => api.books.library(),
+    staleTime: Infinity,
+  });
+
+  const libraryStatusMap = useMemo(
+    () =>
+      new Map(
+        (libraryData ?? [])
+          .filter((e): e is typeof e & { googleId: string } => e.googleId !== null)
+          .map((e) => [e.googleId, e.status])
+      ),
+    [libraryData]
+  );
 
   const books = data?.results ?? [];
 
@@ -39,15 +64,20 @@ export const Author = () => {
         </Text>
       ) : (
         <BookGrid>
-          {books.map((book) => (
-            <BookCard
-              key={book.googleId}
-              title={book.title}
-              author={book.authors[0] ?? ''}
-              coverUrl={book.largeThumbnail ?? book.thumbnail}
-              onClick={() => handleBookClick(book)}
-            />
-          ))}
+          {books.map((book) => {
+            const shelfStatus = libraryStatusMap.get(book.googleId);
+            return (
+              <BookCard
+                key={book.googleId}
+                title={book.title}
+                author={book.authors[0] ?? ''}
+                coverUrl={book.largeThumbnail ?? book.thumbnail}
+                inLibrary={!!shelfStatus}
+                spineLabel={shelfStatus ? STATUS_LABELS[shelfStatus] : undefined}
+                onClick={() => handleBookClick(book)}
+              />
+            );
+          })}
         </BookGrid>
       )}
     </Layout>
