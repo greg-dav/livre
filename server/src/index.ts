@@ -11,7 +11,7 @@ import { errorHandler } from './lib/route';
 import { UsersRepository } from './repositories/UsersRepository';
 import { ConfigRepository } from './repositories/ConfigRepository';
 import { SetupRepository } from './repositories/SetupRepository';
-import { GoogleBooksClient } from './clients/GoogleBooksClient';
+import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
 import { AuthService } from './services/AuthService';
 import { BooksService } from './services/BooksService';
 import { createAuthRouter } from './routes/auth';
@@ -22,9 +22,9 @@ import { createLogRouter } from './routes/log';
 const usersRepository = new UsersRepository();
 const configRepository = new ConfigRepository();
 const setupRepository = new SetupRepository();
-const googleBooksClient = new GoogleBooksClient();
-const authService = new AuthService(usersRepository, setupRepository, googleBooksClient);
-const booksService = new BooksService(configRepository, googleBooksClient);
+const googleBooksProvider = new GoogleBooksProvider(configRepository);
+const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
+const booksService = new BooksService(googleBooksProvider);
 
 const app = express();
 

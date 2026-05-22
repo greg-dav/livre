@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { BookCard } from '@livre/primitives';
 import { Logo } from '@livre/primitives';
-import { CurrentlyReadingCard, ShelfTabs, UserMenu, type ShelfStatus } from '../../components';
+import {
+  BookSearch,
+  CurrentlyReadingCard,
+  ShelfTabs,
+  UserMenu,
+  type ShelfStatus,
+} from '../../components';
 import { Page, TopBar, Content, BookGrid } from './Library.styles';
 
 const CURRENTLY_READING = {
@@ -34,6 +40,7 @@ export const Library = () => {
     <Page>
       <TopBar>
         <Logo />
+        <BookSearch />
         <UserMenu />
       </TopBar>
       <Content>

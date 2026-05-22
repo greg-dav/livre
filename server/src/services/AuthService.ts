@@ -8,7 +8,7 @@ import createError from 'http-errors';
 import { env } from '../env';
 import { type UsersRepository } from '../repositories/UsersRepository';
 import { type SetupRepository } from '../repositories/SetupRepository';
-import { type GoogleBooksClient } from '../clients/GoogleBooksClient';
+import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     private readonly users: UsersRepository,
     private readonly setup: SetupRepository,
-    private readonly books: GoogleBooksClient
+    private readonly googleBooks: GoogleBooksProvider
   ) {}
 
   getStatus() {
@@ -32,7 +32,7 @@ export class AuthService {
     password: string,
     googleBooksApiKey: string
   ): Promise<AuthResponse> {
-    await this.books.validateApiKey(googleBooksApiKey);
+    await this.googleBooks.validate(googleBooksApiKey);
 
     const [passwordHash, { publicKey, privateKey }] = await Promise.all([
       bcrypt.hash(password, 12),
@@ -53,6 +53,7 @@ export class AuthService {
         isAdmin,
         googleBooksApiKey,
       });
+      this.googleBooks.invalidate();
       return {
         token: jwt.sign(user, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d' }),
         user,

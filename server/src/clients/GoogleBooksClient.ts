@@ -29,15 +29,17 @@ const googleBooksResponseSchema = z.object({
 });
 
 export class GoogleBooksClient {
-  async validateApiKey(key: string): Promise<void> {
+  static async validateApiKey(key: string): Promise<void> {
     const res = await fetch(
       `https://www.googleapis.com/books/v1/volumes?q=test&maxResults=1&key=${key}`
     );
     if (!res.ok) throw createError(400, 'Invalid Google Books API key');
   }
 
-  async search(query: string, apiKey: string): Promise<BookSearchResponse> {
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&key=${apiKey}`;
+  constructor(private readonly apiKey: string) {}
+
+  async search(query: string): Promise<BookSearchResponse> {
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&key=${this.apiKey}`;
     const res = await fetch(url);
     if (!res.ok) throw createError(502, 'Google Books API error');
 

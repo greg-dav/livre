@@ -15,9 +15,10 @@ export const Content = styled('main')(({ theme }) => ({
 }));
 
 export const TopBar = styled('header')(({ theme }) => ({
-  display: 'flex',
+  display: 'grid',
+  gridTemplateColumns: 'auto 1fr auto',
   alignItems: 'center',
-  justifyContent: 'space-between',
+  gap: theme.spacing(4),
   padding: `${theme.spacing(4)} ${theme.spacing(6)}`,
   borderBottom: `1px solid ${theme.border}`,
 }));
