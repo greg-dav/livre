@@ -22,8 +22,8 @@ export function createAuthRouter(service: AuthService): Router {
     '/register',
     registerBodySchema,
     authResponseSchema,
-    async ({ username, password }, respond) => {
-      respond(await service.register(username, password), 201);
+    async ({ username, password, googleBooksApiKey }, respond) => {
+      respond(await service.register(username, password, googleBooksApiKey), 201);
     }
   );
 

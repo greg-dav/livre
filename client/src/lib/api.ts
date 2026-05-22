@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { userSchema, authResponseSchema, instanceStatusSchema, apiErrorSchema } from '@livre/types';
+import {
+  userSchema,
+  authResponseSchema,
+  instanceStatusSchema,
+  apiErrorSchema,
+  bookSearchResponseSchema,
+} from '@livre/types';
 
 export type { User } from '@livre/types';
 
@@ -33,10 +39,10 @@ async function request<T>(path: string, schema: z.ZodType<T>, options?: RequestI
 export const api = {
   auth: {
     status: () => request('/auth/status', instanceStatusSchema),
-    register: (username: string, password: string) =>
+    register: (username: string, password: string, googleBooksApiKey: string) =>
       request('/auth/register', authResponseSchema, {
         method: 'POST',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, googleBooksApiKey }),
       }),
     login: (username: string, password: string) =>
       request('/auth/login', authResponseSchema, {
@@ -44,5 +50,9 @@ export const api = {
         body: JSON.stringify({ username, password }),
       }),
     me: () => request('/auth/me', userSchema),
+  },
+  books: {
+    search: (q: string) =>
+      request(`/books/search?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
   },
 };

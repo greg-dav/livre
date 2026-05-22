@@ -9,3 +9,5 @@ export {
 export type { RegisterBody, LoginBody, InstanceStatus, AuthResponse } from './schemas/auth';
 export { apiErrorSchema } from './schemas/api';
 export type { ApiError } from './schemas/api';
+export { bookSearchResultSchema, bookSearchResponseSchema } from './schemas/books';
+export type { BookSearchResult, BookSearchResponse } from './schemas/books';

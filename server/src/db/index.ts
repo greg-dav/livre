@@ -26,4 +26,6 @@ if (!userColumns.includes('private_key')) {
   db.exec('ALTER TABLE users ADD COLUMN private_key TEXT');
 }
 
+export const inTransaction = <T>(fn: () => T): T => db.transaction(fn)();
+
 export default db;

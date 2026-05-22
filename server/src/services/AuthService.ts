@@ -6,7 +6,10 @@ import { z } from 'zod';
 import { type AuthResponse } from '@livre/types';
 import createError from 'http-errors';
 import { env } from '../env';
+import { inTransaction } from '../db';
 import { type UsersRepository } from '../repositories/UsersRepository';
+import { ConfigRepository } from '../repositories/ConfigRepository';
+import { type GoogleBooksClient } from '../clients/GoogleBooksClient';
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
@@ -15,13 +18,23 @@ export class AuthService {
     code: z.literal('SQLITE_CONSTRAINT_UNIQUE'),
   });
 
-  constructor(private readonly users: UsersRepository) {}
+  constructor(
+    private readonly users: UsersRepository,
+    private readonly config: ConfigRepository,
+    private readonly books: GoogleBooksClient
+  ) {}
 
   getStatus() {
     return { hasUsers: this.users.count() > 0 };
   }
 
-  async register(username: string, password: string): Promise<AuthResponse> {
+  async register(
+    username: string,
+    password: string,
+    googleBooksApiKey: string
+  ): Promise<AuthResponse> {
+    await this.books.validateApiKey(googleBooksApiKey);
+
     const [passwordHash, { publicKey, privateKey }] = await Promise.all([
       bcrypt.hash(password, 12),
       generateKeyPairAsync('rsa', {
@@ -32,7 +45,11 @@ export class AuthService {
     ]);
 
     try {
-      const user = this.users.create({ username, passwordHash, publicKey, privateKey });
+      const user = inTransaction(() => {
+        const u = this.users.create({ username, passwordHash, publicKey, privateKey });
+        this.config.set(ConfigRepository.GOOGLE_BOOKS_API_KEY, googleBooksApiKey);
+        return u;
+      });
       return {
         token: jwt.sign(user, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d' }),
         user,

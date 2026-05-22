@@ -6,6 +6,7 @@ import { api } from '../../lib/api';
 interface Credentials {
   username: string;
   password: string;
+  googleBooksApiKey: string;
 }
 
 export const useRegisterMutation = () => {
@@ -13,7 +14,8 @@ export const useRegisterMutation = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: ({ username, password }: Credentials) => api.auth.register(username, password),
+    mutationFn: ({ username, password, googleBooksApiKey }: Credentials) =>
+      api.auth.register(username, password, googleBooksApiKey),
     onSuccess: ({ token, user }) => {
       login(token, user);
       navigate('/', { replace: true });

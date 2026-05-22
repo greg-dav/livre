@@ -13,6 +13,11 @@ CREATE TABLE IF NOT EXISTS users (
   last_login    TEXT
 );
 
+CREATE TABLE IF NOT EXISTS config (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS books (
   id               INTEGER PRIMARY KEY AUTOINCREMENT,
   google_books_id  TEXT UNIQUE,
