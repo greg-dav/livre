@@ -17,8 +17,8 @@ import {
 
 /**
  * Inline book search for the top bar. Queries Google Books via the server with a 300ms debounce
- * and renders results in a dropdown. Clicking a result navigates to the book detail page with
- * the result data pre-loaded so no additional fetch is needed on arrival.
+ * and renders results in a dropdown. Clicking a result navigates to the book detail page, which
+ * fetches the full volume data independently.
  */
 export const BookSearch = () => {
   const [query, setQuery] = useState('');
@@ -38,7 +38,7 @@ export const BookSearch = () => {
   const handleSelect = (book: BookSearchResult) => {
     setQuery('');
     setOpen(false);
-    navigate(`/book/${book.googleId}`, { state: { book } });
+    navigate(`/book/${book.googleId}`);
   };
 
   return (

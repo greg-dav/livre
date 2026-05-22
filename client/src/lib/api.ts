@@ -56,7 +56,7 @@ export const api = {
     search: (q: string) =>
       request(`/books/search?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
     byAuthor: (name: string) =>
-      request(`/books/search?author=${encodeURIComponent(name)}`, bookSearchResponseSchema),
+      request(`/books/author/${encodeURIComponent(name)}`, bookSearchResponseSchema),
     getById: (id: string) => request(`/books/${encodeURIComponent(id)}`, bookSearchResultSchema),
   },
 };

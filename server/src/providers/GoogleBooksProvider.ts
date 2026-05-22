@@ -11,6 +11,10 @@ export class GoogleBooksProvider {
     return this.client().search(query);
   }
 
+  async searchByAuthor(name: string) {
+    return this.client().searchByAuthor(name);
+  }
+
   async getById(id: string) {
     return this.client().getById(id);
   }

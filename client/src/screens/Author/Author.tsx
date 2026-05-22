@@ -1,14 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Text, BookCard, BookGrid } from '@livre/primitives';
-import { type BookSearchResult } from '@livre/types';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
 
 /**
  * All books by a single author, fetched via a Google Books author search. Navigated to by
- * clicking an author name on the BookDetail screen. Each book card navigates to its detail page
- * with the result data pre-loaded so no additional fetch is needed.
+ * clicking an author name on the BookDetail screen. Each book card navigates to its detail page,
+ * which fetches the full volume data independently.
  */
 export const Author = () => {
   const { name } = useParams<{ name: string }>();
@@ -22,8 +21,8 @@ export const Author = () => {
 
   const books = data?.results ?? [];
 
-  const handleBookClick = (book: BookSearchResult) => {
-    navigate(`/book/${book.googleId}`, { state: { book } });
+  const handleBookClick = (book: { googleId: string }) => {
+    navigate(`/book/${book.googleId}`);
   };
 
   return (

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Text, Lightbox } from '@livre/primitives';
-import { type BookSearchResult } from '@livre/types';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
 import {
@@ -22,22 +21,18 @@ import {
 } from './BookDetail.styles';
 
 /**
- * Full detail view for a single book. Navigated to from search results (data arrives via router
- * state, no fetch needed) or directly by URL (fetches from the server). Author names link to the
- * author page. Metadata shown when available — all fields from Google Books are optional.
+ * Full detail view for a single book. Always fetches the full volume by ID — search results only
+ * carry small thumbnails, so we need the individual endpoint for high-res covers. Author names
+ * link to the author page. Metadata shown when available — all fields from Google Books are optional.
  */
 export const BookDetail = () => {
   const { googleId } = useParams<{ googleId: string }>();
-  const location = useLocation();
-  const stateBook = location.state?.book as BookSearchResult | undefined;
 
-  const { data: fetchedBook } = useQuery({
+  const { data: book } = useQuery({
     queryKey: ['books', 'detail', googleId],
     queryFn: () => api.books.getById(googleId!),
-    enabled: !!googleId && !stateBook,
+    enabled: !!googleId,
   });
-
-  const book = stateBook ?? fetchedBook;
   const [coverIndex, setCoverIndex] = useState(0);
   const coverSrcs = [book?.largeThumbnail, book?.thumbnail].filter((u): u is string => !!u);
   const coverSrc = coverSrcs[coverIndex];
@@ -62,9 +57,7 @@ export const BookDetail = () => {
       <Hero>
         {coverSrc ? (
           <Lightbox
-            srcs={[book.fullThumbnail, book.largeThumbnail, coverSrc].filter(
-              (s): s is string => !!s
-            )}
+            srcs={[book.largeThumbnail, book.thumbnail].filter((s): s is string => !!s)}
             alt={book.title}
           >
             <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />

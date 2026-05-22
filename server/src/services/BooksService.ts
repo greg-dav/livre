@@ -8,8 +8,14 @@ export class BooksService {
     return this.googleBooks.search(query);
   }
 
-  async searchByAuthor(name: string): Promise<BookSearchResponse> {
-    return this.googleBooks.search(`inauthor:"${name}"`);
+  async getAuthorBooks(name: string): Promise<BookSearchResponse> {
+    const { results, total } = await this.googleBooks.searchByAuthor(name);
+    // Enrich each result with a full getById so the grid gets large image URLs.
+    // Individual failures fall back to the search result rather than breaking the whole response.
+    const enriched = await Promise.all(
+      results.map((r) => this.googleBooks.getById(r.googleId).catch(() => r))
+    );
+    return { results: enriched, total };
   }
 
   async getById(id: string): Promise<BookSearchResult> {

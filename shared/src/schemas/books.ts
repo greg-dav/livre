@@ -8,7 +8,6 @@ export const bookSearchResultSchema = z.object({
   description: z.string().optional(),
   thumbnail: z.string().optional(),
   largeThumbnail: z.string().optional(),
-  fullThumbnail: z.string().optional(),
   isbn: z.string().optional(),
   pageCount: z.number().optional(),
   publisher: z.string().optional(),

@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { z } from 'zod';
 import createError from 'http-errors';
 import { type BookSearchResult, type BookSearchResponse } from '@livre/types';
@@ -57,14 +58,24 @@ function mapVolume(v: GoogleVolume): BookSearchResult {
 
   const imgs = v.volumeInfo.imageLinks;
   const toHttps = (url: string) => url.replace('http://', 'https://');
-  // Only use URLs the API explicitly returned — absent keys mean that size doesn't exist for this
-  // book, and any URL we construct for it will return Google's "image not available" placeholder.
-  const rawThumb = imgs?.thumbnail ?? imgs?.smallThumbnail;
-  const thumbnail = rawThumb ? toHttps(rawThumb) : undefined;
-  const largeThumbnail = rawThumb
-    ? toHttps(imgs?.extraLarge ?? imgs?.large ?? imgs?.medium ?? imgs?.small ?? rawThumb)
-    : undefined;
-  const fullThumbnail = rawThumb ? toHttps(imgs?.extraLarge ?? imgs?.large ?? rawThumb) : undefined;
+
+  const pickUrl = (keys: (keyof NonNullable<typeof imgs>)[]) =>
+    _.chain(keys)
+      .map((k) => imgs?.[k])
+      .compact()
+      .map(toHttps)
+      .first()
+      .value() as string | undefined;
+
+  const thumbnail = pickUrl(['thumbnail', 'smallThumbnail']);
+  const largeThumbnail = pickUrl([
+    'extraLarge',
+    'large',
+    'medium',
+    'small',
+    'thumbnail',
+    'smallThumbnail',
+  ]);
 
   return {
     googleId: v.id,
@@ -78,7 +89,6 @@ function mapVolume(v: GoogleVolume): BookSearchResult {
     language: v.volumeInfo.language,
     thumbnail,
     largeThumbnail,
-    fullThumbnail,
     isbn,
   };
 }
@@ -100,6 +110,10 @@ export class GoogleBooksClient {
 
     const { totalItems, items = [] } = googleBooksResponseSchema.parse(await res.json());
     return { results: items.map(mapVolume), total: totalItems };
+  }
+
+  async searchByAuthor(name: string): Promise<BookSearchResponse> {
+    return this.search(`inauthor:"${name}"`);
   }
 
   async getById(id: string): Promise<BookSearchResult> {

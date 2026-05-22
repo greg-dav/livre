@@ -9,20 +9,16 @@ import { type BooksService } from '../services/BooksService';
 export function createBooksRouter(service: BooksService): Router {
   const router = new SchemaRouter().use(requireAuth);
 
-  // /search must be registered before /:googleId so it isn't swallowed by the param route
+  // /search and /author/:name must be registered before /:googleId
   router.get('/search', bookSearchResponseSchema, async (respond, req) => {
-    const author = z
-      .string()
-      .min(1)
-      .optional()
-      .parse(req.query.author ?? undefined);
-    if (author) {
-      respond(await service.searchByAuthor(author));
-      return;
-    }
     const q = z.string().min(1, 'Query is required').safeParse(req.query.q);
     if (!q.success) throw createError(400, q.error.issues[0]?.message ?? 'Invalid query');
     respond(await service.search(q.data));
+  });
+
+  router.get('/author/:name', bookSearchResponseSchema, async (respond, req) => {
+    const name = z.string().min(1).parse(req.params.name);
+    respond(await service.getAuthorBooks(name));
   });
 
   router.get('/:googleId', bookSearchResultSchema, async (respond, req) => {
