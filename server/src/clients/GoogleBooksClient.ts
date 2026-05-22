@@ -34,6 +34,22 @@ const googleBooksResponseSchema = z.object({
 
 type GoogleVolume = z.infer<typeof googleVolumeSchema>;
 
+// Google Books descriptions are HTML snippets. Convert block-level tags to newlines,
+// strip remaining markup, and decode common entities so callers get plain text.
+function cleanDescription(html: string): string {
+  return html
+    .replace(/<\/?(p|br|div|h[1-6])\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function mapVolume(v: GoogleVolume): BookSearchResult {
   const isbn =
     v.volumeInfo.industryIdentifiers?.find((i) => i.type === 'ISBN_13')?.identifier ??
@@ -58,7 +74,7 @@ function mapVolume(v: GoogleVolume): BookSearchResult {
     title: v.volumeInfo.title,
     authors: v.volumeInfo.authors ?? [],
     publishedDate: v.volumeInfo.publishedDate,
-    description: v.volumeInfo.description,
+    description: v.volumeInfo.description ? cleanDescription(v.volumeInfo.description) : undefined,
     publisher: v.volumeInfo.publisher,
     pageCount: v.volumeInfo.pageCount,
     categories: v.volumeInfo.categories ?? [],

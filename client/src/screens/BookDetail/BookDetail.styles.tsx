@@ -65,6 +65,7 @@ export const Divider = styled('hr')(({ theme }) => ({
 
 export const Description = styled('div')({
   maxWidth: '680px',
+  whiteSpace: 'pre-line',
 });
 
 export const MetaGrid = styled('dl')(({ theme }) => ({

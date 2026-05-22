@@ -16,6 +16,7 @@ const Overlay = styled(Radix.Overlay)({
   position: 'fixed',
   inset: 0,
   background: 'rgba(0,0,0,0.5)',
+  zIndex: 200,
 });
 
 const Content = styled(Radix.Content)(({ theme }) => ({
@@ -30,6 +31,7 @@ const Content = styled(Radix.Content)(({ theme }) => ({
   borderRadius: theme.spacing(3),
   padding: theme.spacing(6),
   boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
+  zIndex: 201,
 
   '&:focus': {
     outline: 'none',

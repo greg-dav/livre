@@ -18,6 +18,7 @@ const StyledContent = styled(Radix.Content)(({ theme }) => ({
   borderRadius: theme.spacing(2),
   padding: theme.spacing(1),
   boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+  zIndex: 200,
 }));
 
 const Item = styled(Radix.Item)(({ theme }) => ({

@@ -92,6 +92,62 @@ Use `as` to override the rendered element without changing styles:
 <Text variant="h2" as="span">livre</Text>    // wordmark
 ```
 
+## Primitives rules
+
+**Never import from `@radix-ui` directly outside `@livre/primitives`.** If a Radix component is needed in `client/`, add a styled wrapper to `@livre/primitives` first and import that.
+
+Primitives follow one of two composition patterns depending on their structure:
+
+**Composed component** — for primitives with a clear "entry point" element. The component manages portal, trigger, and layout internally. Sub-components attached via `Object.assign`:
+
+```tsx
+// correct usage
+<DropdownMenu trigger={<button />} align="end">
+  <DropdownMenu.Item onSelect={logout}>Sign out</DropdownMenu.Item>
+  <DropdownMenu.Separator />
+</DropdownMenu>
+```
+
+Use this for: `DropdownMenu`, `Dialog`, `Tooltip`.
+
+**Namespace object** — for primitives whose pieces must be coordinated by the caller (state container + multiple children). Export as a plain object:
+
+```tsx
+// correct usage
+<Tabs.Root defaultValue="read">
+  <Tabs.List>
+    <Tabs.Trigger value="read">Read</Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content value="read">…</Tabs.Content>
+</Tabs.Root>
+```
+
+Use this for: `Tabs`, `Form`.
+
+**Never wrap `<Text>` with `styled()`** — styled-components v6 injects the wrapper's CSS class after `Text`'s own class. Same-specificity rules mean the wrapper wins on conflicts, silently breaking font styles. Use a wrapper element instead:
+
+```tsx
+// correct
+const Wordmark = styled('span')({ cursor: 'pointer' });
+<Wordmark>
+  <Text variant="h2">…</Text>
+</Wordmark>;
+
+// never
+const StyledText = styled(Text)({ cursor: 'pointer' });
+```
+
+## Z-index ladder
+
+Use these fixed values consistently — never pick ad-hoc numbers:
+
+| Layer                             | Value |
+| --------------------------------- | ----- |
+| TopBar (sticky header)            | `100` |
+| Floating UI (dropdowns, tooltips) | `200` |
+| Dialog overlay                    | `200` |
+| Dialog content                    | `201` |
+
 ## File structure conventions
 
 - Component styles live in a `.styles.tsx` sibling: `Button/Button.tsx` + `Button/Button.styles.tsx`
@@ -156,15 +212,29 @@ export const ShelfTabs = ...
 
 ## Backend architecture
 
-### Three-layer structure
+### Five-layer structure
 
 ```
-routes/      ← thin HTTP layer; validates input/output shapes, delegates to services
-services/    ← business logic; no HTTP concerns, no SQL
-repositories/← all database access; Zod validation at the DB boundary
+routes/       ← thin HTTP layer; validates input/output shapes, delegates to services
+services/     ← business logic; no HTTP concerns, no SQL
+providers/    ← lifecycle management for external services (lazy init, caching, invalidation)
+clients/      ← external HTTP adapters; one class per external API
+repositories/ ← all database access; Zod validation at the DB boundary
 ```
 
-Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`.
+Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`, services never import other services (use providers or repositories instead).
+
+**`clients/`** are pure HTTP adapters. They take config in their constructor, own the wire-format schema (private — never exported), and return types from `@livre/types`. If the external API changes, only the client changes.
+
+**`providers/`** manage the lifecycle of a client — lazy initialisation from config, caching the instance, invalidating it when config changes. Services call providers, never clients directly:
+
+```ts
+// correct — service calls provider
+async search(query: string) { return this.googleBooks.search(query); }
+
+// never — service instantiates or imports a client
+import { GoogleBooksClient } from '../clients/GoogleBooksClient';
+```
 
 ### Dependency injection
 
