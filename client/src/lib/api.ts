@@ -9,6 +9,7 @@ import {
   saveBookResponseSchema,
   shelfResponseSchema,
   libraryResponseSchema,
+  updateApiKeyResponseSchema,
   type ShelfStatus,
 } from '@livre/types';
 
@@ -72,5 +73,12 @@ export const api = {
   shelves: {
     getByStatus: (status: ShelfStatus) =>
       request(`/shelves/${encodeURIComponent(status)}`, shelfResponseSchema),
+  },
+  config: {
+    updateGoogleBooksKey: (apiKey: string) =>
+      request('/config/google-books-key', updateApiKeyResponseSchema, {
+        method: 'PUT',
+        body: JSON.stringify({ apiKey }),
+      }),
   },
 };

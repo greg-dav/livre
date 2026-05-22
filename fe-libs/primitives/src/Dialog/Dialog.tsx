@@ -4,7 +4,7 @@ import * as Radix from '@radix-ui/react-dialog';
 import { Text } from '../Text/Text';
 
 interface DialogProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   title: string;
   description?: string;
   children: ReactNode;
@@ -39,9 +39,9 @@ const Content = styled(Radix.Content)(({ theme }) => ({
 }));
 
 /**
- * Modal dialog with built-in overlay, portal, and accessible title. Pass a trigger element and
- * dialog body as children. Use Dialog.Close to add a close button inside the dialog body.
- * Controlled open state is optional — omit open/onOpenChange for uncontrolled usage.
+ * Modal dialog with built-in overlay, portal, and accessible title. Pass a trigger element for
+ * uncontrolled usage, or omit it and manage open/onOpenChange yourself for controlled usage.
+ * Use Dialog.Close to add a close button inside the dialog body.
  */
 const DialogComponent = ({
   trigger,
@@ -52,7 +52,7 @@ const DialogComponent = ({
   onOpenChange,
 }: DialogProps) => (
   <Radix.Root open={open} onOpenChange={onOpenChange}>
-    <Radix.Trigger asChild>{trigger}</Radix.Trigger>
+    {trigger && <Radix.Trigger asChild>{trigger}</Radix.Trigger>}
     <Radix.Portal>
       <Overlay />
       <Content>

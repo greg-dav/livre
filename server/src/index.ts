@@ -20,6 +20,7 @@ import { createAuthRouter } from './routes/auth';
 import { createBooksRouter } from './routes/books';
 import { createShelvesRouter } from './routes/shelves';
 import { createLogRouter } from './routes/log';
+import { createConfigRouter } from './routes/config';
 
 const usersRepository = new UsersRepository();
 const configRepository = new ConfigRepository();
@@ -51,6 +52,7 @@ app.use('/api/auth', authLimiter, createAuthRouter(authService));
 app.use('/api/books', createBooksRouter(booksService));
 app.use('/api/shelves', createShelvesRouter(booksService));
 app.use('/api/log', createLogRouter());
+app.use('/api/config', createConfigRouter(configRepository, googleBooksProvider));
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);

@@ -1,5 +1,18 @@
 import styled from 'styled-components';
 
+export const DialogForm = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(4),
+  marginTop: theme.spacing(5),
+}));
+
+export const DialogActions = styled('div')(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: theme.spacing(3),
+}));
+
 export const Trigger = styled('button')(({ theme }) => ({
   width: theme.spacing(9),
   height: theme.spacing(9),

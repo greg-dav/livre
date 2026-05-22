@@ -11,6 +11,8 @@ export { apiErrorSchema } from './schemas/api';
 export type { ApiError } from './schemas/api';
 export { bookSearchResultSchema, bookSearchResponseSchema } from './schemas/books';
 export type { BookSearchResult, BookSearchResponse } from './schemas/books';
+export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
+export type { UpdateApiKeyBody } from './schemas/config';
 export {
   shelfStatusSchema,
   shelfEntrySchema,
