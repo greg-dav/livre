@@ -16,3 +16,4 @@ export { ProgressBar } from './ProgressBar/ProgressBar';
 export { BookCard, BookGrid } from './BookCard/BookCard';
 export type { BookCardProps } from './BookCard/BookCard';
 export { Lightbox } from './Lightbox/Lightbox';
+export { Loader } from './Loader/Loader';

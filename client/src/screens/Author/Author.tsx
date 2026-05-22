@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Text, BookCard, BookGrid } from '@livre/primitives';
+import { Text, BookCard, BookGrid, Loader } from '@livre/primitives';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
 
@@ -31,19 +31,13 @@ export const Author = () => {
         {name}
       </Text>
 
-      {isFetching && (
-        <Text variant="ui-sm" color="muted">
-          Loading…
-        </Text>
-      )}
-
-      {!isFetching && books.length === 0 && (
+      {isFetching ? (
+        <Loader />
+      ) : books.length === 0 ? (
         <Text variant="ui-sm" color="muted">
           No books found for this author.
         </Text>
-      )}
-
-      {books.length > 0 && (
+      ) : (
         <BookGrid>
           {books.map((book) => (
             <BookCard

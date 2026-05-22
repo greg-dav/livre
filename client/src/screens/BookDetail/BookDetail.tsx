@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Text, Lightbox } from '@livre/primitives';
+import { Text, Lightbox, Loader } from '@livre/primitives';
 import { api } from '../../lib/api';
 import { Layout } from '../../components';
 import {
@@ -40,9 +40,7 @@ export const BookDetail = () => {
   if (!book) {
     return (
       <Layout>
-        <Text variant="ui-sm" color="muted">
-          Loading…
-        </Text>
+        <Loader />
       </Layout>
     );
   }
