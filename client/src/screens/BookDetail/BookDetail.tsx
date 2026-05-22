@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Text } from '@livre/primitives';
@@ -37,6 +38,9 @@ export const BookDetail = () => {
   });
 
   const book = stateBook ?? fetchedBook;
+  const [coverIndex, setCoverIndex] = useState(0);
+  const coverSrcs = [book?.largeThumbnail, book?.thumbnail].filter((u): u is string => !!u);
+  const coverSrc = coverSrcs[coverIndex];
 
   if (!book) {
     return (
@@ -56,8 +60,8 @@ export const BookDetail = () => {
   return (
     <Layout>
       <Hero>
-        {(book.largeThumbnail ?? book.thumbnail) ? (
-          <Cover src={(book.largeThumbnail ?? book.thumbnail)!} alt={book.title} />
+        {coverSrc ? (
+          <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />
         ) : (
           <CoverPlaceholder />
         )}
