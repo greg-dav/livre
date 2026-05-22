@@ -5,8 +5,6 @@ export const Card = styled('article')<{ $clickable?: boolean }>(({ theme, $click
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(5),
-  // No fill — the border alone defines the card. On a cream page bg, a lighter (bgElevated)
-  // fill at this scale reads as a stark white strip rather than a lifted surface. Frame, not fill.
   background: 'transparent',
   border: `1px solid ${theme.border}`,
   borderRadius: theme.radius.lg,
