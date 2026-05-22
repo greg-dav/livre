@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Input, Text } from '@livre/primitives';
+import { Text } from '@livre/primitives';
 import { type BookSearchResult, type ShelfEntry, type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
 import { useDebounce } from './useDebounce';
 import {
   Container,
+  SearchInput,
   Dropdown,
   ResultItem,
   Thumbnail,
@@ -139,7 +140,7 @@ export const BookSearch = () => {
 
   return (
     <Container>
-      <Input
+      <SearchInput
         type="search"
         placeholder="Search by title or author…"
         value={query}

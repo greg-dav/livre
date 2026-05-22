@@ -21,13 +21,13 @@ export const Content = styled(Dialog.Content)({
   },
 });
 
-export const Image = styled('img')({
+export const Image = styled('img')(({ theme }) => ({
   maxWidth: '90vw',
   maxHeight: '90vh',
   objectFit: 'contain',
-  borderRadius: '4px',
+  borderRadius: theme.radius.sm,
   boxShadow: '0 8px 48px rgba(0,0,0,0.6)',
-});
+}));
 
 // Fills the entire content area behind the image — clicking anywhere outside the image hits this
 export const Backdrop = styled('button')({

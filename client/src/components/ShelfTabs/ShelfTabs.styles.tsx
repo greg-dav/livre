@@ -11,8 +11,8 @@ export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) =
   gap: theme.spacing(2),
   padding: '0.4375rem 0.875rem',
   border: `1px solid ${theme.border}`,
-  borderRadius: '6px',
-  background: $active ? theme.bgSurface : 'transparent',
+  borderRadius: theme.radius.md,
+  background: $active ? theme.bgElevated : 'transparent',
   cursor: 'pointer',
   transition: 'background 0.15s',
 
@@ -23,6 +23,6 @@ export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) =
 
 export const Badge = styled('span')(({ theme }) => ({
   background: theme.border,
-  borderRadius: '10px',
+  borderRadius: theme.radius.full,
   padding: '0.0625rem 0.4375rem',
 }));

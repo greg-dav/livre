@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { Input } from '@livre/primitives';
 
 export const Container = styled('div')({
   position: 'relative',
@@ -7,15 +8,34 @@ export const Container = styled('div')({
   margin: '0 auto',
 });
 
+/*
+ * Top-bar search is visually distinct from form inputs — it's app chrome, a pill-shaped surface
+ * that sits on the page bg, not inside a card. Lighter (bgElevated) and rounder (radius.lg) than
+ * the default <Input>. Font properties set explicitly here because <input> elements can't compose
+ * <Text> internally — bounded exception to the no-fontFamily-outside-Text rule, justified by the
+ * primitive being at the typography boundary.
+ */
+export const SearchInput = styled(Input)(({ theme }) => ({
+  background: theme.bgElevated,
+  borderRadius: theme.radius.lg,
+  padding: `${theme.spacing(2.5)} ${theme.spacing(4.5)}`,
+  fontFamily: theme.fontUi,
+  fontSize: '0.9375rem',
+  '&::placeholder': {
+    color: theme.textMuted,
+    opacity: 1,
+  },
+}));
+
 export const Dropdown = styled('ul')(({ theme }) => ({
   position: 'absolute',
   top: `calc(100% + ${theme.spacing(2)})`,
   left: 0,
   right: 0,
   zIndex: 50,
-  background: theme.bgSurface,
+  background: theme.bgElevated,
   border: `1px solid ${theme.border}`,
-  borderRadius: theme.spacing(2),
+  borderRadius: theme.radius.md,
   padding: `${theme.spacing(1)} 0`,
   margin: 0,
   listStyle: 'none',
@@ -77,8 +97,8 @@ export const SectionDivider = styled('li')(({ theme }) => ({
 
 export const ShelfBadge = styled('span')(({ theme }) => ({
   padding: `0 ${theme.spacing(2)}`,
-  borderRadius: theme.spacing(1),
-  background: theme.bgSurface,
+  borderRadius: theme.radius.sm,
+  background: theme.bgElevated,
   border: `1px solid ${theme.border}`,
   flexShrink: 0,
 }));

@@ -5,17 +5,19 @@ export const Card = styled('article')<{ $clickable?: boolean }>(({ theme, $click
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(5),
-  background: theme.bgSurface,
+  // No fill — the border alone defines the card. On a cream page bg, a lighter (bgElevated)
+  // fill at this scale reads as a stark white strip rather than a lifted surface. Frame, not fill.
+  background: 'transparent',
   border: `1px solid ${theme.border}`,
-  borderRadius: '10px',
+  borderRadius: theme.radius.lg,
   padding: theme.spacing(5),
 }));
 
-export const CoverThumb = styled('div')<{ $color: string }>(({ $color }) => ({
+export const CoverThumb = styled('div')<{ $color: string }>(({ $color, theme }) => ({
   width: '64px',
   height: '96px',
   background: $color,
-  borderRadius: '4px',
+  borderRadius: theme.radius.sm,
   flexShrink: 0,
   overflow: 'hidden',
 }));
@@ -48,7 +50,7 @@ export const LogButton = styled('button')(({ theme }) => ({
   flexShrink: 0,
   alignSelf: 'center',
   border: `1px solid ${theme.border}`,
-  borderRadius: '6px',
+  borderRadius: theme.radius.md,
   background: 'transparent',
   cursor: 'pointer',
   color: theme.textMuted,

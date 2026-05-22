@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Livre — BookDetail prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      .wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 96px 32px;
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 3rem;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        margin-bottom: 12px;
+      }
+      .lead {
+        font-family: var(--font-body);
+        font-size: 1.0625rem;
+        color: var(--text-muted);
+        margin-bottom: 48px;
+      }
+      .card {
+        display: block;
+        padding: 32px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--bg-elevated);
+        transition: all 0.2s ease;
+      }
+      .card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+      .card .letter {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 2.25rem;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      .card h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 1.75rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      .card p {
+        font-family: var(--font-body);
+        color: var(--text-muted);
+        font-size: 0.9375rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>BookDetail prototype</h1>
+      <p class="lead">
+        The sidecar layout: book on the left, a journal panel pinned to the right for ambient
+        capture. The journal expands into a full-canvas focus mode for long-form writing —
+        reviews, reflections, anything past a couple of lines.
+      </p>
+      <a class="card" href="a-sidecar.html">
+        <div class="letter">A</div>
+        <h2>Sidecar</h2>
+        <p>
+          Reading companion pinned beside the book. Rating, review, and a chronological log of
+          cycle events and notes. Click "Focus" to expand the journal into a two-column writing
+          workspace.
+        </p>
+      </a>
+    </div>
+  </body>
+</html>

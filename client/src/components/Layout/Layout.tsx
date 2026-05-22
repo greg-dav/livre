@@ -16,7 +16,7 @@ interface LayoutProps {
 export const Layout = ({ children }: LayoutProps) => (
   <Page>
     <TopBar>
-      <Logo />
+      <Logo size="small" />
       <BookSearch />
       <UserMenu />
     </TopBar>

@@ -6,6 +6,8 @@ export { Button } from './Button/Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button/Button';
 export { Input } from './Input/Input';
 export { Card, CardHeader } from './Card/Card';
+export { Pill } from './Pill/Pill';
+export type { PillProps, PillVariant } from './Pill/Pill';
 export { Form } from './Form/Form';
 export { DropdownMenu } from './DropdownMenu/DropdownMenu';
 export { Tabs } from './Tabs/Tabs';

@@ -15,7 +15,7 @@ const StyledContent = styled(Radix.Content)(({ theme }) => ({
   minWidth: theme.spacing(40),
   background: theme.bg,
   border: `1px solid ${theme.border}`,
-  borderRadius: theme.spacing(2),
+  borderRadius: theme.radius.md,
   padding: theme.spacing(1),
   boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
   zIndex: 200,
@@ -23,12 +23,12 @@ const StyledContent = styled(Radix.Content)(({ theme }) => ({
 
 const Item = styled(Radix.Item)(({ theme }) => ({
   padding: `${theme.spacing(2)} ${theme.spacing(3)}`,
-  borderRadius: '6px',
+  borderRadius: theme.radius.sm,
   cursor: 'pointer',
   outline: 'none',
 
   '&[data-highlighted]': {
-    background: theme.bgSurface,
+    background: theme.bgElevated,
   },
 
   '&[data-disabled]': {

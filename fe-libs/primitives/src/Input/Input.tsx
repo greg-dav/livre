@@ -10,7 +10,7 @@ export const Input = styled('input')(({ theme }) => ({
   padding: `${theme.spacing(3)} ${theme.spacing(4)}`,
   background: theme.bg,
   border: `1px solid ${theme.border}`,
-  borderRadius: '4px',
+  borderRadius: theme.radius.sm,
   color: theme.text,
   font: 'inherit',
   outline: 'none',

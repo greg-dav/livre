@@ -10,7 +10,7 @@ const List = styled(Radix.List)(({ theme }) => ({
 
 const Trigger = styled(Radix.Trigger)(({ theme }) => ({
   padding: `${theme.spacing(2)} ${theme.spacing(4)}`,
-  borderRadius: theme.spacing(1),
+  borderRadius: theme.radius.sm,
   cursor: 'pointer',
   border: 'none',
   background: 'transparent',
@@ -19,7 +19,7 @@ const Trigger = styled(Radix.Trigger)(({ theme }) => ({
 
   '&[data-state="active"]': {
     color: theme.text,
-    background: theme.bgSurface,
+    background: theme.bgElevated,
   },
 
   '&:focus-visible': {

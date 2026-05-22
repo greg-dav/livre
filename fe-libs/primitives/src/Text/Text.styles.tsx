@@ -14,12 +14,18 @@ export type TextVariant =
   | 'ui-md'
   | 'ui-sm'
   | 'ui-xs'
-  | 'label';
+  | 'label'
+  | 'mono';
 
 export type TextColor = 'default' | 'muted' | 'accent' | 'onColor' | 'onColorMuted';
 
 const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
-  const display = { fontFamily: theme.fontDisplay, fontStyle: 'italic' as const, fontWeight: 400 };
+  const display = {
+    fontFamily: theme.fontDisplay,
+    fontStyle: 'italic' as const,
+    fontWeight: 500,
+    letterSpacing: '-0.01em',
+  };
   const body = { fontFamily: theme.fontBody, fontWeight: 400 };
   const ui = { fontFamily: theme.fontUi };
 
@@ -27,7 +33,7 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
     case 'h1':
       return { ...display, fontSize: '3rem', lineHeight: 1.1 };
     case 'h2':
-      return { ...display, fontSize: '2.25rem', lineHeight: 1.15 };
+      return { ...display, fontSize: '2.5rem', lineHeight: 1.15 };
     case 'h3':
       return { ...display, fontSize: '1.875rem', lineHeight: 1.2 };
     case 'h4':
@@ -37,7 +43,7 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
     case 'h6':
       return { ...display, fontSize: '1rem', lineHeight: 1.35 };
     case 'body1':
-      return { ...body, fontSize: '1.0625rem', lineHeight: 1.7 };
+      return { ...body, fontSize: '1.0625rem', lineHeight: 1.75 };
     case 'body2':
       return { ...body, fontSize: '0.9375rem', lineHeight: 1.65 };
     case 'ui-lg':
@@ -45,16 +51,23 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
     case 'ui-md':
       return { ...ui, fontSize: '0.9375rem', fontWeight: 400, lineHeight: 1.5 };
     case 'ui-sm':
-      return { ...ui, fontSize: '0.8125rem', fontWeight: 400, lineHeight: 1.4 };
+      return { ...ui, fontSize: '0.875rem', fontWeight: 400, lineHeight: 1.4 };
     case 'ui-xs':
       return { ...ui, fontSize: '0.6875rem', fontWeight: 400, lineHeight: 1.4 };
     case 'label':
       return {
         ...ui,
         fontSize: '0.6875rem',
-        fontWeight: 600,
-        letterSpacing: '0.09em',
+        fontWeight: 700,
+        letterSpacing: '0.08em',
         textTransform: 'uppercase' as const,
+        lineHeight: 1.4,
+      };
+    case 'mono':
+      return {
+        fontFamily: theme.fontMono,
+        fontSize: '0.875rem',
+        fontWeight: 400,
         lineHeight: 1.4,
       };
   }

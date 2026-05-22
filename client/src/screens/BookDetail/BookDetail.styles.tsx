@@ -3,19 +3,50 @@ import { Link } from 'react-router-dom';
 
 export const Hero = styled('div')(({ theme }) => ({
   display: 'flex',
-  gap: theme.spacing(8),
+  gap: theme.spacing(10),
   alignItems: 'flex-start',
 }));
 
-export const CoverWrapper = styled('div')<{ $inLibrary?: boolean }>(({ $inLibrary, theme }) => ({
-  position: 'relative',
-  flexShrink: 0,
-  lineHeight: 0,
-  borderRadius: '4px',
-  overflow: 'hidden',
-  cursor: 'pointer',
-  boxShadow: $inLibrary ? `0 0 0 2px ${theme.accent}` : undefined,
-}));
+// Resting drop shadow that gives the cover physical presence — book on a shelf rather than image
+// on a page. Layered with the accent ring when in library, and preserved through the acquire
+// keyframes so the shadow doesn't disappear during the grab.
+const coverDropShadow = '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06)';
+
+export const CoverWrapper = styled('div')<{ $inLibrary?: boolean; $justAcquired?: boolean }>(
+  ({ $inLibrary, $justAcquired, theme }) => ({
+    position: 'relative',
+    flexShrink: 0,
+    lineHeight: 0,
+    borderRadius: theme.radius.sm,
+    overflow: 'hidden',
+    cursor: 'pointer',
+    isolation: 'isolate',
+    boxShadow: $inLibrary ? `0 0 0 2px ${theme.accent}, ${coverDropShadow}` : coverDropShadow,
+
+    // Acquisition sequence: ring quietly slips out from the cover's edge (200ms), then a snappy
+    // shimmer streaks diagonally (350ms, overlapping with the ring slip for cohesion). Both use
+    // easeOutExpo (cubic-bezier(0.16, 1, 0.3, 1)) — fast accelerate at the start, dramatic
+    // decelerate to settle. Gives the swipe some verve without an overshoot. Only renders during
+    // this beat; the ::after is conditional so there's no stale pseudo sitting on every cover.
+    ...($justAcquired && {
+      animation: 'cover-acquire 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+    }),
+
+    '&::after': $justAcquired
+      ? {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.10) 47%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.10) 53%, transparent 65%)',
+          transform: 'translateX(-120%)',
+          pointerEvents: 'none',
+          mixBlendMode: 'screen',
+          animation: 'cover-shimmer 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards',
+        }
+      : {},
+  })
+);
 
 export const Cover = styled('img')({
   width: 'clamp(155px, 16vw, 200px)',
@@ -27,9 +58,9 @@ export const Cover = styled('img')({
 export const CoverPlaceholder = styled('div')(({ theme }) => ({
   width: 'clamp(155px, 16vw, 200px)',
   aspectRatio: '2 / 3',
-  borderRadius: '4px',
+  borderRadius: theme.radius.sm,
   flexShrink: 0,
-  background: theme.bgSurface,
+  background: theme.bgElevated,
   border: `1px solid ${theme.border}`,
 }));
 
@@ -43,22 +74,39 @@ export const HeroMeta = styled('div')(({ theme }) => ({
 export const AuthorList = styled('div')(({ theme }) => ({
   display: 'flex',
   flexWrap: 'wrap',
-  gap: `${theme.spacing(1)} ${theme.spacing(3)}`,
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+}));
+
+/*
+ * Action row container for the status button and (later) the ⋯ more-actions button. Lives inside
+ * HeroMeta (flex column) and uses align-self: flex-start so the button sizes to its content rather
+ * than stretching to the row width.
+ */
+export const HeroActions = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  alignSelf: 'flex-start',
+  gap: theme.spacing(2),
 }));
 
 export const AuthorLink = styled(Link)(({ theme }) => ({
-  color: theme.accent,
+  color: theme.text,
   textDecoration: 'none',
+  borderBottom: '1px solid transparent',
+  transition: 'border-color 0.15s ease',
   '&:hover': {
-    textDecoration: 'underline',
+    borderBottomColor: theme.textMuted,
   },
 }));
 
 export const Byline = styled('div')(({ theme }) => ({
   display: 'flex',
   flexWrap: 'wrap',
-  gap: `0 ${theme.spacing(2)}`,
   alignItems: 'center',
+  gap: theme.spacing(2),
+  marginBottom: theme.spacing(4),
 }));
 
 export const Dot = styled('span')(({ theme }) => ({
@@ -68,26 +116,83 @@ export const Dot = styled('span')(({ theme }) => ({
 
 export const Divider = styled('hr')(({ theme }) => ({
   border: 'none',
-  borderTop: `1px solid ${theme.border}`,
+  borderTop: `1px solid ${theme.borderSoft}`,
   margin: 0,
 }));
 
-export const Description = styled('div')({
+export const SectionLabel = styled('div')({});
+
+/*
+ * Keeps the description label, body, and category pills bound together so the Layout's flex gap
+ * doesn't separate them. The proto's vertical rhythm is: section-label → 12px → description →
+ * 12px → pills. Without this wrapper they'd inherit the page's 24px Content gap.
+ */
+export const DescriptionSection = styled('section')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(3),
+}));
+
+/*
+ * Description is rendered as multiple <p> elements (one per paragraph) rather than one <p> with
+ * pre-line whitespace, so the inter-paragraph gap can be set explicitly (12px) instead of
+ * inheriting the body line-height (~30px at body1's 1.75 × 17px). Single newlines inside a
+ * paragraph are still preserved as soft breaks via white-space: pre-line.
+ *
+ * The ::first-letter drop cap is one of the rare places we set fontFamily/fontSize outside <Text>.
+ * CSS pseudo-elements can't be composed via React children, and the typographic effect (italic
+ * accent letter that floats and drop-caps two lines of body) only works when bound to the actual
+ * formatted block. Selector targets the FIRST <p> only so subsequent paragraphs don't also get a
+ * drop cap. Bounded exception — do not generalize.
+ */
+export const Description = styled('div')(({ theme }) => ({
   maxWidth: '680px',
-  whiteSpace: 'pre-line',
-});
+
+  '& > p': {
+    whiteSpace: 'pre-line',
+  },
+
+  '& > p + p': {
+    marginTop: theme.spacing(3),
+  },
+
+  '& > p:first-child::first-letter': {
+    fontFamily: theme.fontDisplay,
+    fontStyle: 'italic',
+    fontWeight: 500,
+    fontSize: '3.5rem',
+    lineHeight: 0.9,
+    float: 'left',
+    margin: `${theme.spacing(1)} ${theme.spacing(2)} 0 0`,
+    color: theme.accent,
+  },
+}));
+
+export const Categories = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.spacing(2),
+  maxWidth: '680px',
+  // Visual break between description body and the categorical pills — these are different
+  // content types and need separation. Compounds with DescriptionSection's flex gap (12px) to
+  // give ~28px above. marginBottom compounds with the Content gap to give ~48px before the
+  // meta footer — matches the prototype's `.meta-bottom { margin-top: 48px }`.
+  marginTop: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+}));
 
 export const MetaGrid = styled('dl')(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'max-content 1fr',
-  columnGap: theme.spacing(6),
-  rowGap: theme.spacing(2),
+  columnGap: theme.spacing(8),
+  rowGap: theme.spacing(3),
   maxWidth: '480px',
+  alignItems: 'baseline',
 }));
 
-export const MetaLabel = styled('dt')(({ theme }) => ({
-  color: theme.textMuted,
-}));
+export const MetaLabel = styled('dt')({
+  margin: 0,
+});
 
 export const MetaValue = styled('dd')({
   margin: 0,

@@ -7,9 +7,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <!--
+      Paint the theme bg before the JS bundle parses, so the cream/dark surface is up the moment
+      the page renders. createGlobalStyle from LivreThemeProvider only runs after JS loads, which
+      otherwise causes a brief white flash. Values mirror the roman-light and roman-dark theme
+      tokens; OS color-scheme is a best-effort match — JS still owns the real theme switch.
+    -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      html,
+      body {
+        background-color: #f4efe3;
+        color: #1a1815;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background-color: #13120f;
+          color: #ede9e0;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

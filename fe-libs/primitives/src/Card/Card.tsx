@@ -6,9 +6,9 @@ import styled from 'styled-components';
  * from the outside; Card itself is unconstrained.
  */
 export const Card = styled('div')(({ theme }) => ({
-  background: theme.bgSurface,
+  background: theme.bgElevated,
   border: `1px solid ${theme.border}`,
-  borderRadius: '6px',
+  borderRadius: theme.radius.lg,
   padding: theme.spacing(8),
   display: 'flex',
   flexDirection: 'column',

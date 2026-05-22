@@ -8,6 +8,11 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
     margin: 0,
     padding: 0,
   },
+  // Disables the trackpad/touch overscroll bounce so the sticky TopBar doesn't get dragged off
+  // the top of the viewport on Mac/iOS. Also stops scroll chaining to any parent context.
+  'html, body': {
+    overscrollBehavior: 'none',
+  },
   html: {
     fontSize: '16px',
     WebkitFontSmoothing: 'antialiased',
