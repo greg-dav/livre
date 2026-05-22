@@ -1,17 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as Form from '@radix-ui/react-form';
-import {
-  Text,
-  Logo,
-  Button,
-  Input,
-  Card,
-  CardHeader,
-  FormRoot,
-  FormField,
-  FormLabel,
-} from '@livre/primitives';
+import { Text, Logo, Button, Input, Card, CardHeader, Form } from '@livre/primitives';
 import { api } from '../../lib/api';
 import { useRegisterMutation } from './useRegisterMutation';
 import { Page } from './Setup.styles';
@@ -52,11 +41,11 @@ export const Setup = () => {
             You're the first user. This account will be the administrator.
           </Text>
         </CardHeader>
-        <FormRoot onSubmit={handleSubmit}>
-          <FormField name="username">
-            <FormLabel>
+        <Form.Root onSubmit={handleSubmit}>
+          <Form.Field name="username">
+            <Form.Label>
               <Text variant="label">Username</Text>
-            </FormLabel>
+            </Form.Label>
             <Form.Control asChild>
               <Input
                 type="text"
@@ -77,12 +66,12 @@ export const Setup = () => {
                 Username must be at least 2 characters
               </Text>
             </Form.Message>
-          </FormField>
+          </Form.Field>
 
-          <FormField name="password">
-            <FormLabel>
+          <Form.Field name="password">
+            <Form.Label>
               <Text variant="label">Password</Text>
-            </FormLabel>
+            </Form.Label>
             <Form.Control asChild>
               <Input type="password" autoComplete="new-password" required minLength={8} />
             </Form.Control>
@@ -96,12 +85,12 @@ export const Setup = () => {
                 Password must be at least 8 characters
               </Text>
             </Form.Message>
-          </FormField>
+          </Form.Field>
 
-          <FormField name="confirm">
-            <FormLabel>
+          <Form.Field name="confirm">
+            <Form.Label>
               <Text variant="label">Confirm password</Text>
-            </FormLabel>
+            </Form.Label>
             <Form.Control asChild>
               <Input type="password" autoComplete="new-password" required />
             </Form.Control>
@@ -117,12 +106,12 @@ export const Setup = () => {
                 Passwords do not match
               </Text>
             </Form.Message>
-          </FormField>
+          </Form.Field>
 
-          <FormField name="googleBooksApiKey">
-            <FormLabel>
+          <Form.Field name="googleBooksApiKey">
+            <Form.Label>
               <Text variant="label">Google Books API key</Text>
-            </FormLabel>
+            </Form.Label>
             <Form.Control asChild>
               <Input type="text" autoComplete="off" required />
             </Form.Control>
@@ -131,7 +120,7 @@ export const Setup = () => {
                 Google Books API key is required
               </Text>
             </Form.Message>
-          </FormField>
+          </Form.Field>
 
           {mutation.isError && (
             <Text variant="ui-sm" color="accent">
@@ -146,7 +135,7 @@ export const Setup = () => {
               </Text>
             </Button>
           </Form.Submit>
-        </FormRoot>
+        </Form.Root>
       </Card>
     </Page>
   );

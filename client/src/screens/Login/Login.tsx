@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as Form from '@radix-ui/react-form';
-import { Text, Logo, Button, Input, Card, FormRoot, FormField, FormLabel } from '@livre/primitives';
+import { Text, Logo, Button, Input, Card, Form } from '@livre/primitives';
 import { api } from '../../lib/api';
 import { useLoginMutation } from './useLoginMutation';
 import { Page } from './Login.styles';
@@ -35,11 +34,11 @@ export const Login = () => {
       <Logo />
       <Card style={{ width: '100%', maxWidth: '400px' }}>
         <Text variant="h5">Sign in</Text>
-        <FormRoot onSubmit={handleSubmit}>
-          <FormField name="username">
-            <FormLabel>
+        <Form.Root onSubmit={handleSubmit}>
+          <Form.Field name="username">
+            <Form.Label>
               <Text variant="label">Username</Text>
-            </FormLabel>
+            </Form.Label>
             <Form.Control asChild>
               <Input type="text" autoComplete="username" autoFocus required />
             </Form.Control>
@@ -48,12 +47,12 @@ export const Login = () => {
                 Username is required
               </Text>
             </Form.Message>
-          </FormField>
+          </Form.Field>
 
-          <FormField name="password">
-            <FormLabel>
+          <Form.Field name="password">
+            <Form.Label>
               <Text variant="label">Password</Text>
-            </FormLabel>
+            </Form.Label>
             <Form.Control asChild>
               <Input type="password" autoComplete="current-password" required />
             </Form.Control>
@@ -62,7 +61,7 @@ export const Login = () => {
                 Password is required
               </Text>
             </Form.Message>
-          </FormField>
+          </Form.Field>
 
           {mutation.isError && (
             <Text variant="ui-sm" color="accent">
@@ -77,7 +76,7 @@ export const Login = () => {
               </Text>
             </Button>
           </Form.Submit>
-        </FormRoot>
+        </Form.Root>
       </Card>
     </Page>
   );

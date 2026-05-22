@@ -1,8 +1,7 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Text } from '@livre/primitives';
+import { Text, DropdownMenu } from '@livre/primitives';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Trigger, Content, Item, Separator } from './UserMenu.styles';
+import { Trigger } from './UserMenu.styles';
 
 /**
  * Avatar button that opens a dropdown with app-scoped user actions. Reads auth and theme state
@@ -14,31 +13,30 @@ export const UserMenu = () => {
   const { toggleTheme } = useTheme();
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+    <DropdownMenu
+      trigger={
         <Trigger aria-label="User menu">
           <Text variant="ui-sm" color="muted">
             {user?.username?.[0]?.toUpperCase() ?? '?'}
           </Text>
         </Trigger>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <Content align="end" sideOffset={8}>
-          <Item disabled>
-            <Text variant="ui-sm" color="muted">
-              {user?.username}
-            </Text>
-          </Item>
-          <Separator />
-          <Item onSelect={toggleTheme}>
-            <Text variant="ui-sm">Toggle theme</Text>
-          </Item>
-          <Separator />
-          <Item onSelect={logout}>
-            <Text variant="ui-sm">Sign out</Text>
-          </Item>
-        </Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+      }
+      align="end"
+      sideOffset={8}
+    >
+      <DropdownMenu.Item disabled>
+        <Text variant="ui-sm" color="muted">
+          {user?.username}
+        </Text>
+      </DropdownMenu.Item>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Item onSelect={toggleTheme}>
+        <Text variant="ui-sm">Toggle theme</Text>
+      </DropdownMenu.Item>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Item onSelect={logout}>
+        <Text variant="ui-sm">Sign out</Text>
+      </DropdownMenu.Item>
+    </DropdownMenu>
   );
 };
