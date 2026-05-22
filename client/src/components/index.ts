@@ -1,4 +1,5 @@
 export { BookSearch } from './BookSearch/BookSearch';
+export { Layout } from './Layout/Layout';
 export { CurrentlyReadingCard } from './CurrentlyReadingCard/CurrentlyReadingCard';
 export { Nav } from './Nav/Nav';
 export { ShelfTabs } from './ShelfTabs/ShelfTabs';

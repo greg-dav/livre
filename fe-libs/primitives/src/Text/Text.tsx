@@ -25,6 +25,7 @@ export interface TextProps {
   as?: ElementType;
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
 /**
@@ -33,12 +34,20 @@ export interface TextProps {
  * encodes both the visual role and the correct semantic element; use `as` only when the semantics
  * must differ from the visual (e.g. an h3-styled subheading inside an already-h2 section).
  */
-export const Text = ({ variant, color = 'default', as, children, className }: TextProps) => (
+export const Text = ({
+  variant,
+  color = 'default',
+  as,
+  children,
+  className,
+  onClick,
+}: TextProps) => (
   <StyledText
     as={as ?? defaultElement[variant]}
     $variant={variant}
     $color={color}
     className={className}
+    onClick={onClick}
   >
     {children}
   </StyledText>

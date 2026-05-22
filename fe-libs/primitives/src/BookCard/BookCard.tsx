@@ -1,6 +1,8 @@
 import { Text } from '../Text/Text';
 import { StarRating } from '../StarRating/StarRating';
-import { Card, Cover, FaceImage, Face, Meta } from './BookCard.styles';
+import { Card, Cover, FaceImage, Face, Meta, BookGrid } from './BookCard.styles';
+
+export { BookGrid };
 
 export interface BookCardProps {
   title: string;

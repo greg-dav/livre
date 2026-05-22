@@ -5,6 +5,7 @@ import {
   instanceStatusSchema,
   apiErrorSchema,
   bookSearchResponseSchema,
+  bookSearchResultSchema,
 } from '@livre/types';
 
 export type { User } from '@livre/types';
@@ -54,5 +55,8 @@ export const api = {
   books: {
     search: (q: string) =>
       request(`/books/search?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
+    byAuthor: (name: string) =>
+      request(`/books/search?author=${encodeURIComponent(name)}`, bookSearchResponseSchema),
+    getById: (id: string) => request(`/books/${encodeURIComponent(id)}`, bookSearchResultSchema),
   },
 };

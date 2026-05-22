@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import { BookCard } from '@livre/primitives';
-import { Logo } from '@livre/primitives';
-import {
-  BookSearch,
-  CurrentlyReadingCard,
-  ShelfTabs,
-  UserMenu,
-  type ShelfStatus,
-} from '../../components';
-import { Page, TopBar, Content, BookGrid } from './Library.styles';
+import { useNavigate } from 'react-router-dom';
+import { BookCard, BookGrid } from '@livre/primitives';
+import { Layout, CurrentlyReadingCard, ShelfTabs, type ShelfStatus } from '../../components';
 
 const CURRENTLY_READING = {
   title: 'Blood Meridian',
@@ -33,25 +26,23 @@ const BOOKS = [
   { id: 6, title: 'The Myth of Sisyphus', author: 'Camus', coverColor: '#2A2A2A', rating: 4 },
 ];
 
+/**
+ * Main authenticated screen. Shows the currently reading card, shelf filter tabs, and the book
+ * grid. All data here is static placeholder — will be replaced with real shelf queries.
+ */
 export const Library = () => {
+  const navigate = useNavigate();
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
 
   return (
-    <Page>
-      <TopBar>
-        <Logo />
-        <BookSearch />
-        <UserMenu />
-      </TopBar>
-      <Content>
-        <CurrentlyReadingCard {...CURRENTLY_READING} />
-        <ShelfTabs active={activeShelf} counts={SHELF_COUNTS} onChange={setActiveShelf} />
-        <BookGrid>
-          {BOOKS.map((book) => (
-            <BookCard key={book.id} {...book} />
-          ))}
-        </BookGrid>
-      </Content>
-    </Page>
+    <Layout>
+      <CurrentlyReadingCard {...CURRENTLY_READING} />
+      <ShelfTabs active={activeShelf} counts={SHELF_COUNTS} onChange={setActiveShelf} />
+      <BookGrid>
+        {BOOKS.map((book) => (
+          <BookCard key={book.id} {...book} onClick={() => navigate(`/book/${book.id}`)} />
+        ))}
+      </BookGrid>
+    </Layout>
   );
 };

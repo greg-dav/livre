@@ -11,6 +11,10 @@ export class GoogleBooksProvider {
     return this.client().search(query);
   }
 
+  async getById(id: string) {
+    return this.client().getById(id);
+  }
+
   async validate(apiKey: string): Promise<void> {
     await GoogleBooksClient.validateApiKey(apiKey);
   }

@@ -42,3 +42,9 @@ export const Meta = styled('div')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(1),
 }));
+
+export const BookGrid = styled('section')(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
+  gap: `${theme.spacing(7)} ${theme.spacing(5)}`,
+}));
