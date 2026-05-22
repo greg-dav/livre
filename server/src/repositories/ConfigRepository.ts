@@ -1,27 +1,19 @@
-import { z } from 'zod';
-import db from '../db';
-
-const rowSchema = z.object({ value: z.string() });
+import { eq } from 'drizzle-orm';
+import { db, type Tx } from '../db';
+import { config } from '../db/schema';
 
 export class ConfigRepository {
   static readonly GOOGLE_BOOKS_API_KEY = 'google_books_api_key';
 
-  private readonly query = {
-    get: db.prepare('SELECT value FROM config WHERE key = ?'),
-  };
-
-  private readonly mutation = {
-    set: db.prepare(
-      'INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
-    ),
-  };
-
   get(key: string): string | undefined {
-    const raw = this.query.get.get(key);
-    return raw !== undefined ? rowSchema.parse(raw).value : undefined;
+    return db.select({ value: config.value }).from(config).where(eq(config.key, key)).get()?.value;
   }
 
-  set(key: string, value: string): void {
-    this.mutation.set.run(key, value);
+  set(key: string, value: string, tx?: Tx): void {
+    (tx ?? db)
+      .insert(config)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: config.key, set: { value } })
+      .run();
   }
 }

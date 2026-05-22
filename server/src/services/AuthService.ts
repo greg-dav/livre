@@ -6,9 +6,8 @@ import { z } from 'zod';
 import { type AuthResponse } from '@livre/types';
 import createError from 'http-errors';
 import { env } from '../env';
-import { inTransaction } from '../db';
 import { type UsersRepository } from '../repositories/UsersRepository';
-import { ConfigRepository } from '../repositories/ConfigRepository';
+import { type SetupRepository } from '../repositories/SetupRepository';
 import { type GoogleBooksClient } from '../clients/GoogleBooksClient';
 
 const generateKeyPairAsync = promisify(generateKeyPair);
@@ -20,7 +19,7 @@ export class AuthService {
 
   constructor(
     private readonly users: UsersRepository,
-    private readonly config: ConfigRepository,
+    private readonly setup: SetupRepository,
     private readonly books: GoogleBooksClient
   ) {}
 
@@ -45,10 +44,14 @@ export class AuthService {
     ]);
 
     try {
-      const user = inTransaction(() => {
-        const u = this.users.create({ username, passwordHash, publicKey, privateKey });
-        this.config.set(ConfigRepository.GOOGLE_BOOKS_API_KEY, googleBooksApiKey);
-        return u;
+      const isAdmin = this.users.count() === 0;
+      const user = this.setup.execute({
+        username,
+        passwordHash,
+        publicKey,
+        privateKey,
+        isAdmin,
+        googleBooksApiKey,
       });
       return {
         token: jwt.sign(user, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d' }),
@@ -64,13 +67,13 @@ export class AuthService {
   async login(username: string, password: string): Promise<AuthResponse> {
     const row = this.users.findByUsername(username);
 
-    if (!row || !(await bcrypt.compare(password, row.password_hash))) {
+    if (!row || !(await bcrypt.compare(password, row.passwordHash))) {
       throw createError(401, 'Invalid credentials');
     }
 
     this.users.updateLastLogin(row.id);
 
-    const user = { id: row.id, username: row.username, is_admin: row.is_admin };
+    const user = { id: row.id, username: row.username, is_admin: row.isAdmin };
     return { token: jwt.sign(user, env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d' }), user };
   }
 }
