@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Livre — A. Grid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../book-detail/shared.css" />
+    <style>
+      /* ── Content wrapper ───────────────────────────────────────── */
+      .content {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 40px 48px 80px;
+      }
+
+      /* ── Section label row ─────────────────────────────────────── */
+      .section-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .section-row hr {
+        flex: 1;
+        border: none;
+        border-top: 1px solid var(--border-soft);
+      }
+
+      /* ── Reading grid ──────────────────────────────────────────── */
+      .reading-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+        margin-bottom: 48px;
+      }
+
+      /* ── Reading card ──────────────────────────────────────────── */
+      .reading-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--bg-elevated);
+        overflow: hidden;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .reading-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+      }
+
+      .rc-main {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px 16px 12px;
+      }
+
+      .rc-cover {
+        width: 72px;
+        height: 108px;
+        border-radius: 3px 5px 5px 3px;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 2px var(--accent);
+        background: #1d2f26;
+      }
+      .rc-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .rc-face {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        text-align: center;
+        padding: 10px;
+      }
+      .rc-face-title {
+        font-family: var(--font-body);
+        font-size: 0.75rem;
+        line-height: 1.3;
+        color: rgba(255, 255, 255, 0.88);
+      }
+      .rc-face-author {
+        font-family: var(--font-ui);
+        font-size: 0.625rem;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .rc-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .rc-title {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 500;
+        font-size: 1.25rem;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+      }
+      .rc-author {
+        font-family: var(--font-ui);
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+      }
+      .rc-since {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--font-ui);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+      .method-icon {
+        color: var(--text-muted);
+        opacity: 0.8;
+        display: inline-flex;
+        align-items: center;
+      }
+      .pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+        flex-shrink: 0;
+      }
+      .rc-sync {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-ui);
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      /* ── Quick action footer ───────────────────────────────────── */
+      .rc-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 7px 10px;
+        border-top: 1px solid var(--border-soft);
+      }
+      .rc-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-family: var(--font-ui);
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--text-muted);
+        transition: color 0.15s, background 0.15s;
+      }
+      .rc-action:hover { color: var(--text); background: var(--bg); }
+      .rc-action.primary:hover { color: var(--accent); background: var(--accent-soft); }
+
+      /* ── Shelf tabs ────────────────────────────────────────────── */
+      .shelf-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-soft);
+        margin-bottom: 32px;
+      }
+      .shelf-tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px 13px;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        background: transparent;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+      .shelf-tab.active { border-bottom-color: var(--accent); }
+      .tab-name {
+        font-family: var(--font-ui);
+        font-size: 0.9375rem;
+        color: var(--text-muted);
+        transition: color 0.15s;
+      }
+      .shelf-tab.active .tab-name,
+      .shelf-tab:hover .tab-name { color: var(--text); }
+      .tab-badge {
+        font-family: var(--font-ui);
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        background: var(--bg-sunken);
+        border-radius: 999px;
+        padding: 2px 8px;
+        transition: background 0.15s, color 0.15s;
+      }
+      .shelf-tab.active .tab-badge {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      /* ── Shelf heading ─────────────────────────────────────────── */
+      .shelf-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 28px;
+      }
+      .shelf-heading-left {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .shelf-name {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 1.75rem;
+        font-weight: 500;
+      }
+      .shelf-count {
+        font-family: var(--font-ui);
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+      }
+      .shelf-sort {
+        font-family: var(--font-ui);
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: color 0.15s;
+      }
+      .shelf-sort:hover { color: var(--text); }
+
+      /* ── Book grid ─────────────────────────────────────────────── */
+      .book-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+        gap: 28px 20px;
+      }
+      .book { display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+      .book-cover {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        border-radius: 3px 6px 6px 3px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+      }
+      .book:hover .book-cover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+      }
+      .book-cover > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .book-face {
+        width: 100%; height: 100%;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 4px; text-align: center; padding: 16px;
+      }
+      .face-title {
+        font-family: var(--font-body);
+        font-size: 0.875rem;
+        line-height: 1.3;
+        color: rgba(255, 255, 255, 0.88);
+      }
+      .face-author {
+        font-family: var(--font-ui);
+        font-size: 0.6875rem;
+        color: rgba(255, 255, 255, 0.48);
+      }
+      .book-meta { display: flex; flex-direction: column; gap: 3px; }
+      .book-title {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+      .book-author { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); }
+      .book-stars {
+        font-size: 0.75rem;
+        color: var(--accent);
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+      }
+      .book-method {
+        color: var(--text-muted);
+        opacity: 0.55;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="icon">☰</div>
+        <div class="icon active">○</div>
+        <div class="icon">+</div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <span class="wordmark">livre<span class="t-accent">.</span></span>
+          <input class="search-input" placeholder="Search by title or author…" />
+          <div class="avatar">G</div>
+        </div>
+
+        <div class="content">
+
+          <!-- Currently Reading section -->
+          <div class="section-row">
+            <span class="t-label t-accent">Currently Reading</span>
+            <hr />
+          </div>
+
+          <div class="reading-grid">
+
+            <!-- Card 1 — Physical -->
+            <div class="reading-card">
+              <div class="rc-main">
+                <div class="rc-cover">
+                  <img
+                    src="https://books.google.com/books/content?id=0XCcDwAAQBAJ&printsec=frontcover&img=1&zoom=4"
+                    alt="Permanent Record"
+                  />
+                </div>
+                <div class="rc-body">
+                  <div class="rc-title">Permanent Record</div>
+                  <div class="rc-author">Edward Snowden</div>
+                  <div class="rc-since">
+                    <span class="method-icon" title="Physical copy">
+                      <svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                    <span class="pulse-dot"></span>
+                    Since September 4
+                  </div>
+                </div>
+              </div>
+              <div class="rc-actions">
+                <button class="rc-action primary">✦ Note</button>
+                <button class="rc-action primary">❝ Quote</button>
+                <div style="flex:1"></div>
+                <button class="rc-action">···</button>
+              </div>
+            </div>
+
+            <!-- Card 2 — E-reader with KOReader sync -->
+            <div class="reading-card">
+              <div class="rc-main">
+                <div class="rc-cover" style="background: #2a1e38;">
+                  <div class="rc-face">
+                    <span class="rc-face-title">A Gentleman in Moscow</span>
+                    <span class="rc-face-author">Amor Towles</span>
+                  </div>
+                </div>
+                <div class="rc-body">
+                  <div class="rc-title">A Gentleman in Moscow</div>
+                  <div class="rc-author">Amor Towles</div>
+                  <div class="rc-since">
+                    <span class="method-icon" title="E-reader">
+                      <svg width="9" height="12" viewBox="0 0 9 12" fill="none"><rect x="0.75" y="0.75" width="7.5" height="10.5" rx="1.25" stroke="currentColor" stroke-width="1.25"/><circle cx="4.5" cy="9.5" r="0.7" fill="currentColor"/></svg>
+                    </span>
+                    <span class="pulse-dot"></span>
+                    Since October 12
+                  </div>
+                  <div class="rc-sync">
+                    <span style="width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
+                    <span style="color:var(--accent);">KOReader</span>
+                    <span>· last synced 2h ago</span>
+                  </div>
+                </div>
+              </div>
+              <div class="rc-actions">
+                <button class="rc-action primary">✦ Note</button>
+                <button class="rc-action primary">❝ Quote</button>
+                <div style="flex:1"></div>
+                <button class="rc-action">···</button>
+              </div>
+            </div>
+
+            <!-- Card 3 — Audio -->
+            <div class="reading-card">
+              <div class="rc-main">
+                <div class="rc-cover" style="background: #0d1d2e;">
+                  <div class="rc-face">
+                    <span class="rc-face-title">The Remains of the Day</span>
+                    <span class="rc-face-author">Kazuo Ishiguro</span>
+                  </div>
+                </div>
+                <div class="rc-body">
+                  <div class="rc-title">The Remains of the Day</div>
+                  <div class="rc-author">Kazuo Ishiguro</div>
+                  <div class="rc-since">
+                    <span class="method-icon" title="Audiobook">
+                      <svg width="13" height="11" viewBox="0 0 13 11" fill="none"><path d="M2 5.5V5a4.5 4.5 0 0 1 9 0v.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><rect x="0.75" y="5.5" width="2.5" height="4" rx="0.75" stroke="currentColor" stroke-width="1.25"/><rect x="9.75" y="5.5" width="2.5" height="4" rx="0.75" stroke="currentColor" stroke-width="1.25"/></svg>
+                    </span>
+                    <span class="pulse-dot"></span>
+                    Since November 1
+                  </div>
+                </div>
+              </div>
+              <div class="rc-actions">
+                <button class="rc-action primary">✦ Note</button>
+                <button class="rc-action primary">❝ Quote</button>
+                <div style="flex:1"></div>
+                <button class="rc-action">···</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Shelf tabs -->
+          <div class="shelf-tabs">
+            <button class="shelf-tab active" onclick="setTab(this,'read')">
+              <span class="tab-name">Read</span>
+              <span class="tab-badge">43</span>
+            </button>
+            <button class="shelf-tab" onclick="setTab(this,'want')">
+              <span class="tab-name">Want to Read</span>
+              <span class="tab-badge">12</span>
+            </button>
+            <button class="shelf-tab" onclick="setTab(this,'dnf')">
+              <span class="tab-name">Did Not Finish</span>
+              <span class="tab-badge">5</span>
+            </button>
+          </div>
+
+          <!-- Shelf: Read -->
+          <div id="shelf-read">
+            <div class="shelf-heading">
+              <div class="shelf-heading-left">
+                <span class="shelf-name">Read</span>
+                <span class="shelf-count">43 books</span>
+              </div>
+              <button class="shelf-sort">Sort: Date Read ▾</button>
+            </div>
+            <div class="book-grid">
+
+              <!-- 1. The Road — Physical -->
+              <div class="book">
+                <div class="book-cover" style="background: #1e2d1c;">
+                  <div class="book-face">
+                    <span class="face-title">The Road</span>
+                    <span class="face-author">Cormac McCarthy</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">The Road</div>
+                  <div class="book-author">Cormac McCarthy</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="Physical copy">
+                      <svg width="11" height="9" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Blood Meridian — Physical -->
+              <div class="book">
+                <div class="book-cover" style="background: #3d1e1e;">
+                  <div class="book-face">
+                    <span class="face-title">Blood Meridian</span>
+                    <span class="face-author">Cormac McCarthy</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Blood Meridian</div>
+                  <div class="book-author">Cormac McCarthy</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="Physical copy">
+                      <svg width="11" height="9" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Permanent Record — Physical -->
+              <div class="book">
+                <div class="book-cover" style="background: #1a2e3a;">
+                  <img
+                    src="https://books.google.com/books/content?id=0XCcDwAAQBAJ&printsec=frontcover&img=1&zoom=3"
+                    alt="Permanent Record"
+                  />
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Permanent Record</div>
+                  <div class="book-author">Edward Snowden</div>
+                  <div class="book-stars">★★★★
+                    <span class="book-method" title="Physical copy">
+                      <svg width="11" height="9" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. The Left Hand of Darkness — E-reader -->
+              <div class="book">
+                <div class="book-cover" style="background: #1f2b1a;">
+                  <div class="book-face">
+                    <span class="face-title">The Left Hand of Darkness</span>
+                    <span class="face-author">Ursula K. Le Guin</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">The Left Hand of Darkness</div>
+                  <div class="book-author">Ursula K. Le Guin</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="E-reader">
+                      <svg width="8" height="11" viewBox="0 0 9 12" fill="none"><rect x="0.75" y="0.75" width="7.5" height="10.5" rx="1.25" stroke="currentColor" stroke-width="1.25"/><circle cx="4.5" cy="9.5" r="0.7" fill="currentColor"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. A Gentleman in Moscow — Physical -->
+              <div class="book">
+                <div class="book-cover" style="background: #2a1e38;">
+                  <div class="book-face">
+                    <span class="face-title">A Gentleman in Moscow</span>
+                    <span class="face-author">Amor Towles</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">A Gentleman in Moscow</div>
+                  <div class="book-author">Amor Towles</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="Physical copy">
+                      <svg width="11" height="9" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 6. Dune — Audio -->
+              <div class="book">
+                <div class="book-cover" style="background: #0e2233;">
+                  <div class="book-face">
+                    <span class="face-title">Dune</span>
+                    <span class="face-author">Frank Herbert</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Dune</div>
+                  <div class="book-author">Frank Herbert</div>
+                  <div class="book-stars">★★★★
+                    <span class="book-method" title="Audiobook">
+                      <svg width="11" height="10" viewBox="0 0 13 11" fill="none"><path d="M2 5.5V5a4.5 4.5 0 0 1 9 0v.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><rect x="0.75" y="5.5" width="2.5" height="4" rx="0.75" stroke="currentColor" stroke-width="1.25"/><rect x="9.75" y="5.5" width="2.5" height="4" rx="0.75" stroke="currentColor" stroke-width="1.25"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 7. Gilead — Physical -->
+              <div class="book">
+                <div class="book-cover" style="background: #1c2e29;">
+                  <div class="book-face">
+                    <span class="face-title">Gilead</span>
+                    <span class="face-author">Marilynne Robinson</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Gilead</div>
+                  <div class="book-author">Marilynne Robinson</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="Physical copy">
+                      <svg width="11" height="9" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 8. Stoner — E-reader -->
+              <div class="book">
+                <div class="book-cover" style="background: #2e1c10;">
+                  <div class="book-face">
+                    <span class="face-title">Stoner</span>
+                    <span class="face-author">John Williams</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Stoner</div>
+                  <div class="book-author">John Williams</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="E-reader">
+                      <svg width="8" height="11" viewBox="0 0 9 12" fill="none"><rect x="0.75" y="0.75" width="7.5" height="10.5" rx="1.25" stroke="currentColor" stroke-width="1.25"/><circle cx="4.5" cy="9.5" r="0.7" fill="currentColor"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 9. A Visit from the Goon Squad — Physical -->
+              <div class="book">
+                <div class="book-cover" style="background: #281a2e;">
+                  <div class="book-face">
+                    <span class="face-title">A Visit from the Goon Squad</span>
+                    <span class="face-author">Jennifer Egan</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">A Visit from the Goon Squad</div>
+                  <div class="book-author">Jennifer Egan</div>
+                  <div class="book-stars">★★★★
+                    <span class="book-method" title="Physical copy">
+                      <svg width="11" height="9" viewBox="0 0 13 10" fill="none"><path d="M6.5 0.5V9.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M6.5 0.5H1.5C1.2 0.5 1 0.7 1 1V9C1 9.3 1.2 9.5 1.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M6.5 0.5H11.5C11.8 0.5 12 0.7 12 1V9C12 9.3 11.8 9.5 11.5 9.5H6.5" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 10. Housekeeping — E-reader -->
+              <div class="book">
+                <div class="book-cover" style="background: #1a2c1a;">
+                  <div class="book-face">
+                    <span class="face-title">Housekeeping</span>
+                    <span class="face-author">Marilynne Robinson</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Housekeeping</div>
+                  <div class="book-author">Marilynne Robinson</div>
+                  <div class="book-stars">★★★★★
+                    <span class="book-method" title="E-reader">
+                      <svg width="8" height="11" viewBox="0 0 9 12" fill="none"><rect x="0.75" y="0.75" width="7.5" height="10.5" rx="1.25" stroke="currentColor" stroke-width="1.25"/><circle cx="4.5" cy="9.5" r="0.7" fill="currentColor"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Shelf: Want to Read -->
+          <div id="shelf-want" style="display: none;">
+            <div class="shelf-heading">
+              <div class="shelf-heading-left">
+                <span class="shelf-name">Want to Read</span>
+                <span class="shelf-count">12 books</span>
+              </div>
+              <button class="shelf-sort">Sort: Added ▾</button>
+            </div>
+            <div class="book-grid">
+              <div class="book">
+                <div class="book-cover" style="background: #24203a;">
+                  <div class="book-face">
+                    <span class="face-title">The Dispossessed</span>
+                    <span class="face-author">Ursula K. Le Guin</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">The Dispossessed</div>
+                  <div class="book-author">Ursula K. Le Guin</div>
+                </div>
+              </div>
+              <div class="book">
+                <div class="book-cover" style="background: #1e2c1a;">
+                  <div class="book-face">
+                    <span class="face-title">The Brothers Karamazov</span>
+                    <span class="face-author">Fyodor Dostoevsky</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">The Brothers Karamazov</div>
+                  <div class="book-author">Fyodor Dostoevsky</div>
+                </div>
+              </div>
+              <div class="book">
+                <div class="book-cover" style="background: #2a1c10;">
+                  <div class="book-face">
+                    <span class="face-title">The Rings of Saturn</span>
+                    <span class="face-author">W.G. Sebald</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">The Rings of Saturn</div>
+                  <div class="book-author">W.G. Sebald</div>
+                </div>
+              </div>
+              <div class="book">
+                <div class="book-cover" style="background: #10202a;">
+                  <div class="book-face">
+                    <span class="face-title">Pedro Páramo</span>
+                    <span class="face-author">Juan Rulfo</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Pedro Páramo</div>
+                  <div class="book-author">Juan Rulfo</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shelf: DNF -->
+          <div id="shelf-dnf" style="display: none;">
+            <div class="shelf-heading">
+              <div class="shelf-heading-left">
+                <span class="shelf-name">Did Not Finish</span>
+                <span class="shelf-count">5 books</span>
+              </div>
+            </div>
+            <div class="book-grid">
+              <div class="book">
+                <div class="book-cover" style="background: #262626;">
+                  <div class="book-face">
+                    <span class="face-title">Infinite Jest</span>
+                    <span class="face-author">David Foster Wallace</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Infinite Jest</div>
+                  <div class="book-author">David Foster Wallace</div>
+                </div>
+              </div>
+              <div class="book">
+                <div class="book-cover" style="background: #2e2420;">
+                  <div class="book-face">
+                    <span class="face-title">Gravity's Rainbow</span>
+                    <span class="face-author">Thomas Pynchon</span>
+                  </div>
+                </div>
+                <div class="book-meta">
+                  <div class="book-title">Gravity's Rainbow</div>
+                  <div class="book-author">Thomas Pynchon</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <script>
+      function setTab(btn, shelf) {
+        document.querySelectorAll('.shelf-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        ['read', 'want', 'dnf'].forEach(s => {
+          const el = document.getElementById('shelf-' + s);
+          if (el) el.style.display = s === shelf ? 'block' : 'none';
+        });
+      }
+    </script>
+  </body>
+</html>
