@@ -8,6 +8,7 @@ import { Page, TopBar, Content, BackLink } from './Layout.styles';
 
 interface LayoutProps {
   children: ReactNode;
+  fullWidth?: boolean;
 }
 
 const backStateSchema = z.discriminatedUnion('from', [
@@ -31,7 +32,7 @@ const getBackNav = (state: unknown): { label: string; to: string } => {
  * user menu are never re-implemented per screen. Shows a context-aware back link on all pages
  * except the Library root. Wraps children in a centred, padded content column.
  */
-export const Layout = ({ children }: LayoutProps) => {
+export const Layout = ({ children, fullWidth }: LayoutProps) => {
   const location = useLocation();
   const isRoot = location.pathname === '/';
   const backNav = getBackNav(location.state);
@@ -43,7 +44,7 @@ export const Layout = ({ children }: LayoutProps) => {
         <BookSearch />
         <UserMenu />
       </TopBar>
-      <Content>
+      <Content $fullWidth={fullWidth}>
         {!isRoot && (
           <BackLink to={backNav.to}>
             <Text variant="ui-sm">← {backNav.label}</Text>

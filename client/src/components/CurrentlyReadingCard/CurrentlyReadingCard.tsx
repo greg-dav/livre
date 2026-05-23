@@ -1,11 +1,14 @@
-import { Text, ProgressBar } from '@livre/primitives';
+import { Text } from '@livre/primitives';
 import {
   Card,
   CoverThumb,
   CoverThumbImg,
   Body,
-  ProgressSection,
-  LogButton,
+  MainRow,
+  SinceRow,
+  PulseDot,
+  Actions,
+  ActionBtn,
 } from './CurrentlyReadingCard.styles';
 
 interface CurrentlyReadingCardProps {
@@ -13,58 +16,50 @@ interface CurrentlyReadingCardProps {
   author: string;
   coverUrl?: string;
   coverColor?: string;
-  progress?: number;
   startedDate: string;
-  onLog?: () => void;
   onClick?: () => void;
 }
 
 /**
- * Prominent card for the book currently in progress. Designed to sit above the shelf grid as a
- * focal point, not inside it. The log button is the primary call-to-action for recording a
- * reading session — keep it wired to the log route, not to local UI state.
+ * Compact card for a book currently in progress, displayed in the sticky left panel of the
+ * library split layout. Clicking navigates to the book detail page. Action buttons are
+ * decorative placeholders for note and quote logging, not yet wired to routes.
  */
 export const CurrentlyReadingCard = ({
   title,
   author,
   coverUrl,
   coverColor = '#1a1a1a',
-  progress,
   startedDate,
-  onLog,
   onClick,
 }: CurrentlyReadingCardProps) => (
   <Card $clickable={!!onClick} onClick={onClick}>
-    <CoverThumb $color={coverColor}>
-      {coverUrl && <CoverThumbImg src={coverUrl} alt={title} />}
-    </CoverThumb>
-    <Body>
-      <Text variant="label" color="accent">
-        Currently Reading
-      </Text>
-      <Text variant="h3" as="h2">
-        {title}
-      </Text>
-      <Text variant="ui-md" color="muted">
-        {author}
-      </Text>
-      <ProgressSection>
-        {progress !== undefined && <ProgressBar value={progress} />}
-        <Text variant="ui-sm" color="muted">
-          Started {startedDate}
+    <MainRow>
+      <CoverThumb $color={coverColor}>
+        {coverUrl && <CoverThumbImg src={coverUrl} alt={title} />}
+      </CoverThumb>
+      <Body>
+        <Text variant="h6" as="h3">
+          {title}
         </Text>
-      </ProgressSection>
-    </Body>
-    {onLog && (
-      <LogButton
-        onClick={(e) => {
-          e.stopPropagation();
-          onLog();
-        }}
-        aria-label="Log progress"
-      >
-        +
-      </LogButton>
-    )}
+        <Text variant="ui-xs" color="muted">
+          {author}
+        </Text>
+        <SinceRow>
+          <PulseDot />
+          <Text variant="ui-xs" color="muted">
+            Since {startedDate}
+          </Text>
+        </SinceRow>
+      </Body>
+    </MainRow>
+    <Actions>
+      <ActionBtn title="Add note" onClick={(e) => e.stopPropagation()} aria-label="Add note">
+        ✦
+      </ActionBtn>
+      <ActionBtn title="Add quote" onClick={(e) => e.stopPropagation()} aria-label="Add quote">
+        ❝
+      </ActionBtn>
+    </Actions>
   </Card>
 );

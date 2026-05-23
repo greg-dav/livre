@@ -2,29 +2,32 @@ import styled from 'styled-components';
 
 export const TabRow = styled('div')(({ theme }) => ({
   display: 'flex',
-  gap: theme.spacing(2),
+  borderBottom: `1px solid ${theme.borderSoft}`,
+  marginBottom: theme.spacing(8),
 }));
 
 export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2),
-  padding: '0.4375rem 0.875rem',
-  border: `1px solid ${theme.border}`,
-  borderRadius: theme.radius.md,
-  background: $active ? theme.bgElevated : 'transparent',
+  padding: '10px 20px 13px',
+  border: 'none',
+  borderBottom: `2px solid ${$active ? theme.accent : 'transparent'}`,
+  marginBottom: '-1px',
+  background: 'transparent',
   cursor: 'pointer',
-  transition: 'background 0.15s',
+  transition: 'border-color 0.15s',
 
   '&:hover span': {
     color: theme.text,
   },
 }));
 
-export const Badge = styled('span')(({ theme }) => ({
+export const Badge = styled('span')<{ $active: boolean }>(({ theme, $active }) => ({
   display: 'inline-flex',
   alignItems: 'center',
-  background: theme.border,
+  background: $active ? theme.accentSoft : theme.bgSunken,
   borderRadius: theme.radius.full,
   padding: '2px 0.4375rem',
+  transition: 'background 0.15s, color 0.15s',
 }));
