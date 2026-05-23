@@ -5,6 +5,7 @@ server/public/
 *.db-wal
 .env
 .env.local
+.claude/settings.local.json
 dist/
 *.tsbuildinfo
 client/vite.config.js
