@@ -41,7 +41,11 @@ export const Library = () => {
           author={entry.authors.join(', ')}
           coverUrl={entry.coverUrl ?? undefined}
           startedDate={formatDate(entry.addedDate)}
-          onClick={entry.googleId ? () => navigate(`/book/${entry.googleId}`) : undefined}
+          onClick={
+            entry.googleId
+              ? () => navigate(`/book/${entry.googleId}`, { state: { from: 'library' } })
+              : undefined
+          }
         />
       ))}
       <ShelfTabs active={activeShelf} counts={tabCounts} onChange={setActiveShelf} />
@@ -56,7 +60,11 @@ export const Library = () => {
               author={entry.authors.join(', ')}
               coverUrl={entry.coverUrl ?? undefined}
               rating={entry.rating ?? undefined}
-              onClick={entry.googleId ? () => navigate(`/book/${entry.googleId}`) : undefined}
+              onClick={
+                entry.googleId
+                  ? () => navigate(`/book/${entry.googleId}`, { state: { from: 'library' } })
+                  : undefined
+              }
             />
           ))}
         </BookGrid>

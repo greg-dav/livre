@@ -47,7 +47,7 @@ export const Author = () => {
   const books = data?.results ?? [];
 
   const handleBookClick = (book: { googleId: string }) => {
-    navigate(`/book/${book.googleId}`);
+    navigate(`/book/${book.googleId}`, { state: { from: 'author', authorName: name } });
   };
 
   return (

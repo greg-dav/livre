@@ -35,6 +35,9 @@ export const StyledButton = styled('button')<{ $variant: ButtonVariant; $size: B
     '&:hover:not(:disabled)': {
       opacity: 0.88,
     },
+    '&[data-state="open"]:not(:disabled)': {
+      opacity: 0.82,
+    },
     '&:disabled': {
       opacity: 0.55,
       cursor: 'not-allowed',

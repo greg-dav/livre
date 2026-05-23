@@ -17,5 +17,6 @@ export const Input = styled('input')(({ theme }) => ({
   transition: 'border-color 0.15s',
   '&:focus': {
     borderColor: theme.accent,
+    boxShadow: `0 0 0 3px ${theme.accentSoft}`,
   },
 }));

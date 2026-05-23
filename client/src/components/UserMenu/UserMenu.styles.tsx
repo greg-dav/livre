@@ -28,4 +28,8 @@ export const Trigger = styled('button')(({ theme }) => ({
   '&:hover': {
     borderColor: theme.textMuted,
   },
+  '&[data-state="open"]': {
+    borderColor: theme.accent,
+    color: theme.accent,
+  },
 }));

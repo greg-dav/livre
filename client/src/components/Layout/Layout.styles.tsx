@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 export const Page = styled('div')(({ theme }) => ({
   minHeight: '100dvh',
@@ -25,4 +26,18 @@ export const Content = styled('main')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(8),
+}));
+
+export const BackLink = styled(Link)(({ theme }) => ({
+  textDecoration: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: theme.spacing(1.5),
+  '& span': {
+    color: theme.textMuted,
+    transition: 'color 0.15s',
+  },
+  '&:hover span': {
+    color: theme.text,
+  },
 }));

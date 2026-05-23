@@ -24,6 +24,9 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
     minHeight: '100dvh',
     transition: 'background-color 0.2s, color 0.2s',
   },
+  '::selection': {
+    background: theme.accentSoft,
+  },
 }));
 
 interface LivreThemeProviderProps {

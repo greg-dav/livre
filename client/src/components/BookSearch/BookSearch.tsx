@@ -92,7 +92,7 @@ export const BookSearch = () => {
   const handleNavigate = (googleId: string) => {
     setQuery('');
     setOpen(false);
-    navigate(`/book/${googleId}`);
+    navigate(`/book/${googleId}`, { state: { from: 'library' } });
   };
 
   const renderLibraryResult = (entry: ShelfEntry) => {
