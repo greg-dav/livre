@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Text } from '@livre/primitives';
 import { type BookSearchResult, type ShelfEntry, type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
+import { getRecentBooks, type RecentBook } from '../../lib/recentBooks';
 import { useDebounce } from './useDebounce';
 import {
   Container,
@@ -35,6 +36,7 @@ const SHELF_LABELS: Record<ShelfStatus, string> = {
 export const BookSearch = () => {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const [recentBooks] = useState<RecentBook[]>(() => getRecentBooks());
   const debouncedQuery = useDebounce(query, 300);
   const navigate = useNavigate();
 
@@ -82,7 +84,8 @@ export const BookSearch = () => {
     [searchData, localMatchIds]
   );
 
-  const showDropdown = open && query.length > 1;
+  const showRecents = open && query.length <= 1 && recentBooks.length > 0;
+  const showDropdown = open && (query.length > 1 || recentBooks.length > 0);
   const nothingToShow =
     localMatches.length === 0 &&
     googleResults.length === 0 &&
@@ -93,6 +96,28 @@ export const BookSearch = () => {
     setQuery('');
     setOpen(false);
     navigate(`/book/${googleId}`, { state: { from: 'library' } });
+  };
+
+  const renderRecentBook = (book: RecentBook) => {
+    const libraryStatus = libraryStatusMap.get(book.googleId);
+    return (
+      <ResultItem key={book.googleId} onClick={() => handleNavigate(book.googleId)}>
+        {book.thumbnail ? <Thumbnail src={book.thumbnail} alt="" /> : <ThumbnailPlaceholder />}
+        <ResultInfo>
+          <Text variant="ui-sm">{book.title}</Text>
+          <Text variant="ui-xs" color="muted">
+            {book.authors.join(', ')}
+          </Text>
+        </ResultInfo>
+        {libraryStatus !== undefined && (
+          <ShelfBadge>
+            <Text variant="label" color="accent">
+              {SHELF_LABELS[libraryStatus]}
+            </Text>
+          </ShelfBadge>
+        )}
+      </ResultItem>
+    );
   };
 
   const renderLibraryResult = (entry: ShelfEntry) => {
@@ -150,32 +175,45 @@ export const BookSearch = () => {
       />
       {showDropdown && (
         <Dropdown>
-          {localMatches.length > 0 && (
+          {showRecents ? (
             <>
               <SectionLabel>
                 <Text variant="label" color="muted">
-                  From your library
+                  Recently viewed
                 </Text>
               </SectionLabel>
-              {localMatches.map(renderLibraryResult)}
-              {googleResults.length > 0 && <SectionDivider />}
+              {recentBooks.map(renderRecentBook)}
+            </>
+          ) : (
+            <>
+              {localMatches.length > 0 && (
+                <>
+                  <SectionLabel>
+                    <Text variant="label" color="muted">
+                      From your library
+                    </Text>
+                  </SectionLabel>
+                  {localMatches.map(renderLibraryResult)}
+                  {googleResults.length > 0 && <SectionDivider />}
+                </>
+              )}
+              {isFetching && localMatches.length === 0 && (
+                <StatusRow>
+                  <Text variant="ui-sm" color="muted">
+                    Searching…
+                  </Text>
+                </StatusRow>
+              )}
+              {nothingToShow && (
+                <StatusRow>
+                  <Text variant="ui-sm" color="muted">
+                    No results for "{debouncedQuery}"
+                  </Text>
+                </StatusRow>
+              )}
+              {googleResults.map(renderGoogleResult)}
             </>
           )}
-          {isFetching && localMatches.length === 0 && (
-            <StatusRow>
-              <Text variant="ui-sm" color="muted">
-                Searching…
-              </Text>
-            </StatusRow>
-          )}
-          {nothingToShow && (
-            <StatusRow>
-              <Text variant="ui-sm" color="muted">
-                No results for "{debouncedQuery}"
-              </Text>
-            </StatusRow>
-          )}
-          {googleResults.map(renderGoogleResult)}
         </Dropdown>
       )}
     </Container>

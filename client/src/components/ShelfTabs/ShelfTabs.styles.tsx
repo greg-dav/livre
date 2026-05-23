@@ -22,7 +22,9 @@ export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) =
 }));
 
 export const Badge = styled('span')(({ theme }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
   background: theme.border,
   borderRadius: theme.radius.full,
-  padding: '0.0625rem 0.4375rem',
+  padding: '2px 0.4375rem',
 }));

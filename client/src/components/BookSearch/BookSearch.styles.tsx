@@ -96,7 +96,9 @@ export const SectionDivider = styled('li')(({ theme }) => ({
 }));
 
 export const ShelfBadge = styled('span')(({ theme }) => ({
-  padding: `0 ${theme.spacing(2)}`,
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: `2px ${theme.spacing(2)}`,
   borderRadius: theme.radius.sm,
   background: theme.bgElevated,
   border: `1px solid ${theme.border}`,

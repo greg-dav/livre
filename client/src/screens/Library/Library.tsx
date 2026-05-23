@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { BookCard, BookGrid, Loader } from '@livre/primitives';
 import { Layout, CurrentlyReadingCard, ShelfTabs, type ShelfStatus } from '../../components';
 import { api } from '../../lib/api';
@@ -25,6 +25,7 @@ export const Library = () => {
   const { data } = useQuery({
     queryKey: ['shelves', activeShelf],
     queryFn: () => api.shelves.getByStatus(activeShelf),
+    placeholderData: keepPreviousData,
   });
 
   const readingEntries = readingData?.entries ?? [];

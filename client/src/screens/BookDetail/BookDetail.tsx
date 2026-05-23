@@ -1,9 +1,10 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, Button, DropdownMenu, Lightbox, Loader, Pill } from '@livre/primitives';
 import { shelfStatusSchema, type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
+import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
 import {
   Hero,
@@ -160,6 +161,16 @@ export const BookDetail = () => {
       }
     },
   });
+
+  useEffect(() => {
+    if (!book) return;
+    pushRecentBook({
+      googleId: googleId!,
+      title: book.title,
+      authors: book.authors,
+      thumbnail: book.thumbnail,
+    });
+  }, [googleId, book?.title]);
 
   const [coverIndex, setCoverIndex] = useState(0);
   const coverSrcs = [book?.largeThumbnail, book?.thumbnail].filter((u): u is string => !!u);
