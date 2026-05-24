@@ -95,7 +95,7 @@ export const LibraryBookDetail = () => {
       authors: book.authors,
       thumbnail: book.thumbnail,
     });
-  }, [googleId, book?.title]);
+  }, [googleId, book]);
 
   const savedStatus = entry?.status ?? null;
   const readingStartedDate = entry?.startedDate ?? null;

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, Button, DropdownMenu, Lightbox, Loader, Pill } from '@livre/primitives';
@@ -58,8 +58,7 @@ export const SearchBookDetail = () => {
     staleTime: Infinity,
   });
 
-  // Redirect to the library path if this book is already saved
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!libraryData || !googleId) return;
     const entry = libraryData.find((e) => e.googleId === googleId);
     if (entry) navigate(`/library/${entry.userBookId}`, { replace: true });
@@ -70,8 +69,8 @@ export const SearchBookDetail = () => {
       if (!googleId) throw new Error('No book ID');
       return api.books.log(googleId, event);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['library'] });
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       navigate(`/library/${data.userBookId}`, { state: { justAcquired: true } });
     },
@@ -85,7 +84,7 @@ export const SearchBookDetail = () => {
       authors: book.authors,
       thumbnail: book.thumbnail,
     });
-  }, [googleId, book?.title]);
+  }, [googleId, book]);
 
   const [coverIndex, setCoverIndex] = useState(0);
   const coverSrcs = [book?.largeThumbnail, book?.thumbnail].filter((u): u is string => !!u);
