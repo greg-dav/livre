@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&amp;display=swap');
+  </style>
+  <rect width="64" height="64" rx="13" fill="#C99C3C"/>
+  <text
+    x="33"
+    y="33"
+    font-family="'Cormorant Garamond', Georgia, serif"
+    font-style="italic"
+    font-weight="600"
+    font-size="46"
+    fill="#F4EFE3"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >L</text>
+</svg>
