@@ -65,7 +65,7 @@ export const Library = () => {
               title={entry.title}
               author={entry.authors.join(', ')}
               coverUrl={entry.coverUrl ?? undefined}
-              startedDate={formatDate(entry.addedDate)}
+              startedDate={formatDate(entry.startedDate ?? entry.addedDate)}
               onClick={
                 entry.googleId
                   ? () => navigate(`/book/${entry.googleId}`, { state: { from: 'library' } })

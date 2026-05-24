@@ -181,6 +181,22 @@ export const Categories = styled('div')(({ theme }) => ({
   marginBottom: theme.spacing(4),
 }));
 
+export const ReadingSince = styled('div')(({ theme }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  marginTop: theme.spacing(2),
+}));
+
+export const ReadingSinceDot = styled('span')(({ theme }) => ({
+  width: '6px',
+  height: '6px',
+  borderRadius: '50%',
+  flexShrink: 0,
+  background: theme.accent,
+  boxShadow: `0 0 0 3px ${theme.accentSoft}`,
+}));
+
 export const MetaGrid = styled('dl')(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'max-content 1fr',

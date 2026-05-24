@@ -22,6 +22,8 @@ import {
   SectionLabel,
   Categories,
   HeroActions,
+  ReadingSince,
+  ReadingSinceDot,
   MetaGrid,
   MetaLabel,
   MetaValue,
@@ -102,6 +104,9 @@ const dedupeAuthors = (authors: string[]): string[] => {
   });
 };
 
+const formatReadingSince = (iso: string): string =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
 const formatPublishedDate = (raw: string): string => {
   // Google returns YYYY, YYYY-MM, or YYYY-MM-DD; render the most specific form we can.
   const parts = raw.split('-');
@@ -143,10 +148,12 @@ export const BookDetail = () => {
     staleTime: Infinity,
   });
 
-  const savedStatus = useMemo(
-    () => libraryIds?.find((e) => e.googleId === googleId)?.status ?? null,
+  const savedEntry = useMemo(
+    () => libraryIds?.find((e) => e.googleId === googleId) ?? null,
     [libraryIds, googleId]
   );
+  const savedStatus = savedEntry?.status ?? null;
+  const readingStartedDate = savedEntry?.startedDate ?? null;
 
   const [justAcquired, setJustAcquired] = useState(false);
 
@@ -251,6 +258,14 @@ export const BookDetail = () => {
               ))}
             </DropdownMenu>
           </HeroActions>
+          {savedStatus === 'reading' && readingStartedDate && (
+            <ReadingSince>
+              <ReadingSinceDot />
+              <Text variant="ui-sm" color="muted">
+                Reading since {formatReadingSince(readingStartedDate)}
+              </Text>
+            </ReadingSince>
+          )}
         </HeroMeta>
       </Hero>
 
