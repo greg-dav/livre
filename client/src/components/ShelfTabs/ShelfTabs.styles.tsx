@@ -18,7 +18,11 @@ export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) =
   cursor: 'pointer',
   transition: 'border-color 0.15s',
 
-  '&:hover span': {
+  '& > span:first-child': {
+    transition: 'color 0.15s',
+  },
+
+  '&:hover > span:first-child': {
     color: theme.text,
   },
 }));
