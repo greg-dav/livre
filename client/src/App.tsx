@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Library, Login, Setup, BookDetail, Author } from './screens';
+import { Library, Login, Setup, SearchBookDetail, LibraryBookDetail, Author } from './screens';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,8 +23,12 @@ const AppRoutes = () => {
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/setup" element={user ? <Navigate to="/" replace /> : <Setup />} />
       <Route
-        path="/book/:googleId"
-        element={user ? <BookDetail /> : <Navigate to="/login" replace />}
+        path="/search/:googleId"
+        element={user ? <SearchBookDetail /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/library/:userBookId"
+        element={user ? <LibraryBookDetail /> : <Navigate to="/login" replace />}
       />
       <Route path="/author/:name" element={user ? <Author /> : <Navigate to="/login" replace />} />
       <Route path="/*" element={user ? <Library /> : <Navigate to="/login" replace />} />

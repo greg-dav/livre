@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Text, BookCard, BookGrid, Loader } from '@livre/primitives';
 import { type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
+import { bookPath } from '../../lib/bookPath';
 import { Layout } from '../../components';
 
 const STATUS_LABELS: Record<ShelfStatus, string> = {
@@ -47,7 +48,7 @@ export const Author = () => {
   const books = data?.results ?? [];
 
   const handleBookClick = (book: { googleId: string }) => {
-    navigate(`/book/${book.googleId}`, { state: { from: 'author', authorName: name } });
+    navigate(bookPath(book.googleId, libraryData));
   };
 
   return (

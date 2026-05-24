@@ -5,6 +5,7 @@ import { Text } from '@livre/primitives';
 import { type BookSearchResult, type ShelfEntry, type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
 import { getRecentBooks, type RecentBook } from '../../lib/recentBooks';
+import { bookPath } from '../../lib/bookPath';
 import { useDebounce } from './useDebounce';
 import {
   Container,
@@ -95,7 +96,7 @@ export const BookSearch = () => {
   const handleNavigate = (googleId: string) => {
     setQuery('');
     setOpen(false);
-    navigate(`/book/${googleId}`, { state: { from: 'library' } });
+    navigate(bookPath(googleId, libraryData));
   };
 
   const renderRecentBook = (book: RecentBook) => {

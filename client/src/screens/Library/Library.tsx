@@ -66,11 +66,7 @@ export const Library = () => {
               author={entry.authors.join(', ')}
               coverUrl={entry.coverUrl ?? undefined}
               startedDate={formatDate(entry.startedDate ?? entry.addedDate)}
-              onClick={
-                entry.googleId
-                  ? () => navigate(`/book/${entry.googleId}`, { state: { from: 'library' } })
-                  : undefined
-              }
+              onClick={entry.googleId ? () => navigate(`/library/${entry.userBookId}`) : undefined}
             />
           ))}
         </LeftPanel>
@@ -98,9 +94,7 @@ export const Library = () => {
                   coverUrl={entry.coverUrl ?? undefined}
                   rating={entry.rating ?? undefined}
                   onClick={
-                    entry.googleId
-                      ? () => navigate(`/book/${entry.googleId}`, { state: { from: 'library' } })
-                      : undefined
+                    entry.googleId ? () => navigate(`/library/${entry.userBookId}`) : undefined
                   }
                 />
               ))}
