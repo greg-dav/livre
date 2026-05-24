@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
 
 export const Page = styled('div')(({ theme }) => ({
   minHeight: '100dvh',
@@ -32,7 +31,11 @@ export const Content = styled('main')<{ $fullWidth?: boolean }>(({ theme, $fullW
       }
 );
 
-export const BackLink = styled(Link)(({ theme }) => ({
+export const BackButton = styled('button')(({ theme }) => ({
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
   textDecoration: 'none',
   display: 'inline-flex',
   alignItems: 'center',

@@ -1,41 +1,30 @@
 import { type ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Logo, Text } from '@livre/primitives';
 import { BookSearch } from '../BookSearch/BookSearch';
 import { UserMenu } from '../UserMenu/UserMenu';
-import { Page, TopBar, Content, BackLink } from './Layout.styles';
+import { Page, TopBar, Content, BackButton } from './Layout.styles';
 
 interface LayoutProps {
   children: ReactNode;
   fullWidth?: boolean;
 }
 
-const backStateSchema = z.discriminatedUnion('from', [
-  z.object({ from: z.literal('library') }),
-  z.object({ from: z.literal('author'), authorName: z.string() }),
-]);
-
-const getBackNav = (state: unknown): { label: string; to: string } => {
-  const result = backStateSchema.safeParse(state);
-  if (result.success && result.data.from === 'author') {
-    return {
-      label: `Back to Books by ${result.data.authorName}`,
-      to: `/author/${encodeURIComponent(result.data.authorName)}`,
-    };
-  }
-  return { label: 'Back to Library', to: '/' };
-};
+const backLabelSchema = z.object({ backLabel: z.string() });
 
 /**
  * Shell for every authenticated screen. Owns the persistent top bar so Logo, search, and the
- * user menu are never re-implemented per screen. Shows a context-aware back link on all pages
- * except the Library root. Wraps children in a centred, padded content column.
+ * user menu are never re-implemented per screen. Shows a context-aware back button on all pages
+ * except the Library root — uses navigate(-1) so the browser history stack determines the
+ * destination, with backLabel in navigation state supplying the display text. Wraps children in
+ * a centred, padded content column.
  */
 export const Layout = ({ children, fullWidth }: LayoutProps) => {
   const location = useLocation();
-  const isRoot = location.pathname === '/';
-  const backNav = getBackNav(location.state);
+  const navigate = useNavigate();
+  const isRoot = location.pathname === '/library' || location.pathname === '/';
+  const backLabel = backLabelSchema.safeParse(location.state).data?.backLabel ?? 'Library';
 
   return (
     <Page>
@@ -46,9 +35,9 @@ export const Layout = ({ children, fullWidth }: LayoutProps) => {
       </TopBar>
       <Content $fullWidth={fullWidth}>
         {!isRoot && (
-          <BackLink to={backNav.to}>
-            <Text variant="ui-sm">← {backNav.label}</Text>
-          </BackLink>
+          <BackButton onClick={() => navigate(-1)}>
+            <Text variant="ui-sm">← Back to {backLabel}</Text>
+          </BackButton>
         )}
         {children}
       </Content>

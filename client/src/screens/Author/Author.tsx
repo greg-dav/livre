@@ -48,7 +48,7 @@ export const Author = () => {
   const books = data?.results ?? [];
 
   const handleBookClick = (book: { googleId: string }) => {
-    navigate(bookPath(book.googleId, libraryData));
+    navigate(bookPath(book.googleId, libraryData), { state: { backLabel: name } });
   };
 
   return (

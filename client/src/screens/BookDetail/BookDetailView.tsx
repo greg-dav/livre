@@ -81,7 +81,10 @@ export const BookDetailView = ({
             {dedupeAuthors(book.authors).map((author, i) => (
               <Fragment key={author}>
                 {i > 0 && <Dot>·</Dot>}
-                <AuthorLink to={`/author/${encodeURIComponent(author)}`}>
+                <AuthorLink
+                  to={`/search/author/${encodeURIComponent(author)}`}
+                  state={{ backLabel: book.title }}
+                >
                   <Text variant="ui-lg">{author}</Text>
                 </AuthorLink>
               </Fragment>

@@ -28,10 +28,13 @@ const AppRoutes = () => {
         element={user ? <LibraryBookDetail /> : <Navigate to="/login" replace />}
       />
       <Route
-        path="/search/:googleId"
+        path="/search/book/:googleId"
         element={user ? <SearchBookDetail /> : <Navigate to="/login" replace />}
       />
-      <Route path="/author/:name" element={user ? <Author /> : <Navigate to="/login" replace />} />
+      <Route
+        path="/search/author/:name"
+        element={user ? <Author /> : <Navigate to="/login" replace />}
+      />
       <Route path="*" element={<Navigate to={user ? '/library' : '/login'} replace />} />
     </Routes>
   );

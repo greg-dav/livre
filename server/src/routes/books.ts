@@ -23,14 +23,20 @@ export function createBooksRouter(service: BooksService): Router {
     respond(await service.search(q.data));
   });
 
+  /** Return books by a given author via Google Books. */
+  router.get('/search/author/:name', bookSearchResponseSchema, async (respond, req) => {
+    const name = z.string().min(1).parse(req.params.name);
+    respond(await service.getAuthorBooks(name));
+  });
+
   /** Fetch full volume data for a single book from Google Books. */
-  router.get('/search/:googleId', bookVolumeSchema, async (respond, req) => {
+  router.get('/search/book/:googleId', bookVolumeSchema, async (respond, req) => {
     respond(await service.getById(req.params.googleId));
   });
 
   /** Add a Google Books volume to the library with an initial status event. */
   router.post(
-    '/search/:googleId/add',
+    '/search/book/:googleId/add',
     createLogEventBodySchema,
     createLogEventResponseSchema,
     async (body, respond, req) => {
@@ -39,12 +45,6 @@ export function createBooksRouter(service: BooksService): Router {
       respond(await service.addToLibrary(user.id, req.params.googleId, body.event, body.date));
     }
   );
-
-  /** Return books by a given author via Google Books. */
-  router.get('/author/:name', bookSearchResponseSchema, async (respond, req) => {
-    const name = z.string().min(1).parse(req.params.name);
-    respond(await service.getAuthorBooks(name));
-  });
 
   /** Return all books in the authenticated user's library. */
   router.get('/library', libraryResponseSchema, async (respond, req) => {
