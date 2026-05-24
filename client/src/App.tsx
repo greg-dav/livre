@@ -20,18 +20,19 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/setup" element={user ? <Navigate to="/" replace /> : <Setup />} />
-      <Route
-        path="/search/:googleId"
-        element={user ? <SearchBookDetail /> : <Navigate to="/login" replace />}
-      />
+      <Route path="/login" element={user ? <Navigate to="/library" replace /> : <Login />} />
+      <Route path="/setup" element={user ? <Navigate to="/library" replace /> : <Setup />} />
+      <Route path="/library" element={user ? <Library /> : <Navigate to="/login" replace />} />
       <Route
         path="/library/:userBookId"
         element={user ? <LibraryBookDetail /> : <Navigate to="/login" replace />}
       />
+      <Route
+        path="/search/:googleId"
+        element={user ? <SearchBookDetail /> : <Navigate to="/login" replace />}
+      />
       <Route path="/author/:name" element={user ? <Author /> : <Navigate to="/login" replace />} />
-      <Route path="/*" element={user ? <Library /> : <Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={user ? '/library' : '/login'} replace />} />
     </Routes>
   );
 };
