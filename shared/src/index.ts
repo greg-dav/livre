@@ -15,21 +15,21 @@ export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/co
 export type { UpdateApiKeyBody } from './schemas/config';
 export {
   shelfStatusSchema,
+  logEventTypeSchema,
   shelfEntrySchema,
   shelfCountsSchema,
   shelfResponseSchema,
-  saveBookBodySchema,
-  saveBookResponseSchema,
-  libraryEntrySchema,
+  createLogEventBodySchema,
+  createLogEventResponseSchema,
   libraryResponseSchema,
 } from './schemas/shelves';
 export type {
   ShelfStatus,
+  LogEventType,
   ShelfEntry,
   ShelfCounts,
   ShelfResponse,
-  SaveBookBody,
-  SaveBookResponse,
-  LibraryEntry,
+  CreateLogEventBody,
+  CreateLogEventResponse,
   LibraryResponse,
 } from './schemas/shelves';

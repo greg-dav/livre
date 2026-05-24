@@ -2,19 +2,23 @@ import {
   type BookSearchResult,
   type BookSearchResponse,
   type ShelfResponse,
-  type SaveBookResponse,
+  type CreateLogEventResponse,
   type LibraryResponse,
   type ShelfStatus,
+  type LogEventType,
 } from '@livre/types';
+import { db } from '../db';
 import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
 import { type BooksRepository } from '../repositories/BooksRepository';
 import { type UserBooksRepository } from '../repositories/UserBooksRepository';
+import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
 
 export class BooksService {
   constructor(
     private readonly googleBooks: GoogleBooksProvider,
     private readonly booksRepo: BooksRepository,
-    private readonly userBooksRepo: UserBooksRepository
+    private readonly userBooksRepo: UserBooksRepository,
+    private readonly readingLogRepo: ReadingLogRepository
   ) {}
 
   async search(query: string): Promise<BookSearchResponse> {
@@ -40,11 +44,12 @@ export class BooksService {
     return bookData;
   }
 
-  async saveToLibrary(
+  async saveLog(
     userId: number,
     googleId: string,
-    status: ShelfStatus
-  ): Promise<SaveBookResponse> {
+    event: LogEventType,
+    date?: string
+  ): Promise<CreateLogEventResponse> {
     const cached = this.booksRepo.findByGoogleId(googleId);
     let bookId: number;
     if (cached) {
@@ -53,15 +58,32 @@ export class BooksService {
       const bookData = await this.googleBooks.getById(googleId);
       bookId = this.booksRepo.upsert(bookData);
     }
-    const userBookId = this.userBooksRepo.upsert(userId, bookId, status);
-    return { userBookId, status };
+
+    return db.transaction(() => {
+      const userBookId = this.userBooksRepo.findOrCreate(userId, bookId);
+      const resolvedEvent =
+        event === 'started' && this.readingLogRepo.shouldPromoteToRestart(userBookId)
+          ? 'restarted'
+          : event;
+      const logDate = date ?? new Date().toISOString().slice(0, 10);
+      const logId = this.readingLogRepo.insert(userBookId, resolvedEvent, logDate);
+      return { userBookId, logId };
+    });
   }
 
   getShelf(userId: number, status: ShelfStatus): ShelfResponse {
-    return {
-      entries: this.userBooksRepo.findByUserAndStatus(userId, status),
-      counts: this.userBooksRepo.countsByUser(userId),
+    const all = this.userBooksRepo.findAllByUser(userId);
+    const entries = all.filter((e) => e.status === status);
+    const counts = {
+      want: 0,
+      reading: 0,
+      read: 0,
+      dnf: 0,
     };
+    for (const entry of all) {
+      counts[entry.status]++;
+    }
+    return { entries, counts };
   }
 
   getLibrary(userId: number): LibraryResponse {

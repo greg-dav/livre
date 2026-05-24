@@ -6,10 +6,11 @@ import {
   apiErrorSchema,
   bookSearchResponseSchema,
   bookSearchResultSchema,
-  saveBookResponseSchema,
+  createLogEventResponseSchema,
   shelfResponseSchema,
   libraryResponseSchema,
   updateApiKeyResponseSchema,
+  type LogEventType,
   type ShelfStatus,
 } from '@livre/types';
 
@@ -64,10 +65,10 @@ export const api = {
       request(`/books/author/${encodeURIComponent(name)}`, bookSearchResponseSchema),
     getById: (id: string) => request(`/books/${encodeURIComponent(id)}`, bookSearchResultSchema),
     library: () => request('/books/library', libraryResponseSchema),
-    save: (googleId: string, status: ShelfStatus) =>
-      request(`/books/${encodeURIComponent(googleId)}/save`, saveBookResponseSchema, {
+    log: (googleId: string, event: LogEventType, date?: string) =>
+      request(`/books/${encodeURIComponent(googleId)}/log`, createLogEventResponseSchema, {
         method: 'POST',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ event, date }),
       }),
   },
   shelves: {

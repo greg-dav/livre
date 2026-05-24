@@ -3,9 +3,20 @@ import { z } from 'zod';
 export const shelfStatusSchema = z.enum(['want', 'reading', 'read', 'dnf']);
 export type ShelfStatus = z.infer<typeof shelfStatusSchema>;
 
+export const logEventTypeSchema = z.enum([
+  'shelved',
+  'started',
+  'finished',
+  'dnf',
+  'restarted',
+  'note',
+]);
+export type LogEventType = z.infer<typeof logEventTypeSchema>;
+
 export const shelfEntrySchema = z.object({
   userBookId: z.number(),
   status: shelfStatusSchema,
+  startedDate: z.string().nullable(),
   rating: z.number().nullable(),
   review: z.string().nullable(),
   addedDate: z.string(),
@@ -30,22 +41,17 @@ export const shelfResponseSchema = z.object({
 });
 export type ShelfResponse = z.infer<typeof shelfResponseSchema>;
 
-export const saveBookBodySchema = z.object({
-  status: shelfStatusSchema,
+export const createLogEventBodySchema = z.object({
+  event: logEventTypeSchema,
+  date: z.string().optional(),
 });
-export type SaveBookBody = z.infer<typeof saveBookBodySchema>;
+export type CreateLogEventBody = z.infer<typeof createLogEventBodySchema>;
 
-export const saveBookResponseSchema = z.object({
+export const createLogEventResponseSchema = z.object({
   userBookId: z.number(),
-  status: shelfStatusSchema,
+  logId: z.number(),
 });
-export type SaveBookResponse = z.infer<typeof saveBookResponseSchema>;
-
-export const libraryEntrySchema = z.object({
-  googleId: z.string(),
-  status: shelfStatusSchema,
-});
-export type LibraryEntry = z.infer<typeof libraryEntrySchema>;
+export type CreateLogEventResponse = z.infer<typeof createLogEventResponseSchema>;
 
 export const libraryResponseSchema = z.array(shelfEntrySchema);
 export type LibraryResponse = z.infer<typeof libraryResponseSchema>;

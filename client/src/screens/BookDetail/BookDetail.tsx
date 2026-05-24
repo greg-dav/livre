@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, Button, DropdownMenu, Lightbox, Loader, Pill } from '@livre/primitives';
-import { shelfStatusSchema, type ShelfStatus } from '@livre/types';
+import { type ShelfStatus, type LogEventType } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
@@ -33,6 +33,13 @@ const STATUS_LABELS: Record<ShelfStatus, string> = {
   read: 'Read',
   dnf: 'Did Not Finish',
 };
+
+const SELECTABLE_EVENTS: { event: LogEventType; label: string }[] = [
+  { event: 'shelved', label: 'Want to Read' },
+  { event: 'started', label: 'Currently Reading' },
+  { event: 'finished', label: 'Read' },
+  { event: 'dnf', label: 'Did Not Finish' },
+];
 
 const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
 
@@ -144,9 +151,9 @@ export const BookDetail = () => {
   const [justAcquired, setJustAcquired] = useState(false);
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: (status: ShelfStatus) => {
+    mutationFn: (event: LogEventType) => {
       if (!googleId) throw new Error('No book ID');
-      return api.books.save(googleId, status);
+      return api.books.log(googleId, event);
     },
     onSuccess: () => {
       const wasNew = !savedStatus;
@@ -237,9 +244,9 @@ export const BookDetail = () => {
                 </Button>
               }
             >
-              {shelfStatusSchema.options.map((status) => (
-                <DropdownMenu.Item key={status} onSelect={() => save(status)}>
-                  <Text variant="ui-sm">{STATUS_LABELS[status]}</Text>
+              {SELECTABLE_EVENTS.map(({ event, label }) => (
+                <DropdownMenu.Item key={event} onSelect={() => save(event)}>
+                  <Text variant="ui-sm">{label}</Text>
                 </DropdownMenu.Item>
               ))}
             </DropdownMenu>

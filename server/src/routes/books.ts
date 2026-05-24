@@ -3,8 +3,8 @@ import { type Router } from 'express';
 import {
   bookSearchResponseSchema,
   bookSearchResultSchema,
-  saveBookBodySchema,
-  saveBookResponseSchema,
+  createLogEventBodySchema,
+  createLogEventResponseSchema,
   libraryResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
@@ -38,13 +38,13 @@ export function createBooksRouter(service: BooksService): Router {
   });
 
   router.post(
-    '/:googleId/save',
-    saveBookBodySchema,
-    saveBookResponseSchema,
+    '/:googleId/log',
+    createLogEventBodySchema,
+    createLogEventResponseSchema,
     async (body, respond, req) => {
       const user = req.user;
       if (!user) throw createError(401, 'Unauthorized');
-      respond(await service.saveToLibrary(user.id, req.params.googleId, body.status));
+      respond(await service.saveLog(user.id, req.params.googleId, body.event, body.date));
     }
   );
 

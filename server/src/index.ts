@@ -13,6 +13,7 @@ import { ConfigRepository } from './repositories/ConfigRepository';
 import { SetupRepository } from './repositories/SetupRepository';
 import { BooksRepository } from './repositories/BooksRepository';
 import { UserBooksRepository } from './repositories/UserBooksRepository';
+import { ReadingLogRepository } from './repositories/ReadingLogRepository';
 import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
 import { AuthService } from './services/AuthService';
 import { BooksService } from './services/BooksService';
@@ -27,9 +28,15 @@ const configRepository = new ConfigRepository();
 const setupRepository = new SetupRepository();
 const booksRepository = new BooksRepository();
 const userBooksRepository = new UserBooksRepository();
+const readingLogRepository = new ReadingLogRepository();
 const googleBooksProvider = new GoogleBooksProvider(configRepository);
 const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
-const booksService = new BooksService(googleBooksProvider, booksRepository, userBooksRepository);
+const booksService = new BooksService(
+  googleBooksProvider,
+  booksRepository,
+  userBooksRepository,
+  readingLogRepository
+);
 
 const app = express();
 
@@ -65,6 +72,11 @@ if (env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, () => {
   console.log(`Livre running on port ${env.PORT} [${env.NODE_ENV}]`);
+});
+
+process.on('SIGTERM', () => {
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 1000).unref();
 });

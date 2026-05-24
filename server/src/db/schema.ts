@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
@@ -51,7 +51,6 @@ export const userBooks = sqliteTable(
     bookId: integer('book_id')
       .notNull()
       .references(() => books.id),
-    status: text('status', { enum: ['want', 'reading', 'read', 'dnf'] }).notNull(),
     rating: integer('rating'),
     review: text('review'),
     addedDate: text('added_date')
@@ -66,10 +65,30 @@ export const readingLog = sqliteTable('reading_log', {
   userBookId: integer('user_book_id')
     .notNull()
     .references(() => userBooks.id, { onDelete: 'cascade' }),
-  event: text('event', { enum: ['started', 'finished', 'dnf', 'restarted', 'note'] }).notNull(),
+  event: text('event', {
+    enum: ['shelved', 'started', 'finished', 'dnf', 'restarted', 'note'],
+  }).notNull(),
   note: text('note'),
   date: text('date').notNull(),
   createdAt: text('created_at')
     .notNull()
     .default(sql`(datetime('now'))`),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  userBooks: many(userBooks),
+}));
+
+export const booksRelations = relations(books, ({ many }) => ({
+  userBooks: many(userBooks),
+}));
+
+export const userBooksRelations = relations(userBooks, ({ one, many }) => ({
+  user: one(users, { fields: [userBooks.userId], references: [users.id] }),
+  book: one(books, { fields: [userBooks.bookId], references: [books.id] }),
+  log: many(readingLog),
+}));
+
+export const readingLogRelations = relations(readingLog, ({ one }) => ({
+  userBook: one(userBooks, { fields: [readingLog.userBookId], references: [userBooks.id] }),
+}));

@@ -1,111 +1,84 @@
-import { and, count, eq, isNotNull } from 'drizzle-orm';
-import { z } from 'zod';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { books, userBooks } from '../db/schema';
-import {
-  shelfEntrySchema,
-  shelfCountsSchema,
-  libraryResponseSchema,
-  type ShelfEntry,
-  type ShelfCounts,
-  type LibraryResponse,
-  type ShelfStatus,
-} from '@livre/types';
+import { books, readingLog, userBooks } from '../db/schema';
+import { shelfEntrySchema, type ShelfEntry, type ShelfStatus } from '@livre/types';
+
+const LATEST_STATUS_EVENT_ID = sql<number>`(
+  SELECT id FROM reading_log
+  WHERE user_book_id = ${userBooks.id}
+    AND event IN ('shelved', 'started', 'restarted', 'finished', 'dnf')
+  ORDER BY date DESC, id DESC
+  LIMIT 1
+)`;
+
+const STARTED_DATE_EXPR = sql<string | null>`(
+  SELECT date
+  FROM reading_log
+  WHERE user_book_id = ${userBooks.id}
+    AND event IN ('started', 'restarted')
+  ORDER BY date DESC, id DESC
+  LIMIT 1
+)`;
+
+const EVENT_TO_STATUS: Record<string, ShelfStatus> = {
+  shelved: 'want',
+  started: 'reading',
+  restarted: 'reading',
+  finished: 'read',
+  dnf: 'dnf',
+};
 
 export class UserBooksRepository {
-  findByUserAndStatus(userId: number, status: ShelfStatus): ShelfEntry[] {
-    const raw = db
-      .select({
-        userBookId: userBooks.id,
-        status: userBooks.status,
-        rating: userBooks.rating,
-        review: userBooks.review,
-        addedDate: userBooks.addedDate,
-        googleId: books.googleBooksId,
-        title: books.title,
-        authorRaw: books.author,
-        coverUrl: books.coverUrl,
-      })
-      .from(userBooks)
-      .innerJoin(books, eq(userBooks.bookId, books.id))
-      .where(and(eq(userBooks.userId, userId), eq(userBooks.status, status)))
-      .all();
-
-    return z.array(shelfEntrySchema).parse(
-      raw.map((r) => ({
-        userBookId: r.userBookId,
-        status: r.status,
-        rating: r.rating,
-        review: r.review,
-        addedDate: r.addedDate,
-        googleId: r.googleId,
-        title: r.title,
-        authors: r.authorRaw ? r.authorRaw.split('|') : [],
-        coverUrl: r.coverUrl,
-      }))
-    );
-  }
-
-  countsByUser(userId: number): ShelfCounts {
+  findAllByUser(userId: number): ShelfEntry[] {
     const rows = db
-      .select({ status: userBooks.status, total: count() })
-      .from(userBooks)
-      .where(eq(userBooks.userId, userId))
-      .groupBy(userBooks.status)
-      .all();
-
-    const counts = { want: 0, reading: 0, read: 0, dnf: 0 };
-    for (const row of rows) {
-      counts[row.status] = row.total;
-    }
-    return shelfCountsSchema.parse(counts);
-  }
-
-  findAllByUser(userId: number): LibraryResponse {
-    const raw = db
       .select({
-        userBookId: userBooks.id,
-        status: userBooks.status,
+        id: userBooks.id,
         rating: userBooks.rating,
         review: userBooks.review,
         addedDate: userBooks.addedDate,
-        googleId: books.googleBooksId,
+        googleBooksId: books.googleBooksId,
         title: books.title,
         authorRaw: books.author,
         coverUrl: books.coverUrl,
+        latestEvent: readingLog.event,
+        startedDate: STARTED_DATE_EXPR,
       })
       .from(userBooks)
       .innerJoin(books, eq(userBooks.bookId, books.id))
-      .where(and(eq(userBooks.userId, userId), isNotNull(books.googleBooksId)))
+      .innerJoin(readingLog, eq(readingLog.id, LATEST_STATUS_EVENT_ID))
+      .where(eq(userBooks.userId, userId))
       .all();
 
-    return libraryResponseSchema.parse(
-      raw.map((r) => ({
-        userBookId: r.userBookId,
-        status: r.status,
+    return rows.map((r) =>
+      shelfEntrySchema.parse({
+        userBookId: r.id,
+        status: EVENT_TO_STATUS[r.latestEvent],
+        startedDate: r.startedDate,
         rating: r.rating,
         review: r.review,
         addedDate: r.addedDate,
-        googleId: r.googleId,
+        googleId: r.googleBooksId,
         title: r.title,
         authors: r.authorRaw ? r.authorRaw.split('|') : [],
         coverUrl: r.coverUrl,
-      }))
+      })
     );
   }
 
-  upsert(userId: number, bookId: number, status: ShelfStatus): number {
+  findOrCreate(userId: number, bookId: number): number {
+    const existing = db
+      .select({ id: userBooks.id })
+      .from(userBooks)
+      .where(and(eq(userBooks.userId, userId), eq(userBooks.bookId, bookId)))
+      .get();
+    if (existing) return existing.id;
+
     const row = db
       .insert(userBooks)
-      .values({ userId, bookId, status })
-      .onConflictDoUpdate({
-        target: [userBooks.userId, userBooks.bookId],
-        set: { status },
-      })
+      .values({ userId, bookId })
       .returning({ id: userBooks.id })
       .get();
-
-    if (!row) throw new Error('Failed to upsert user book');
+    if (!row) throw new Error('Failed to create user book');
     return row.id;
   }
 

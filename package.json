@@ -9,7 +9,7 @@
     "fe-libs/*"
   ],
   "scripts": {
-    "dev": "concurrently -n types,client,server -c blue,cyan,yellow \"npm run dev -w @livre/types\" \"npm run dev -w client\" \"npm run dev -w server\"",
+    "dev": "concurrently -n types,client,server,proto -c blue,cyan,yellow,magenta \"npm run dev -w @livre/types\" \"npm run dev -w client\" \"npm run dev -w server\" \"npx serve prototypes -p 5174 -n\"",
     "build": "npm run build -w @livre/types && npm run build -w client",
     "start": "npm run start -w server",
     "install:all": "npm install",
