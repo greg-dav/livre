@@ -24,11 +24,11 @@ const AppRoutes = () => {
       <Route path="/setup" element={user ? <Navigate to="/library" replace /> : <Setup />} />
       <Route path="/library" element={user ? <Library /> : <Navigate to="/login" replace />} />
       <Route
-        path="/library/:userBookId"
+        path="/library/:libraryBookId"
         element={user ? <LibraryBookDetail /> : <Navigate to="/login" replace />}
       />
       <Route
-        path="/search/book/:googleId"
+        path="/search/book/:bookRef"
         element={user ? <SearchBookDetail /> : <Navigate to="/login" replace />}
       />
       <Route

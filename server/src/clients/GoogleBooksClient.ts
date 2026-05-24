@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { z } from 'zod';
 import createError from 'http-errors';
-import { type BookSearchResult, type BookSearchResponse } from '@livre/types';
+import { type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
 
 const googleVolumeSchema = z.object({
   id: z.string(),
@@ -51,7 +51,15 @@ function cleanDescription(html: string): string {
     .trim();
 }
 
-function mapVolume(v: GoogleVolume): BookSearchResult {
+// Google's cover URLs accept a `zoom` parameter; `zoom=0` asks for the best available size
+// and falls back gracefully when a larger one doesn't exist. `edge=curl` adds a cosmetic
+// page-curl we don't want. Munging lets a search result expose a high-quality cover without
+// the extra per-book volume fetch that would otherwise be required to read `imageLinks.large`.
+function upgradeCoverUrl(url: string): string {
+  return url.replace(/([?&])zoom=\d+/, '$1zoom=0').replace(/&edge=curl/g, '');
+}
+
+function mapVolume(v: GoogleVolume): SourcedBook {
   const isbn =
     v.volumeInfo.industryIdentifiers?.find((i) => i.type === 'ISBN_13')?.identifier ??
     v.volumeInfo.industryIdentifiers?.find((i) => i.type === 'ISBN_10')?.identifier;
@@ -68,17 +76,13 @@ function mapVolume(v: GoogleVolume): BookSearchResult {
       .value() as string | undefined;
 
   const thumbnail = pickUrl(['thumbnail', 'smallThumbnail']);
-  const largeThumbnail = pickUrl([
-    'extraLarge',
-    'large',
-    'medium',
-    'small',
-    'thumbnail',
-    'smallThumbnail',
-  ]);
+  const largeThumbnail =
+    pickUrl(['extraLarge', 'large', 'medium', 'small']) ??
+    (thumbnail ? upgradeCoverUrl(thumbnail) : undefined);
 
   return {
-    googleId: v.id,
+    source: 'GOOGLE_BOOKS',
+    externalId: v.id,
     title: v.volumeInfo.title,
     authors: v.volumeInfo.authors ?? [],
     publishedDate: v.volumeInfo.publishedDate,
@@ -103,7 +107,7 @@ export class GoogleBooksClient {
 
   constructor(private readonly apiKey: string) {}
 
-  async search(query: string): Promise<BookSearchResponse> {
+  async search(query: string): Promise<SourcedBookSearchResponse> {
     const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&key=${this.apiKey}`;
     const res = await fetch(url);
     if (!res.ok) throw createError(502, 'Google Books API error');
@@ -112,11 +116,11 @@ export class GoogleBooksClient {
     return { results: items.map(mapVolume), total: totalItems };
   }
 
-  async searchByAuthor(name: string): Promise<BookSearchResponse> {
+  async searchByAuthor(name: string): Promise<SourcedBookSearchResponse> {
     return this.search(`inauthor:"${name}"`);
   }
 
-  async getById(id: string): Promise<BookSearchResult> {
+  async getById(id: string): Promise<SourcedBook> {
     const url = `https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}?key=${this.apiKey}`;
     const res = await fetch(url);
     if (res.status === 404) throw createError(404, 'Book not found');

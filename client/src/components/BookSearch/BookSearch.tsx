@@ -31,8 +31,9 @@ const SHELF_LABELS: Record<ShelfStatus, string> = {
 /**
  * Inline book search for the top bar. Library books are matched locally (instant, no debounce)
  * from cached data; Google Books results fill in after the 300ms debounce. Results already in
- * the library are promoted to a "From your library" section and deduped from the Google results.
- * Library books that match Google Books results but not the local filter get a status badge inline.
+ * the library are promoted to a "From your library" section and deduped from the Google
+ * results by their opaque bookRef. Library books that match Google Books results but not the
+ * local filter get a status badge inline.
  */
 export const BookSearch = () => {
   const [query, setQuery] = useState('');
@@ -63,26 +64,26 @@ export const BookSearch = () => {
     );
   }, [libraryData, query]);
 
-  const localMatchIds = useMemo(
-    () => new Set(localMatches.map((e) => e.googleId).filter((id): id is string => id !== null)),
+  const localMatchRefs = useMemo(
+    () => new Set(localMatches.map((e) => e.bookRef).filter((ref): ref is string => ref !== null)),
     [localMatches]
   );
 
-  // All library IDs → used to badge Google Books results that are saved but not locally matched
+  // All library refs → used to badge Google Books results that are saved but not locally matched
   const libraryStatusMap = useMemo(
     () =>
       new Map(
         (libraryData ?? [])
-          .filter((e): e is ShelfEntry & { googleId: string } => e.googleId !== null)
-          .map((e) => [e.googleId, e.status])
+          .filter((e): e is ShelfEntry & { bookRef: string } => e.bookRef !== null)
+          .map((e) => [e.bookRef, e.status])
       ),
     [libraryData]
   );
 
   // Google Books results minus books already shown in the local library section
   const googleResults = useMemo(
-    () => (searchData?.results ?? []).filter((r) => !localMatchIds.has(r.googleId)),
-    [searchData, localMatchIds]
+    () => (searchData?.results ?? []).filter((r) => !localMatchRefs.has(r.bookRef)),
+    [searchData, localMatchRefs]
   );
 
   const showRecents = open && query.length <= 1 && recentBooks.length > 0;
@@ -93,16 +94,20 @@ export const BookSearch = () => {
     !isFetching &&
     debouncedQuery.length > 1;
 
-  const handleNavigate = (googleId: string) => {
+  const closeAndNavigate = (path: string) => {
     setQuery('');
     setOpen(false);
-    navigate(bookPath(googleId, libraryData));
+    navigate(path);
   };
 
+  const handleRefNavigate = (bookRef: string) => closeAndNavigate(bookPath(bookRef, libraryData));
+  const handleLibraryNavigate = (libraryBookId: number) =>
+    closeAndNavigate(`/library/${libraryBookId}`);
+
   const renderRecentBook = (book: RecentBook) => {
-    const libraryStatus = libraryStatusMap.get(book.googleId);
+    const libraryStatus = libraryStatusMap.get(book.bookRef);
     return (
-      <ResultItem key={book.googleId} onClick={() => handleNavigate(book.googleId)}>
+      <ResultItem key={book.bookRef} onClick={() => handleRefNavigate(book.bookRef)}>
         {book.thumbnail ? <Thumbnail src={book.thumbnail} alt="" /> : <ThumbnailPlaceholder />}
         <ResultInfo>
           <Text variant="ui-sm">{book.title}</Text>
@@ -122,10 +127,11 @@ export const BookSearch = () => {
   };
 
   const renderLibraryResult = (entry: ShelfEntry) => {
-    const googleId = entry.googleId;
-    if (!googleId) return null;
     return (
-      <ResultItem key={entry.userBookId} onClick={() => handleNavigate(googleId)}>
+      <ResultItem
+        key={entry.libraryBookId}
+        onClick={() => handleLibraryNavigate(entry.libraryBookId)}
+      >
         {entry.coverUrl ? <Thumbnail src={entry.coverUrl} alt="" /> : <ThumbnailPlaceholder />}
         <ResultInfo>
           <Text variant="ui-sm">{entry.title}</Text>
@@ -143,9 +149,9 @@ export const BookSearch = () => {
   };
 
   const renderGoogleResult = (book: BookSearchResult) => {
-    const libraryStatus = libraryStatusMap.get(book.googleId);
+    const libraryStatus = libraryStatusMap.get(book.bookRef);
     return (
-      <ResultItem key={book.googleId} onClick={() => handleNavigate(book.googleId)}>
+      <ResultItem key={book.bookRef} onClick={() => handleRefNavigate(book.bookRef)}>
         {book.thumbnail ? <Thumbnail src={book.thumbnail} alt="" /> : <ThumbnailPlaceholder />}
         <ResultInfo>
           <Text variant="ui-sm">{book.title}</Text>

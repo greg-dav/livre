@@ -11,10 +11,11 @@ import { errorHandler } from './lib/route';
 import { UsersRepository } from './repositories/UsersRepository';
 import { ConfigRepository } from './repositories/ConfigRepository';
 import { SetupRepository } from './repositories/SetupRepository';
-import { BooksRepository } from './repositories/BooksRepository';
-import { UserBooksRepository } from './repositories/UserBooksRepository';
+import { BookCacheRepository } from './repositories/BookCacheRepository';
+import { LibraryBooksRepository } from './repositories/LibraryBooksRepository';
 import { ReadingLogRepository } from './repositories/ReadingLogRepository';
 import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
+import { BookCacheProvider } from './providers/BookCacheProvider';
 import { AuthService } from './services/AuthService';
 import { BooksService } from './services/BooksService';
 import { createAuthRouter } from './routes/auth';
@@ -26,17 +27,21 @@ import { createConfigRouter } from './routes/config';
 const usersRepository = new UsersRepository();
 const configRepository = new ConfigRepository();
 const setupRepository = new SetupRepository();
-const booksRepository = new BooksRepository();
-const userBooksRepository = new UserBooksRepository();
+const bookCacheRepository = new BookCacheRepository();
+const libraryBooksRepository = new LibraryBooksRepository();
 const readingLogRepository = new ReadingLogRepository();
 const googleBooksProvider = new GoogleBooksProvider(configRepository);
+const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
 const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
 const booksService = new BooksService(
   googleBooksProvider,
-  booksRepository,
-  userBooksRepository,
+  bookCacheProvider,
+  libraryBooksRepository,
   readingLogRepository
 );
+
+// Sweep expired book_cache entries on boot and every 24h thereafter.
+bookCacheProvider.startPeriodicSweep();
 
 const app = express();
 

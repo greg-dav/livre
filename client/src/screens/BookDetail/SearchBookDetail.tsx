@@ -10,20 +10,21 @@ import { SELECTABLE_EVENTS } from './BookDetail.utils';
 import { BookDetailView } from './BookDetailView';
 
 /**
- * Discovery view for a book not yet in the library. Fetches full volume data by Google Books ID.
- * If the book is already in the library (detected from the library cache), redirects immediately
- * to the library path. On save, redirects to the library path and triggers the acquisition
- * animation.
+ * Discovery view for a book not yet in the library. Identified entirely by the opaque
+ * `bookRef` from the URL — the client never knows or cares which provider the book is from.
+ * If the book is already in the library (detected from the library cache), redirects
+ * immediately to the library path. On save, redirects to the library path and triggers the
+ * acquisition animation.
  */
 export const SearchBookDetail = () => {
-  const { googleId } = useParams<{ googleId: string }>();
+  const { bookRef } = useParams<{ bookRef: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: book } = useQuery({
-    queryKey: ['books', 'detail', googleId],
-    queryFn: () => api.books.getById(googleId!),
-    enabled: !!googleId,
+    queryKey: ['books', 'detail', bookRef],
+    queryFn: () => api.books.getByRef(bookRef!),
+    enabled: !!bookRef,
   });
 
   const { data: libraryData } = useQuery({
@@ -33,33 +34,33 @@ export const SearchBookDetail = () => {
   });
 
   useLayoutEffect(() => {
-    if (!libraryData || !googleId) return;
-    const entry = libraryData.find((e) => e.googleId === googleId);
-    if (entry) navigate(`/library/${entry.userBookId}`, { replace: true });
-  }, [libraryData, googleId, navigate]);
+    if (!libraryData || !bookRef) return;
+    const entry = libraryData.find((e) => e.bookRef === bookRef);
+    if (entry) navigate(`/library/${entry.libraryBookId}`, { replace: true });
+  }, [libraryData, bookRef, navigate]);
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: (event: LogEventType) => api.books.addToLibrary(googleId!, event),
+    mutationFn: (event: LogEventType) => api.books.addToLibrary(bookRef!, event),
     onSuccess: async (data) => {
       await queryClient.prefetchQuery({
-        queryKey: ['library', 'detail', data.userBookId],
-        queryFn: () => api.books.libraryBook(data.userBookId),
+        queryKey: ['library', 'detail', data.libraryBookId],
+        queryFn: () => api.books.libraryBook(data.libraryBookId),
       });
-      navigate(`/library/${data.userBookId}`, { state: { justAcquired: true } });
+      navigate(`/library/${data.libraryBookId}`, { state: { justAcquired: true } });
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
     },
   });
 
   useEffect(() => {
-    if (!book) return;
+    if (!book || !bookRef) return;
     pushRecentBook({
-      googleId: googleId!,
+      bookRef,
       title: book.title,
       authors: book.authors,
       thumbnail: book.thumbnail,
     });
-  }, [googleId, book]);
+  }, [bookRef, book]);
 
   if (!book) {
     return (

@@ -61,12 +61,12 @@ export const Library = () => {
           </LeftPanelHeader>
           {readingEntries.map((entry) => (
             <CurrentlyReadingCard
-              key={entry.userBookId}
+              key={entry.libraryBookId}
               title={entry.title}
               author={entry.authors.join(', ')}
               coverUrl={entry.coverUrl ?? undefined}
               startedDate={formatDate(entry.startedDate ?? entry.addedDate)}
-              onClick={entry.googleId ? () => navigate(`/library/${entry.userBookId}`) : undefined}
+              onClick={() => navigate(`/library/${entry.libraryBookId}`)}
             />
           ))}
         </LeftPanel>
@@ -88,14 +88,12 @@ export const Library = () => {
             <BookGrid>
               {data.entries.map((entry) => (
                 <BookCard
-                  key={entry.userBookId}
+                  key={entry.libraryBookId}
                   title={entry.title}
                   author={entry.authors.join(', ')}
                   coverUrl={entry.coverUrl ?? undefined}
                   rating={entry.rating ?? undefined}
-                  onClick={
-                    entry.googleId ? () => navigate(`/library/${entry.userBookId}`) : undefined
-                  }
+                  onClick={() => navigate(`/library/${entry.libraryBookId}`)}
                 />
               ))}
             </BookGrid>

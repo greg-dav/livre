@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { bookRefSchema } from '@livre/types';
 
 const STORAGE_KEY = 'livre:recent-books';
 const MAX_RECENT = 5;
 
 const recentBookSchema = z.object({
-  googleId: z.string(),
+  bookRef: bookRefSchema,
   title: z.string(),
   authors: z.array(z.string()),
   thumbnail: z.string().optional(),
@@ -26,9 +27,6 @@ export const getRecentBooks = (): RecentBook[] => {
 
 export const pushRecentBook = (book: RecentBook): void => {
   const current = getRecentBooks();
-  const updated = [book, ...current.filter((b) => b.googleId !== book.googleId)].slice(
-    0,
-    MAX_RECENT
-  );
+  const updated = [book, ...current.filter((b) => b.bookRef !== book.bookRef)].slice(0, MAX_RECENT);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 };

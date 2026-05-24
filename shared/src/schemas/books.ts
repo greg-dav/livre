@@ -1,8 +1,15 @@
 import { z } from 'zod';
+import { bookRefSchema } from './bookRef';
 import { shelfEntrySchema } from './shelves';
 
-export const bookVolumeSchema = z.object({
-  googleId: z.string(),
+export { bookSourceSchema, bookRefSchema } from './bookRef';
+export type { BookSource } from './bookRef';
+
+/**
+ * Metadata fields shared between the transient API cache and a user's permanent library record.
+ * Both compose this schema so the two stay in sync.
+ */
+export const bookMetadataSchema = z.object({
   title: z.string(),
   authors: z.array(z.string()),
   publishedDate: z.string().optional(),
@@ -14,6 +21,11 @@ export const bookVolumeSchema = z.object({
   publisher: z.string().optional(),
   categories: z.array(z.string()),
   language: z.string().optional(),
+});
+export type BookMetadata = z.infer<typeof bookMetadataSchema>;
+
+export const bookVolumeSchema = bookMetadataSchema.extend({
+  bookRef: bookRefSchema,
 });
 export type BookVolume = z.infer<typeof bookVolumeSchema>;
 

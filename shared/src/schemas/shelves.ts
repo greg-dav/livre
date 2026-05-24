@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { bookRefSchema } from './bookRef';
 
 export const shelfStatusSchema = z.enum(['want', 'reading', 'read', 'dnf']);
 export type ShelfStatus = z.infer<typeof shelfStatusSchema>;
@@ -14,13 +15,14 @@ export const logEventTypeSchema = z.enum([
 export type LogEventType = z.infer<typeof logEventTypeSchema>;
 
 export const shelfEntrySchema = z.object({
-  userBookId: z.number(),
+  libraryBookId: z.number(),
   status: shelfStatusSchema,
   startedDate: z.string().nullable(),
   rating: z.number().nullable(),
   review: z.string().nullable(),
   addedDate: z.string(),
-  googleId: z.string().nullable(),
+  // Nullable to support future manual entries with no upstream source.
+  bookRef: bookRefSchema.nullable(),
   title: z.string(),
   authors: z.array(z.string()),
   coverUrl: z.string().nullable(),
@@ -48,7 +50,7 @@ export const createLogEventBodySchema = z.object({
 export type CreateLogEventBody = z.infer<typeof createLogEventBodySchema>;
 
 export const createLogEventResponseSchema = z.object({
-  userBookId: z.number(),
+  libraryBookId: z.number(),
   logId: z.number(),
 });
 export type CreateLogEventResponse = z.infer<typeof createLogEventResponseSchema>;

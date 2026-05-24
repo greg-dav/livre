@@ -12,38 +12,39 @@ import { BookDetailView } from './BookDetailView';
 import { navigationStateSchema } from '../../schemas/navigation';
 
 /**
- * Detail view for a book in the user's library. Fetches all data by userBookId in a single
- * request — no googleId needed on the client. Shows library-specific UI: current status in the
- * action button, "Reading since" indicator, and (eventually) the journal sidecar. The acquisition
- * animation fires once when navigated here from the search path.
+ * Detail view for a book in the user's library. Fetches all data by libraryBookId in a single
+ * request — the opaque bookRef is returned in the payload (so we can record it as a recent
+ * book) but is otherwise unused by the client. Shows library-specific UI: current status in
+ * the action button, "Reading since" indicator, and (eventually) the journal sidecar. The
+ * acquisition animation fires once when navigated here from the search path.
  */
 export const LibraryBookDetail = () => {
-  const { userBookId: userBookIdStr } = useParams<{ userBookId: string }>();
-  const userBookId = Number(userBookIdStr);
+  const { libraryBookId: libraryBookIdStr } = useParams<{ libraryBookId: string }>();
+  const libraryBookId = Number(libraryBookIdStr);
   const location = useLocation();
   const queryClient = useQueryClient();
 
   const justAcquired = navigationStateSchema.safeParse(location.state).data?.justAcquired ?? false;
 
   const { data } = useQuery({
-    queryKey: ['library', 'detail', userBookId],
-    queryFn: () => api.books.libraryBook(userBookId),
-    enabled: !!userBookId,
+    queryKey: ['library', 'detail', libraryBookId],
+    queryFn: () => api.books.libraryBook(libraryBookId),
+    enabled: !!libraryBookId,
   });
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: (event: LogEventType) => api.books.logByUserBookId(userBookId, event),
+    mutationFn: (event: LogEventType) => api.books.logByLibraryBookId(libraryBookId, event),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
-      queryClient.invalidateQueries({ queryKey: ['library', 'detail', userBookId] });
+      queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
     },
   });
 
   useEffect(() => {
-    if (!data || !data.entry.googleId) return;
+    if (!data || !data.entry.bookRef) return;
     pushRecentBook({
-      googleId: data.entry.googleId,
+      bookRef: data.entry.bookRef,
       title: data.book.title,
       authors: data.book.authors,
       thumbnail: data.book.thumbnail,

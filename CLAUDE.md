@@ -274,6 +274,67 @@ private readonly mutation = (() => {
 })();
 ```
 
+## Book data model
+
+The data model splits _transient API cache_ from _user-owned library records_ and keeps both **provider-agnostic** so a future source (Open Library, manual entry, …) drops in without migrations.
+
+### Three tables
+
+```
+book_cache     — shared, transient; (source, external_id) unique; cache_expires_at; no FKs
+library_books  — per-user, permanent; owns its metadata snapshot; FK target for reading_log
+reading_log    — per-library_book events; FK → library_books.id
+```
+
+**`book_cache`** holds metadata fetched from an external source (Google Books, etc.). Rows expire and are swept at startup via `BookCacheProvider.sweep()`. Nothing in the schema references this table — it is purely a read-through cache for the API path.
+
+**`library_books`** is the user's record of a book. It owns a _copy_ of the metadata at the moment of save. This is intentional:
+
+- Users can edit their copy (title, description, cover) without affecting anyone else.
+- Library rendering never depends on a cache hit or even on the original source still being reachable.
+- Two users saving the same book = two independent rows.
+
+There is **no shared `books` table**. Do not add one.
+
+### Provider-agnostic provenance
+
+Both `book_cache` and `library_books` carry `source` + `external_id` instead of any provider-specific column. Adding a new source = append to the `BookSource` enum in `@livre/types/schemas/books.ts` and the matching SQL `CHECK` constraint. Never persist a `google_books_id` (or any other provider-specific id) as a named column.
+
+On `library_books`, both `source` and `external_id` are **nullable** to support future manual entries. The partial unique index `idx_library_books_source` only enforces dedup when both are present.
+
+### `bookRef` — the client never sees a source
+
+The client is **deliberately blind** to which provider a book came from. URLs, query keys, dedup maps, and localStorage all reference books by an opaque string `bookRef` — never by `source` / `externalId`.
+
+- **Encoding lives server-only** in `server/src/lib/bookRef.ts`. `encodeBookRef(source, externalId)` returns a base64url string; `decodeBookRef(ref)` reverses it and validates the source against `bookSourceSchema`.
+- **Wire shapes** (`BookVolume`, `ShelfEntry`) carry `bookRef` instead of `source` / `externalId`. The shared `bookSourceSchema` enum exists for server use; client code must not import or reference it.
+- **Server-internal flow** still works in `(source, externalId)` tuples. The route layer decodes `:bookRef` from URL params before calling services; services and repos convert to client-facing `BookVolume` at the API boundary via `toBookVolume(SourcedBook)`.
+- **`SourcedBook`** (`server/src/lib/bookRef.ts`) is the server-internal book shape: `BookMetadata & { source, externalId }`. The Google Books client, cache repository, and cache provider all traffic in `SourcedBook`. Never expose it across the API.
+- **Client URLs**: `/search/book/:bookRef` for discovery, `/library/:libraryBookId` for library detail. Dedup against the library uses `entry.bookRef === book.bookRef` (string equality).
+- **`bookRef` on `ShelfEntry` is nullable** — manual entries (future) have no upstream source and therefore no ref.
+
+### Naming
+
+- DB primary key on the user's record is `library_books.id`, exposed in API/UI as `libraryBookId` (never `userBookId`).
+- The reading log FK column is `library_book_id`.
+- Repositories/services follow this naming: `LibraryBooksRepository`, `libraryBookId` params.
+
+### `BookCacheProvider`
+
+`BooksService` never touches `BookCacheRepository` directly. All TTL logic lives in `BookCacheProvider`:
+
+```ts
+bookCache.get(source, externalId)         // returns null on miss OR expiry
+bookCache.set(source, book, ttlDays?)     // default 7-day TTL
+bookCache.sweep()                          // delete all expired rows; called at startup
+```
+
+The cache is decoupled from `library_books` — adding a book to a library _copies_ metadata from cache (or the source) into a new `library_books` row. Cache eviction is therefore always safe; it never leaves library data dangling.
+
+### Shared Zod composition
+
+`@livre/types/schemas/books.ts` exposes a `bookMetadataSchema` that both `book_cache` and `library_books` shapes compose. Always extend this when adding new metadata fields — never duplicate the field list.
+
 ## Type safety
 
 Never use `as` casts or `!` non-null assertions. Use Zod `.parse()` to narrow unknown values:

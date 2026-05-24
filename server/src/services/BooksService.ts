@@ -1,6 +1,7 @@
 import {
   type BookVolume,
   type BookSearchResponse,
+  type BookSource,
   type ShelfResponse,
   type CreateLogEventResponse,
   type LibraryBookDetail,
@@ -10,111 +11,128 @@ import {
 } from '@livre/types';
 import { db } from '../db';
 import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
-import { type BooksRepository } from '../repositories/BooksRepository';
-import { type UserBooksRepository } from '../repositories/UserBooksRepository';
+import { type BookCacheProvider } from '../providers/BookCacheProvider';
+import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
+import { toBookVolume, type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
 
+/**
+ * Services work internally in server-side (source, externalId) tuples — the opaque client-side
+ * `bookRef` is decoded by the route layer before calling in here. Outbound responses are
+ * converted back to the client-facing `BookVolume` (with bookRef) via `toBookVolume`.
+ */
 export class BooksService {
   constructor(
     private readonly googleBooks: GoogleBooksProvider,
-    private readonly booksRepo: BooksRepository,
-    private readonly userBooksRepo: UserBooksRepository,
+    private readonly bookCache: BookCacheProvider,
+    private readonly libraryBooksRepo: LibraryBooksRepository,
     private readonly readingLogRepo: ReadingLogRepository
   ) {}
 
   async search(query: string): Promise<BookSearchResponse> {
-    return this.googleBooks.search(query);
+    return this.toResponse(await this.googleBooks.search(query));
   }
 
   async getAuthorBooks(name: string): Promise<BookSearchResponse> {
-    const { results, total } = await this.googleBooks.searchByAuthor(name);
-    const enriched: BookVolume[] = [];
-    for (let i = 0; i < results.length; i += 3) {
-      const chunk = results.slice(i, i + 3);
-      const resolved = await Promise.all(chunk.map((r) => this.getById(r.googleId).catch(() => r)));
-      enriched.push(...resolved);
-    }
-    return { results: enriched, total };
+    // Covers come pre-upgraded from GoogleBooksClient.upgradeCoverUrl, so we no longer need
+    // a per-result getById to surface a large thumbnail.
+    return this.toResponse(await this.googleBooks.searchByAuthor(name));
   }
 
-  async getById(id: string): Promise<BookVolume> {
-    const cached = this.booksRepo.findByGoogleIdResult(id);
-    if (cached) return cached;
-    const bookData = await this.googleBooks.getById(id);
-    this.booksRepo.upsert(bookData);
-    return bookData;
+  async getById(source: BookSource, externalId: string): Promise<BookVolume> {
+    return toBookVolume(await this.fetchSourced(source, externalId));
   }
 
   async addToLibrary(
     userId: number,
-    googleId: string,
+    source: BookSource,
+    externalId: string,
     event: LogEventType,
     date?: string
   ): Promise<CreateLogEventResponse> {
-    const cached = this.booksRepo.findByGoogleId(googleId);
-    let bookId: number;
-    if (cached) {
-      bookId = cached.id;
-    } else {
-      const bookData = await this.googleBooks.getById(googleId);
-      bookId = this.booksRepo.upsert(bookData);
+    // Already in this user's library? Just log the event against the existing record.
+    const existingId = this.libraryBooksRepo.findIdBySource(userId, source, externalId);
+    if (existingId !== null) {
+      return db.transaction(() => {
+        const resolvedEvent =
+          event === 'started' && this.readingLogRepo.shouldPromoteToRestart(existingId)
+            ? 'restarted'
+            : event;
+        const logDate = date ?? new Date().toISOString().slice(0, 10);
+        const logId = this.readingLogRepo.insert(existingId, resolvedEvent, logDate);
+        return { libraryBookId: existingId, logId };
+      });
     }
 
+    const book = await this.fetchSourced(source, externalId);
+
     return db.transaction(() => {
-      const userBookId = this.userBooksRepo.findOrCreate(userId, bookId);
-      const resolvedEvent =
-        event === 'started' && this.readingLogRepo.shouldPromoteToRestart(userBookId)
-          ? 'restarted'
-          : event;
+      const libraryBookId = this.libraryBooksRepo.create(userId, source, externalId, book);
       const logDate = date ?? new Date().toISOString().slice(0, 10);
-      const logId = this.readingLogRepo.insert(userBookId, resolvedEvent, logDate);
-      return { userBookId, logId };
+      const logId = this.readingLogRepo.insert(libraryBookId, event, logDate);
+      return { libraryBookId, logId };
     });
   }
 
-  async getLibraryBook(userId: number, userBookId: number): Promise<LibraryBookDetail | null> {
-    const entry = this.userBooksRepo.findByUserBookId(userId, userBookId);
-    if (!entry || !entry.googleId) return null;
-    const book = await this.getById(entry.googleId);
-    return { entry, book };
+  /**
+   * Detail view for a library book. Reads from the user's own metadata snapshot — no cache or
+   * network call required. Returns null if the book doesn't exist or doesn't belong to the user.
+   */
+  getLibraryBook(userId: number, libraryBookId: number): LibraryBookDetail | null {
+    return this.libraryBooksRepo.findDetailByLibraryBookId(userId, libraryBookId);
   }
 
   logEvent(
     userId: number,
-    userBookId: number,
+    libraryBookId: number,
     event: LogEventType,
     date?: string
   ): CreateLogEventResponse | null {
-    const entry = this.userBooksRepo.findByUserBookId(userId, userBookId);
-    if (!entry) return null;
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return null;
 
     return db.transaction(() => {
       const resolvedEvent =
-        event === 'started' && this.readingLogRepo.shouldPromoteToRestart(userBookId)
+        event === 'started' && this.readingLogRepo.shouldPromoteToRestart(libraryBookId)
           ? 'restarted'
           : event;
       const logDate = date ?? new Date().toISOString().slice(0, 10);
-      const logId = this.readingLogRepo.insert(userBookId, resolvedEvent, logDate);
-      return { userBookId, logId };
+      const logId = this.readingLogRepo.insert(libraryBookId, resolvedEvent, logDate);
+      return { libraryBookId, logId };
     });
   }
 
   getShelf(userId: number, status: ShelfStatus): ShelfResponse {
-    const all = this.userBooksRepo.findAllByUser(userId);
+    const all = this.libraryBooksRepo.findAllByUser(userId);
     const entries = all.filter((e) => e.status === status);
-    const counts = {
-      want: 0,
-      reading: 0,
-      read: 0,
-      dnf: 0,
-    };
-    for (const entry of all) {
-      counts[entry.status]++;
-    }
+    const counts = { want: 0, reading: 0, read: 0, dnf: 0 };
+    for (const entry of all) counts[entry.status]++;
     return { entries, counts };
   }
 
   getLibrary(userId: number): LibraryResponse {
-    return this.userBooksRepo.findAllByUser(userId);
+    return this.libraryBooksRepo.findAllByUser(userId);
+  }
+
+  /** Cache-aware lookup that falls through to the source on miss and writes back on the way out. */
+  private async fetchSourced(source: BookSource, externalId: string): Promise<SourcedBook> {
+    const cached = this.bookCache.get(source, externalId);
+    if (cached) return cached;
+    const book = await this.fetchFromSource(source, externalId);
+    this.bookCache.set(book);
+    return book;
+  }
+
+  private async fetchFromSource(source: BookSource, externalId: string): Promise<SourcedBook> {
+    switch (source) {
+      case 'GOOGLE_BOOKS':
+        return this.googleBooks.getById(externalId);
+    }
+  }
+
+  private toResponse(internal: SourcedBookSearchResponse): BookSearchResponse {
+    return {
+      results: internal.results.map(toBookVolume),
+      total: internal.total,
+    };
   }
 }

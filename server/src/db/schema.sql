@@ -18,44 +18,72 @@ CREATE TABLE IF NOT EXISTS config (
   value TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS books (
+-- Transient cache of book metadata fetched from external sources (Google Books, etc.).
+-- Shared across users; entries auto-expire and are swept at startup.
+-- Never referenced by a foreign key — adding a book to a library copies metadata into
+-- library_books rather than referencing this row.
+CREATE TABLE IF NOT EXISTS book_cache (
   id               INTEGER PRIMARY KEY AUTOINCREMENT,
-  google_books_id  TEXT UNIQUE,
-  open_library_id  TEXT,
+  source           TEXT NOT NULL CHECK (source IN ('GOOGLE_BOOKS')),
+  external_id      TEXT NOT NULL,
   title            TEXT NOT NULL,
-  author           TEXT,
+  authors          TEXT,           -- pipe-delimited
   isbn             TEXT,
   description      TEXT,
-  cover_url        TEXT,
+  thumbnail        TEXT,
+  large_thumbnail  TEXT,
   page_count       INTEGER,
   publisher        TEXT,
   published_date   TEXT,
-  categories       TEXT, -- JSON array
+  categories       TEXT,           -- JSON array
   language         TEXT,
-  avg_rating       REAL,
-  ratings_count    INTEGER,
-  fetched_at       TEXT NOT NULL DEFAULT (datetime('now'))
+  cache_expires_at TEXT NOT NULL,
+  UNIQUE (source, external_id)
 );
 
-CREATE TABLE IF NOT EXISTS user_books (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  book_id    INTEGER NOT NULL REFERENCES books(id),
-  rating     INTEGER CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5)),
-  review     TEXT,
-  added_date TEXT    NOT NULL DEFAULT (datetime('now')),
-  UNIQUE (user_id, book_id)
+CREATE INDEX IF NOT EXISTS idx_book_cache_expires ON book_cache(cache_expires_at);
+
+-- A user's permanent record of a book. Owns its own metadata snapshot so users can edit
+-- their copy independently and so we never depend on a cache hit (or even on the original
+-- source still being reachable) to render a library book.
+CREATE TABLE IF NOT EXISTS library_books (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- provider-agnostic provenance; both nullable to support future manual entries
+  source         TEXT CHECK (source IS NULL OR source IN ('GOOGLE_BOOKS')),
+  external_id    TEXT,
+  -- metadata snapshot (user-owned copy)
+  title            TEXT NOT NULL,
+  authors          TEXT,           -- pipe-delimited
+  isbn             TEXT,
+  description      TEXT,
+  thumbnail        TEXT,
+  large_thumbnail  TEXT,
+  page_count       INTEGER,
+  publisher        TEXT,
+  published_date   TEXT,
+  categories       TEXT,           -- JSON array
+  language         TEXT,
+  -- user fields
+  rating         INTEGER CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5)),
+  review         TEXT,
+  added_date     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_library_books_source
+  ON library_books(user_id, source, external_id)
+  WHERE source IS NOT NULL AND external_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_library_books_user ON library_books(user_id);
 
 CREATE TABLE IF NOT EXISTS reading_log (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_book_id INTEGER NOT NULL REFERENCES user_books(id) ON DELETE CASCADE,
-  event        TEXT    NOT NULL CHECK (event IN ('shelved', 'started', 'finished', 'dnf', 'restarted', 'note')),
-  note         TEXT,
-  date         TEXT    NOT NULL,
-  created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  library_book_id INTEGER NOT NULL REFERENCES library_books(id) ON DELETE CASCADE,
+  event           TEXT    NOT NULL CHECK (event IN ('shelved', 'started', 'finished', 'dnf', 'restarted', 'note')),
+  note            TEXT,
+  date            TEXT    NOT NULL,
+  created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_books_user ON user_books(user_id);
-CREATE INDEX IF NOT EXISTS idx_reading_log_ub  ON reading_log(user_book_id);
+CREATE INDEX IF NOT EXISTS idx_reading_log_lb   ON reading_log(library_book_id);
 CREATE INDEX IF NOT EXISTS idx_reading_log_date ON reading_log(date);

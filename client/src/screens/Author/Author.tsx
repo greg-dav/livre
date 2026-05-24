@@ -16,8 +16,8 @@ const STATUS_LABELS: Record<ShelfStatus, string> = {
 
 /**
  * All books by a single author, fetched via a Google Books author search. Navigated to by
- * clicking an author name on the BookDetail screen. Each book card navigates to its detail page,
- * which fetches the full volume data independently.
+ * clicking an author name on the BookDetail screen. Each book card navigates to its detail
+ * page, which fetches the full volume data independently.
  */
 export const Author = () => {
   const { name } = useParams<{ name: string }>();
@@ -39,17 +39,13 @@ export const Author = () => {
     () =>
       new Map(
         (libraryData ?? [])
-          .filter((e): e is typeof e & { googleId: string } => e.googleId !== null)
-          .map((e) => [e.googleId, e.status])
+          .filter((e): e is typeof e & { bookRef: string } => e.bookRef !== null)
+          .map((e) => [e.bookRef, e.status])
       ),
     [libraryData]
   );
 
   const books = data?.results ?? [];
-
-  const handleBookClick = (book: { googleId: string }) => {
-    navigate(bookPath(book.googleId, libraryData), { state: { backLabel: name } });
-  };
 
   return (
     <Layout>
@@ -66,16 +62,20 @@ export const Author = () => {
       ) : (
         <BookGrid>
           {books.map((book) => {
-            const shelfStatus = libraryStatusMap.get(book.googleId);
+            const shelfStatus = libraryStatusMap.get(book.bookRef);
             return (
               <BookCard
-                key={book.googleId}
+                key={book.bookRef}
                 title={book.title}
                 author={book.authors[0] ?? ''}
                 coverUrl={book.largeThumbnail ?? book.thumbnail}
                 inLibrary={!!shelfStatus}
                 spineLabel={shelfStatus ? STATUS_LABELS[shelfStatus] : undefined}
-                onClick={() => handleBookClick(book)}
+                onClick={() =>
+                  navigate(bookPath(book.bookRef, libraryData), {
+                    state: { backLabel: name },
+                  })
+                }
               />
             );
           })}

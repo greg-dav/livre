@@ -4,10 +4,10 @@ import { readingLog } from '../db/schema';
 import type { LogEventType } from '@livre/types';
 
 export class ReadingLogRepository {
-  insert(userBookId: number, event: LogEventType, date: string, note?: string): number {
+  insert(libraryBookId: number, event: LogEventType, date: string, note?: string): number {
     const row = db
       .insert(readingLog)
-      .values({ userBookId, event, date, note: note ?? null })
+      .values({ libraryBookId, event, date, note: note ?? null })
       .returning({ id: readingLog.id })
       .get();
     if (!row) throw new Error('Failed to insert log event');
@@ -17,13 +17,13 @@ export class ReadingLogRepository {
   // Returns true when 'started' should be promoted to 'restarted': the book was previously
   // started at least once, but the current head event is not started/restarted (i.e. the
   // prior reading session ended).
-  shouldPromoteToRestart(userBookId: number): boolean {
+  shouldPromoteToRestart(libraryBookId: number): boolean {
     const hasStart = db
       .select({ id: readingLog.id })
       .from(readingLog)
       .where(
         and(
-          eq(readingLog.userBookId, userBookId),
+          eq(readingLog.libraryBookId, libraryBookId),
           inArray(readingLog.event, ['started', 'restarted'])
         )
       )
@@ -36,7 +36,7 @@ export class ReadingLogRepository {
       .from(readingLog)
       .where(
         and(
-          eq(readingLog.userBookId, userBookId),
+          eq(readingLog.libraryBookId, libraryBookId),
           inArray(readingLog.event, ['shelved', 'started', 'restarted', 'finished', 'dnf'])
         )
       )

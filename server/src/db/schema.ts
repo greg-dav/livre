@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -20,51 +20,58 @@ export const config = sqliteTable('config', {
   value: text('value').notNull(),
 });
 
-export const books = sqliteTable('books', {
+export const bookCache = sqliteTable(
+  'book_cache',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    source: text('source').notNull(),
+    externalId: text('external_id').notNull(),
+    title: text('title').notNull(),
+    authors: text('authors'),
+    isbn: text('isbn'),
+    description: text('description'),
+    thumbnail: text('thumbnail'),
+    largeThumbnail: text('large_thumbnail'),
+    pageCount: integer('page_count'),
+    publisher: text('publisher'),
+    publishedDate: text('published_date'),
+    categories: text('categories'),
+    language: text('language'),
+    cacheExpiresAt: text('cache_expires_at').notNull(),
+  },
+  (t) => [unique().on(t.source, t.externalId)]
+);
+
+export const libraryBooks = sqliteTable('library_books', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  googleBooksId: text('google_books_id').unique(),
-  openLibraryId: text('open_library_id'),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  source: text('source'),
+  externalId: text('external_id'),
   title: text('title').notNull(),
-  author: text('author'),
+  authors: text('authors'),
   isbn: text('isbn'),
   description: text('description'),
-  coverUrl: text('cover_url'),
+  thumbnail: text('thumbnail'),
+  largeThumbnail: text('large_thumbnail'),
   pageCount: integer('page_count'),
   publisher: text('publisher'),
   publishedDate: text('published_date'),
-  categories: text('categories'), // JSON array
+  categories: text('categories'),
   language: text('language'),
-  avgRating: real('avg_rating'),
-  ratingsCount: integer('ratings_count'),
-  fetchedAt: text('fetched_at')
+  rating: integer('rating'),
+  review: text('review'),
+  addedDate: text('added_date')
     .notNull()
     .default(sql`(datetime('now'))`),
 });
 
-export const userBooks = sqliteTable(
-  'user_books',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    userId: integer('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    bookId: integer('book_id')
-      .notNull()
-      .references(() => books.id),
-    rating: integer('rating'),
-    review: text('review'),
-    addedDate: text('added_date')
-      .notNull()
-      .default(sql`(datetime('now'))`),
-  },
-  (t) => [unique().on(t.userId, t.bookId)]
-);
-
 export const readingLog = sqliteTable('reading_log', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userBookId: integer('user_book_id')
+  libraryBookId: integer('library_book_id')
     .notNull()
-    .references(() => userBooks.id, { onDelete: 'cascade' }),
+    .references(() => libraryBooks.id, { onDelete: 'cascade' }),
   event: text('event', {
     enum: ['shelved', 'started', 'finished', 'dnf', 'restarted', 'note'],
   }).notNull(),
@@ -76,19 +83,17 @@ export const readingLog = sqliteTable('reading_log', {
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-  userBooks: many(userBooks),
+  libraryBooks: many(libraryBooks),
 }));
 
-export const booksRelations = relations(books, ({ many }) => ({
-  userBooks: many(userBooks),
-}));
-
-export const userBooksRelations = relations(userBooks, ({ one, many }) => ({
-  user: one(users, { fields: [userBooks.userId], references: [users.id] }),
-  book: one(books, { fields: [userBooks.bookId], references: [books.id] }),
+export const libraryBooksRelations = relations(libraryBooks, ({ one, many }) => ({
+  user: one(users, { fields: [libraryBooks.userId], references: [users.id] }),
   log: many(readingLog),
 }));
 
 export const readingLogRelations = relations(readingLog, ({ one }) => ({
-  userBook: one(userBooks, { fields: [readingLog.userBookId], references: [userBooks.id] }),
+  libraryBook: one(libraryBooks, {
+    fields: [readingLog.libraryBookId],
+    references: [libraryBooks.id],
+  }),
 }));

@@ -10,12 +10,17 @@ export type { RegisterBody, LoginBody, InstanceStatus, AuthResponse } from './sc
 export { apiErrorSchema } from './schemas/api';
 export type { ApiError } from './schemas/api';
 export {
+  bookSourceSchema,
+  bookMetadataSchema,
+  bookRefSchema,
   bookVolumeSchema,
   bookSearchResultSchema,
   bookSearchResponseSchema,
   libraryBookDetailSchema,
 } from './schemas/books';
 export type {
+  BookSource,
+  BookMetadata,
   BookVolume,
   BookSearchResult,
   BookSearchResponse,

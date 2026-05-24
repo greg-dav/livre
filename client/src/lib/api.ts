@@ -64,22 +64,22 @@ export const api = {
       request(`/books/search?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
     byAuthor: (name: string) =>
       request(`/books/search/author/${encodeURIComponent(name)}`, bookSearchResponseSchema),
-    getById: (id: string) =>
-      request(`/books/search/book/${encodeURIComponent(id)}`, bookVolumeSchema),
+    getByRef: (bookRef: string) =>
+      request(`/books/search/book/${encodeURIComponent(bookRef)}`, bookVolumeSchema),
     library: () => request('/books/library', libraryResponseSchema),
-    libraryBook: (userBookId: number) =>
-      request(`/books/library/${userBookId}`, libraryBookDetailSchema),
-    addToLibrary: (googleId: string, event: LogEventType, date?: string) =>
+    libraryBook: (libraryBookId: number) =>
+      request(`/books/library/${libraryBookId}`, libraryBookDetailSchema),
+    addToLibrary: (bookRef: string, event: LogEventType, date?: string) =>
       request(
-        `/books/search/book/${encodeURIComponent(googleId)}/add`,
+        `/books/search/book/${encodeURIComponent(bookRef)}/add`,
         createLogEventResponseSchema,
         {
           method: 'POST',
           body: JSON.stringify({ event, date }),
         }
       ),
-    logByUserBookId: (userBookId: number, event: LogEventType, date?: string) =>
-      request(`/books/library/${userBookId}/log`, createLogEventResponseSchema, {
+    logByLibraryBookId: (libraryBookId: number, event: LogEventType, date?: string) =>
+      request(`/books/library/${libraryBookId}/log`, createLogEventResponseSchema, {
         method: 'POST',
         body: JSON.stringify({ event, date }),
       }),
