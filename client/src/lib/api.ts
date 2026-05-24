@@ -4,9 +4,10 @@ import {
   authResponseSchema,
   instanceStatusSchema,
   apiErrorSchema,
+  bookVolumeSchema,
   bookSearchResponseSchema,
-  bookSearchResultSchema,
   createLogEventResponseSchema,
+  libraryBookDetailSchema,
   shelfResponseSchema,
   libraryResponseSchema,
   updateApiKeyResponseSchema,
@@ -63,10 +64,17 @@ export const api = {
       request(`/books/search?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
     byAuthor: (name: string) =>
       request(`/books/author/${encodeURIComponent(name)}`, bookSearchResponseSchema),
-    getById: (id: string) => request(`/books/${encodeURIComponent(id)}`, bookSearchResultSchema),
+    getById: (id: string) => request(`/books/search/${encodeURIComponent(id)}`, bookVolumeSchema),
     library: () => request('/books/library', libraryResponseSchema),
-    log: (googleId: string, event: LogEventType, date?: string) =>
-      request(`/books/${encodeURIComponent(googleId)}/log`, createLogEventResponseSchema, {
+    libraryBook: (userBookId: number) =>
+      request(`/books/library/${userBookId}`, libraryBookDetailSchema),
+    addToLibrary: (googleId: string, event: LogEventType, date?: string) =>
+      request(`/books/search/${encodeURIComponent(googleId)}/add`, createLogEventResponseSchema, {
+        method: 'POST',
+        body: JSON.stringify({ event, date }),
+      }),
+    logByUserBookId: (userBookId: number, event: LogEventType, date?: string) =>
+      request(`/books/library/${userBookId}/log`, createLogEventResponseSchema, {
         method: 'POST',
         body: JSON.stringify({ event, date }),
       }),

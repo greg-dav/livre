@@ -10,6 +10,7 @@ export const createConfigRouter = (
 ) => {
   const router = Router();
 
+  /** Update and validate the Google Books API key; requires admin privileges. */
   router.put('/google-books-key', requireAdmin, async (req, res, next) => {
     try {
       const { apiKey } = updateApiKeyBodySchema.parse(req.body);

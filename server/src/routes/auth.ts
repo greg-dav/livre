@@ -14,10 +14,12 @@ export function createAuthRouter(service: AuthService): Router {
   const open = new SchemaRouter();
   const authed = new SchemaRouter().use(requireAuth);
 
+  /** Return whether any user accounts exist, used to gate the setup vs login flow. */
   open.get('/status', instanceStatusSchema, (respond) => {
     respond(service.getStatus());
   });
 
+  /** Register a new user account, validate the Google Books API key, and return a JWT. */
   open.post(
     '/register',
     registerBodySchema,
@@ -27,6 +29,7 @@ export function createAuthRouter(service: AuthService): Router {
     }
   );
 
+  /** Validate credentials and issue a JWT. */
   open.post(
     '/login',
     loginBodySchema,
@@ -36,6 +39,7 @@ export function createAuthRouter(service: AuthService): Router {
     }
   );
 
+  /** Return the authenticated user's profile. */
   authed.get('/me', userSchema, (respond, req) => {
     respond(userSchema.parse(req.user));
   });

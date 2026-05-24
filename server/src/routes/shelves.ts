@@ -8,6 +8,7 @@ import { type BooksService } from '../services/BooksService';
 export function createShelvesRouter(service: BooksService): Router {
   const router = new SchemaRouter().use(requireAuth);
 
+  /** Return all books on a given shelf along with counts for all shelf statuses. */
   router.get('/:status', shelfResponseSchema, async (respond, req) => {
     const user = req.user;
     if (!user) throw createError(401, 'Unauthorized');

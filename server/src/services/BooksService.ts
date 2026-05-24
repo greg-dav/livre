@@ -1,8 +1,9 @@
 import {
-  type BookSearchResult,
+  type BookVolume,
   type BookSearchResponse,
   type ShelfResponse,
   type CreateLogEventResponse,
+  type LibraryBookDetail,
   type LibraryResponse,
   type ShelfStatus,
   type LogEventType,
@@ -27,7 +28,7 @@ export class BooksService {
 
   async getAuthorBooks(name: string): Promise<BookSearchResponse> {
     const { results, total } = await this.googleBooks.searchByAuthor(name);
-    const enriched: BookSearchResult[] = [];
+    const enriched: BookVolume[] = [];
     for (let i = 0; i < results.length; i += 3) {
       const chunk = results.slice(i, i + 3);
       const resolved = await Promise.all(chunk.map((r) => this.getById(r.googleId).catch(() => r)));
@@ -36,7 +37,7 @@ export class BooksService {
     return { results: enriched, total };
   }
 
-  async getById(id: string): Promise<BookSearchResult> {
+  async getById(id: string): Promise<BookVolume> {
     const cached = this.booksRepo.findByGoogleIdResult(id);
     if (cached) return cached;
     const bookData = await this.googleBooks.getById(id);
@@ -44,7 +45,7 @@ export class BooksService {
     return bookData;
   }
 
-  async saveLog(
+  async addToLibrary(
     userId: number,
     googleId: string,
     event: LogEventType,
@@ -61,6 +62,33 @@ export class BooksService {
 
     return db.transaction(() => {
       const userBookId = this.userBooksRepo.findOrCreate(userId, bookId);
+      const resolvedEvent =
+        event === 'started' && this.readingLogRepo.shouldPromoteToRestart(userBookId)
+          ? 'restarted'
+          : event;
+      const logDate = date ?? new Date().toISOString().slice(0, 10);
+      const logId = this.readingLogRepo.insert(userBookId, resolvedEvent, logDate);
+      return { userBookId, logId };
+    });
+  }
+
+  async getLibraryBook(userId: number, userBookId: number): Promise<LibraryBookDetail | null> {
+    const entry = this.userBooksRepo.findByUserBookId(userId, userBookId);
+    if (!entry || !entry.googleId) return null;
+    const book = await this.getById(entry.googleId);
+    return { entry, book };
+  }
+
+  logEvent(
+    userId: number,
+    userBookId: number,
+    event: LogEventType,
+    date?: string
+  ): CreateLogEventResponse | null {
+    const entry = this.userBooksRepo.findByUserBookId(userId, userBookId);
+    if (!entry) return null;
+
+    return db.transaction(() => {
       const resolvedEvent =
         event === 'started' && this.readingLogRepo.shouldPromoteToRestart(userBookId)
           ? 'restarted'

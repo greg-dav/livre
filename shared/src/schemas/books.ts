@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { shelfEntrySchema } from './shelves';
 
-export const bookSearchResultSchema = z.object({
+export const bookVolumeSchema = z.object({
   googleId: z.string(),
   title: z.string(),
   authors: z.array(z.string()),
@@ -14,11 +15,19 @@ export const bookSearchResultSchema = z.object({
   categories: z.array(z.string()),
   language: z.string().optional(),
 });
+export type BookVolume = z.infer<typeof bookVolumeSchema>;
+
+export const bookSearchResultSchema = bookVolumeSchema;
+export type BookSearchResult = BookVolume;
 
 export const bookSearchResponseSchema = z.object({
-  results: z.array(bookSearchResultSchema),
+  results: z.array(bookVolumeSchema),
   total: z.number(),
 });
-
-export type BookSearchResult = z.infer<typeof bookSearchResultSchema>;
 export type BookSearchResponse = z.infer<typeof bookSearchResponseSchema>;
+
+export const libraryBookDetailSchema = z.object({
+  entry: shelfEntrySchema,
+  book: bookVolumeSchema,
+});
+export type LibraryBookDetail = z.infer<typeof libraryBookDetailSchema>;

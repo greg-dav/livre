@@ -65,6 +65,41 @@ export class UserBooksRepository {
     );
   }
 
+  findByUserBookId(userId: number, userBookId: number): ShelfEntry | null {
+    const r = db
+      .select({
+        id: userBooks.id,
+        rating: userBooks.rating,
+        review: userBooks.review,
+        addedDate: userBooks.addedDate,
+        googleBooksId: books.googleBooksId,
+        title: books.title,
+        authorRaw: books.author,
+        coverUrl: books.coverUrl,
+        latestEvent: readingLog.event,
+        startedDate: STARTED_DATE_EXPR,
+      })
+      .from(userBooks)
+      .innerJoin(books, eq(userBooks.bookId, books.id))
+      .innerJoin(readingLog, eq(readingLog.id, LATEST_STATUS_EVENT_ID))
+      .where(and(eq(userBooks.userId, userId), eq(userBooks.id, userBookId)))
+      .get();
+
+    if (!r) return null;
+    return shelfEntrySchema.parse({
+      userBookId: r.id,
+      status: EVENT_TO_STATUS[r.latestEvent],
+      startedDate: r.startedDate,
+      rating: r.rating,
+      review: r.review,
+      addedDate: r.addedDate,
+      googleId: r.googleBooksId,
+      title: r.title,
+      authors: r.authorRaw ? r.authorRaw.split('|') : [],
+      coverUrl: r.coverUrl,
+    });
+  }
+
   findOrCreate(userId: number, bookId: number): number {
     const existing = db
       .select({ id: userBooks.id })
