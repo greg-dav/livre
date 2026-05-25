@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Text } from '../Text/Text';
 import { StarRating } from '../StarRating/StarRating';
 import { Card, Cover, FaceImage, Face, Meta, BookGrid, Spine } from './BookCard.styles';
@@ -34,17 +34,28 @@ export const BookCard = ({
   onClick,
 }: BookCardProps) => {
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  // Reset error state if the cover URL changes (e.g. query results update)
   useEffect(() => {
     setImgError(false);
+    setImgLoaded(false);
+    // Cached images fire load before React attaches onLoad — check complete to catch them
+    if (imgRef.current?.complete) setImgLoaded(true);
   }, [coverUrl]);
 
   return (
     <Card onClick={onClick}>
       <Cover $color={coverColor} $inLibrary={inLibrary}>
         {coverUrl && !imgError ? (
-          <FaceImage src={coverUrl} alt={title} onError={() => setImgError(true)} />
+          <FaceImage
+            ref={imgRef}
+            src={coverUrl}
+            alt={title}
+            $loaded={imgLoaded}
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+          />
         ) : (
           <Face>
             <Text variant="body2" color="onColor">

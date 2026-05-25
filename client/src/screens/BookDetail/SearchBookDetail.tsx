@@ -6,6 +6,7 @@ import { type LogEventType } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
+import { useLibrary } from '../../context/LibraryContext';
 import { SELECTABLE_EVENTS } from './BookDetail.utils';
 import { BookDetailView } from './BookDetailView';
 
@@ -21,23 +22,19 @@ export const SearchBookDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const { library } = useLibrary();
+
   const { data: book } = useQuery({
     queryKey: ['books', 'detail', bookRef],
     queryFn: () => api.books.getByRef(bookRef!),
     enabled: !!bookRef,
   });
 
-  const { data: libraryData } = useQuery({
-    queryKey: ['library'],
-    queryFn: () => api.books.library(),
-    staleTime: Infinity,
-  });
-
   useLayoutEffect(() => {
-    if (!libraryData || !bookRef) return;
-    const entry = libraryData.find((e) => e.bookRef === bookRef);
+    if (!library || !bookRef) return;
+    const entry = library.find((e) => e.bookRef === bookRef);
     if (entry) navigate(`/library/${entry.libraryBookId}`, { replace: true });
-  }, [libraryData, bookRef, navigate]);
+  }, [library, bookRef, navigate]);
 
   const { mutate: save, isPending: isSaving } = useMutation({
     mutationFn: (event: LogEventType) => api.books.addToLibrary(bookRef!, event),
@@ -46,7 +43,7 @@ export const SearchBookDetail = () => {
         queryKey: ['library', 'detail', data.libraryBookId],
         queryFn: () => api.books.libraryBook(data.libraryBookId),
       });
-      navigate(`/library/${data.libraryBookId}`, { state: { justAcquired: true } });
+      navigate(`/library/${data.libraryBookId}`, { state: { justAcquired: true }, replace: true });
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
     },

@@ -35,9 +35,14 @@ export const LibraryBookDetail = () => {
   const { mutate: save, isPending: isSaving } = useMutation({
     mutationFn: (event: LogEventType) => api.books.logByLibraryBookId(libraryBookId, event),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+      // Warm the reading shelf in the background so Library's sidebar is already correct on mount.
+      // invalidateQueries above marks it stale, so prefetchQuery sees a miss and fetches immediately.
+      queryClient.prefetchQuery({
+        queryKey: ['shelves', 'reading'],
+        queryFn: () => api.shelves.getByStatus('reading'),
+      });
     },
   });
 

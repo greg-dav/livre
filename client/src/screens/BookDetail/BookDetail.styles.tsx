@@ -21,6 +21,7 @@ export const CoverWrapper = styled('div')<{ $inLibrary?: boolean; $justAcquired?
     overflow: 'hidden',
     cursor: 'pointer',
     isolation: 'isolate',
+    background: theme.bgElevated,
     boxShadow: $inLibrary ? `0 0 0 2px ${theme.accent}, ${coverDropShadow}` : coverDropShadow,
 
     // Acquisition sequence: ring quietly slips out from the cover's edge (200ms), then a snappy
@@ -48,20 +49,29 @@ export const CoverWrapper = styled('div')<{ $inLibrary?: boolean; $justAcquired?
   })
 );
 
-export const Cover = styled('img')({
+export const Cover = styled('img')<{ $loaded: boolean }>(({ $loaded }) => ({
   width: 'clamp(155px, 16vw, 200px)',
   aspectRatio: '2 / 3',
   objectFit: 'cover',
   display: 'block',
-});
+  opacity: $loaded ? 1 : 0,
+  transition: 'opacity 0.2s ease',
+}));
 
 export const CoverPlaceholder = styled('div')(({ theme }) => ({
   width: 'clamp(155px, 16vw, 200px)',
   aspectRatio: '2 / 3',
   borderRadius: theme.radius.sm,
   flexShrink: 0,
-  background: theme.bgElevated,
-  border: `1px solid ${theme.border}`,
+  background: '#2a2a2a',
+  boxShadow: coverDropShadow,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(5),
+  gap: theme.spacing(2),
+  textAlign: 'center' as const,
 }));
 
 export const HeroMeta = styled('div')(({ theme }) => ({

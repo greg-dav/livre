@@ -57,12 +57,14 @@ export const Cover = styled('div')<{ $color: string; $inLibrary?: boolean }>(
   })
 );
 
-export const FaceImage = styled('img')({
+export const FaceImage = styled('img')<{ $loaded: boolean }>(({ $loaded }) => ({
   width: '100%',
   height: '100%',
   objectFit: 'cover',
   display: 'block',
-});
+  opacity: $loaded ? 1 : 0,
+  transition: 'opacity 0.2s ease',
+}));
 
 export const Face = styled('div')(({ theme }) => ({
   display: 'flex',

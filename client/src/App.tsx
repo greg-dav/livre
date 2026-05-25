@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LibraryProvider } from './context/LibraryContext';
 import { Library, Login, Setup, SearchBookDetail, LibraryBookDetail, Author } from './screens';
 
 const queryClient = new QueryClient({
@@ -13,29 +14,43 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppRoutes = () => {
-  const { user, loading } = useAuth();
+const AuthGuard = () => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return (
+    <LibraryProvider>
+      <Outlet />
+    </LibraryProvider>
+  );
+};
 
+const PublicGuard = () => {
+  const { user } = useAuth();
+  return user ? <Navigate to="/library" replace /> : <Outlet />;
+};
+
+const DefaultRedirect = () => {
+  const { user } = useAuth();
+  return <Navigate to={user ? '/library' : '/login'} replace />;
+};
+
+const AppRoutes = () => {
+  const { loading } = useAuth();
   if (loading) return null;
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/library" replace /> : <Login />} />
-      <Route path="/setup" element={user ? <Navigate to="/library" replace /> : <Setup />} />
-      <Route path="/library" element={user ? <Library /> : <Navigate to="/login" replace />} />
-      <Route
-        path="/library/:libraryBookId"
-        element={user ? <LibraryBookDetail /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/search/book/:bookRef"
-        element={user ? <SearchBookDetail /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/search/author/:name"
-        element={user ? <Author /> : <Navigate to="/login" replace />}
-      />
-      <Route path="*" element={<Navigate to={user ? '/library' : '/login'} replace />} />
+      <Route element={<PublicGuard />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/setup" element={<Setup />} />
+      </Route>
+      <Route element={<AuthGuard />}>
+        <Route path="/library" element={<Library />} />
+        <Route path="/library/:libraryBookId" element={<LibraryBookDetail />} />
+        <Route path="/search/book/:bookRef" element={<SearchBookDetail />} />
+        <Route path="/search/author/:name" element={<Author />} />
+      </Route>
+      <Route path="*" element={<DefaultRedirect />} />
     </Routes>
   );
 };

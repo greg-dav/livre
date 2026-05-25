@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Text, Lightbox, Pill } from '@livre/primitives';
 import { type BookVolume } from '@livre/types';
@@ -53,8 +53,20 @@ export const BookDetailView = ({
   statusIndicator,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   const coverSrcs = [book.largeThumbnail, book.thumbnail].filter((u): u is string => !!u);
   const coverSrc = coverSrcs[coverIndex];
+
+  useEffect(() => {
+    setImgLoaded(false);
+    if (imgRef.current?.complete) setImgLoaded(true);
+  }, [coverSrc]);
+
+  const handleCoverError = useCallback(() => {
+    setImgLoaded(false);
+    setCoverIndex((i) => i + 1);
+  }, []);
 
   const year = book.publishedDate?.slice(0, 4);
   const byline = [year, book.publisher, book.pageCount ? `${book.pageCount} pp` : undefined].filter(
@@ -67,11 +79,25 @@ export const BookDetailView = ({
         {coverSrc ? (
           <Lightbox srcs={coverSrcs} alt={book.title}>
             <CoverWrapper $inLibrary={inLibrary} $justAcquired={justAcquired}>
-              <Cover src={coverSrc} alt={book.title} onError={() => setCoverIndex((i) => i + 1)} />
+              <Cover
+                ref={imgRef}
+                src={coverSrc}
+                alt={book.title}
+                $loaded={imgLoaded}
+                onLoad={() => setImgLoaded(true)}
+                onError={handleCoverError}
+              />
             </CoverWrapper>
           </Lightbox>
         ) : (
-          <CoverPlaceholder />
+          <CoverPlaceholder>
+            <Text variant="body2" color="onColor">
+              {book.title}
+            </Text>
+            <Text variant="ui-xs" color="onColorMuted">
+              {dedupeAuthors(book.authors).join(', ')}
+            </Text>
+          </CoverPlaceholder>
         )}
         <HeroMeta>
           <Text variant="h2" as="h1">
