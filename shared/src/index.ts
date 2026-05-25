@@ -37,6 +37,7 @@ export {
   createLogEventBodySchema,
   createLogEventResponseSchema,
   libraryResponseSchema,
+  logEntrySchema,
 } from './schemas/shelves';
 export type {
   ShelfStatus,
@@ -47,4 +48,5 @@ export type {
   CreateLogEventBody,
   CreateLogEventResponse,
   LibraryResponse,
+  LogEntry,
 } from './schemas/shelves';

@@ -76,10 +76,15 @@ export class BooksService {
 
   /**
    * Detail view for a library book. Reads from the user's own metadata snapshot — no cache or
-   * network call required. Returns null if the book doesn't exist or doesn't belong to the user.
+   * network call required. Composes the reading log onto the (entry, book) pair so the journal
+   * can render the full timeline in a single request. Returns null if the book doesn't exist or
+   * doesn't belong to the user.
    */
   getLibraryBook(userId: number, libraryBookId: number): LibraryBookDetail | null {
-    return this.libraryBooksRepo.findDetailByLibraryBookId(userId, libraryBookId);
+    const detail = this.libraryBooksRepo.findDetailByLibraryBookId(userId, libraryBookId);
+    if (!detail) return null;
+    const log = this.readingLogRepo.findByLibraryBookId(libraryBookId);
+    return { ...detail, log };
   }
 
   logEvent(

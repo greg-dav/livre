@@ -129,10 +129,15 @@ export class LibraryBooksRepository {
   }
 
   /**
-   * Single-query detail lookup. Returns null if the book doesn't exist, doesn't belong to the
-   * user, or has no source/externalId (manual entries can't be rendered as a BookVolume yet).
+   * Single-query detail lookup. Returns the (entry, book) pair; the BooksService composes the
+   * reading log onto this from ReadingLogRepository. Returns null if the book doesn't exist,
+   * doesn't belong to the user, or has no source/externalId (manual entries can't be rendered
+   * as a BookVolume yet).
    */
-  findDetailByLibraryBookId(userId: number, libraryBookId: number): LibraryBookDetail | null {
+  findDetailByLibraryBookId(
+    userId: number,
+    libraryBookId: number
+  ): Omit<LibraryBookDetail, 'log'> | null {
     const row = db
       .select(fullSelect)
       .from(libraryBooks)

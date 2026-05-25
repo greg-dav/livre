@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { bookRefSchema } from './bookRef';
-import { shelfEntrySchema } from './shelves';
+import { shelfEntrySchema, logEntrySchema } from './shelves';
 
 export { bookSourceSchema, bookRefSchema } from './bookRef';
 export type { BookSource } from './bookRef';
@@ -41,5 +41,6 @@ export type BookSearchResponse = z.infer<typeof bookSearchResponseSchema>;
 export const libraryBookDetailSchema = z.object({
   entry: shelfEntrySchema,
   book: bookVolumeSchema,
+  log: z.array(logEntrySchema),
 });
 export type LibraryBookDetail = z.infer<typeof libraryBookDetailSchema>;

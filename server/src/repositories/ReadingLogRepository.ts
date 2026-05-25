@@ -1,9 +1,24 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { readingLog } from '../db/schema';
-import type { LogEventType } from '@livre/types';
+import { logEntrySchema, type LogEntry, type LogEventType } from '@livre/types';
 
 export class ReadingLogRepository {
+  findByLibraryBookId(libraryBookId: number): LogEntry[] {
+    const rows = db
+      .select({
+        id: readingLog.id,
+        event: readingLog.event,
+        date: readingLog.date,
+        note: readingLog.note,
+      })
+      .from(readingLog)
+      .where(eq(readingLog.libraryBookId, libraryBookId))
+      .orderBy(desc(readingLog.date), desc(readingLog.id))
+      .all();
+    return rows.map((r) => logEntrySchema.parse(r));
+  }
+
   insert(libraryBookId: number, event: LogEventType, date: string, note?: string): number {
     const row = db
       .insert(readingLog)

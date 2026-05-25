@@ -13,6 +13,7 @@ export type TextVariant =
   | 'ui-lg'
   | 'ui-md'
   | 'ui-sm'
+  | 'ui-tight'
   | 'ui-xs'
   | 'label'
   | 'mono';
@@ -52,6 +53,8 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
       return { ...ui, fontSize: '0.9375rem', fontWeight: 400, lineHeight: 1.5 };
     case 'ui-sm':
       return { ...ui, fontSize: '0.875rem', fontWeight: 400, lineHeight: 1.4 };
+    case 'ui-tight':
+      return { ...ui, fontSize: '0.8125rem', fontWeight: 400, lineHeight: 1.4 };
     case 'ui-xs':
       return { ...ui, fontSize: '0.6875rem', fontWeight: 400, lineHeight: 1.4 };
     case 'label':

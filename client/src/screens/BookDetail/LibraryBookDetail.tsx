@@ -9,6 +9,7 @@ import { Layout } from '../../components';
 import { ReadingSince, ReadingSinceDot } from './BookDetail.styles';
 import { STATUS_LABELS, SELECTABLE_EVENTS, formatReadingSince } from './BookDetail.utils';
 import { BookDetailView } from './BookDetailView';
+import { Journal } from './Journal';
 import { navigationStateSchema } from '../../schemas/navigation';
 
 /**
@@ -72,6 +73,7 @@ export const LibraryBookDetail = () => {
       book={book}
       inLibrary
       justAcquired={justAcquired}
+      journal={<Journal entry={entry} log={data.log} justAcquired={justAcquired} />}
       actions={
         <DropdownMenu
           trigger={

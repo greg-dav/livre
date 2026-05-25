@@ -57,3 +57,11 @@ export type CreateLogEventResponse = z.infer<typeof createLogEventResponseSchema
 
 export const libraryResponseSchema = z.array(shelfEntrySchema);
 export type LibraryResponse = z.infer<typeof libraryResponseSchema>;
+
+export const logEntrySchema = z.object({
+  id: z.number(),
+  event: logEventTypeSchema,
+  date: z.string(),
+  note: z.string().nullable(),
+});
+export type LogEntry = z.infer<typeof logEntrySchema>;

@@ -15,6 +15,7 @@ const defaultElement: Record<TextVariant, ElementType> = {
   'ui-lg': 'span',
   'ui-md': 'span',
   'ui-sm': 'span',
+  'ui-tight': 'span',
   'ui-xs': 'span',
   label: 'span',
   mono: 'span',

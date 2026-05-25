@@ -80,12 +80,12 @@ const Title = styled('p')(({ theme }) => ({ fontFamily: theme.fontDisplay, fontS
 
 ### Text variants
 
-| Variant                            | Font                             | Size                 |
-| ---------------------------------- | -------------------------------- | -------------------- |
-| `h1`–`h6`                          | Cormorant Garamond, italic       | 3rem → 1rem          |
-| `body1`, `body2`                   | Lora                             | 1.0625rem, 0.9375rem |
-| `ui-lg`, `ui-md`, `ui-sm`, `ui-xs` | Outfit                           | 1rem → 0.6875rem     |
-| `label`                            | Outfit, bold, uppercase, tracked | 0.6875rem            |
+| Variant                                        | Font                             | Size                 |
+| ---------------------------------------------- | -------------------------------- | -------------------- |
+| `h1`–`h6`                                      | Cormorant Garamond, italic       | 3rem → 1rem          |
+| `body1`, `body2`                               | Lora                             | 1.0625rem, 0.9375rem |
+| `ui-lg`, `ui-md`, `ui-sm`, `ui-tight`, `ui-xs` | Outfit                           | 1rem → 0.6875rem     |
+| `label`                                        | Outfit, bold, uppercase, tracked | 0.6875rem            |
 
 ### Text colors
 

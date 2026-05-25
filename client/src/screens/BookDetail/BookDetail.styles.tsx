@@ -1,6 +1,30 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
+/*
+ * Two-column layout used when a journal slot is provided (library books only). The 380px right
+ * column is fixed; the left absorbs the remainder. align-items: start keeps the journal at the
+ * top instead of vertically centring against tall left content.
+ */
+export const LayoutGrid = styled('div')(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '1fr 380px',
+  gap: theme.spacing(14),
+  alignItems: 'start',
+}));
+
+/*
+ * Restores the vertical rhythm (Hero → Divider → DescriptionSection → Divider → MetaGrid) that
+ * Layout's Content normally provides via flex gap. minWidth: 0 lets the column shrink so long
+ * unbroken text doesn't blow out the grid.
+ */
+export const LeftColumn = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(8),
+  minWidth: 0,
+}));
+
 export const Hero = styled('div')(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(10),

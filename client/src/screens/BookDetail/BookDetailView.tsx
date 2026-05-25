@@ -4,6 +4,8 @@ import { Text, Lightbox, Pill } from '@livre/primitives';
 import { type BookVolume } from '@livre/types';
 import { Layout } from '../../components';
 import {
+  LayoutGrid,
+  LeftColumn,
   Hero,
   CoverWrapper,
   Cover,
@@ -37,13 +39,16 @@ interface BookDetailViewProps {
   justAcquired?: boolean;
   actions: ReactNode;
   statusIndicator?: ReactNode;
+  /** When provided, renders alongside the book content in a two-column layout. */
+  journal?: ReactNode;
 }
 
 /**
  * Shared layout for book detail screens. Renders cover, title, authors, byline, description, and
- * meta grid. Variable elements — the action button and any status indicator — are passed as slots
- * so both the discovery and library views reuse this structure without coupling to each other's
- * data or mutation logic.
+ * meta grid. Variable elements — the action button, status indicator, and optional journal panel
+ * — are passed as slots so both the discovery and library views reuse this structure without
+ * coupling to each other's data or mutation logic. When journal is provided, the page becomes a
+ * two-column layout (content + sticky rail); otherwise it stays single-column.
  */
 export const BookDetailView = ({
   book,
@@ -51,6 +56,7 @@ export const BookDetailView = ({
   justAcquired,
   actions,
   statusIndicator,
+  journal,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -73,8 +79,8 @@ export const BookDetailView = ({
     Boolean
   );
 
-  return (
-    <Layout>
+  const content = (
+    <>
       <Hero>
         {coverSrc ? (
           <Lightbox srcs={coverSrcs} alt={book.title}>
@@ -217,6 +223,19 @@ export const BookDetailView = ({
           </>
         )}
       </MetaGrid>
+    </>
+  );
+
+  return (
+    <Layout>
+      {journal ? (
+        <LayoutGrid>
+          <LeftColumn>{content}</LeftColumn>
+          {journal}
+        </LayoutGrid>
+      ) : (
+        content
+      )}
     </Layout>
   );
 };
