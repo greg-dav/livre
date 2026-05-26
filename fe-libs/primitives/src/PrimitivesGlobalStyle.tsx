@@ -24,4 +24,9 @@ export const PrimitivesGlobalStyle = createGlobalStyle`
       box-shadow: 0 0 0 2px ${({ theme }) => theme.accent}, ${COVER_DROP_SHADOW};
     }
   }
+
+  @keyframes journal-entrance {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
 `;

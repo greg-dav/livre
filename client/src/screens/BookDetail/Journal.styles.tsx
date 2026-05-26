@@ -1,21 +1,4 @@
-import styled, { keyframes } from 'styled-components';
-
-/*
- * Entrance animation when a book has just been added to the library. Delay (0.15s) lets the
- * cover-acquire ring slip out first; subtle inward slide gives the panel a "settling in"
- * feel rather than just popping. easeOutExpo (cubic-bezier(0.16, 1, 0.3, 1)) matches the
- * cover so the two animations feel like one motion.
- */
-const journalEntrance = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
+import styled from 'styled-components';
 
 /*
  * Sticky right-rail container. Holds the journal contents (rating, review, log, composer) and
@@ -32,7 +15,7 @@ export const Panel = styled('aside')<{ $justAcquired?: boolean }>(({ theme, $jus
   maxHeight: 'calc(100vh - 128px)',
   overflowY: 'auto',
   ...($justAcquired && {
-    animation: `${journalEntrance} 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both`,
+    animation: 'journal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
   }),
 }));
 
