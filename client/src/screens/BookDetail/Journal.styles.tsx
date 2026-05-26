@@ -187,16 +187,18 @@ export const TimelineEntry = styled('div')<{ $landmark?: boolean; $open?: boolea
 }) => {
   // All three node types are sized and positioned so their horizontal centers land at the
   // same x (entry coord -14.5px) as the connecting line — the line at left: -15px / width 1px
-  // also centers at -14.5. Closed landmark needs no border (the accent fill carries it); open
-  // landmark's 2px border widens its visual box to 13px, so its left shifts further out to
-  // keep the center aligned.
+  // also centers at -14.5. Closed landmark needs no border (the accent fill carries it).
+  //
+  // The app's global box-sizing: border-box means width includes the border. The open
+  // landmark is therefore sized 13px (= 9px ring + 2px border each side) to render the same
+  // 13px visual the prototype intended under a content-box reading.
   const node = $landmark
     ? $open
       ? {
           left: '-21px',
           top: '10px',
-          width: '9px',
-          height: '9px',
+          width: '13px',
+          height: '13px',
           background: theme.bgElevated,
           border: `2px solid ${theme.accent}`,
         }
