@@ -181,6 +181,13 @@ export class LibraryBooksRepository {
     return r?.id ?? null;
   }
 
+  updateTags(libraryBookId: number, tags: string[]): void {
+    db.update(libraryBooks)
+      .set({ tags: tags.length > 0 ? JSON.stringify(tags) : null })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
   /**
    * Copy a metadata snapshot into the user's library. Caller is responsible for ensuring no
    * duplicate exists (use findIdBySource first). Returns the new library_books.id.

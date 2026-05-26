@@ -8,6 +8,8 @@ import {
   createLogEventResponseSchema,
   libraryBookDetailSchema,
   libraryResponseSchema,
+  updateTagsBodySchema,
+  updateTagsResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { requireAuth } from '../middleware/auth';
@@ -78,6 +80,21 @@ export function createBooksRouter(service: BooksService): Router {
     if (!detail) throw createError(404, 'Book not found');
     respond(detail);
   });
+
+  /** Update the tags on a library book. */
+  router.patch(
+    '/library/:libraryBookId/tags',
+    updateTagsBodySchema,
+    updateTagsResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updateTags(user.id, libraryBookId, body.tags);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
 
   /** Log a reading event for a book already in the library. */
   router.post(

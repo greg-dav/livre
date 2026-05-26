@@ -202,19 +202,6 @@ export const Description = styled('div')(({ theme }) => ({
   },
 }));
 
-export const Categories = styled('div')(({ theme }) => ({
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: theme.spacing(2),
-  maxWidth: '680px',
-  // Visual break between description body and the categorical pills — these are different
-  // content types and need separation. Compounds with DescriptionSection's flex gap (12px) to
-  // give ~28px above. marginBottom compounds with the Content gap to give ~48px before the
-  // meta footer — matches the prototype's `.meta-bottom { margin-top: 48px }`.
-  marginTop: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-}));
-
 export const ReadingSince = styled('div')(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',

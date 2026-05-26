@@ -104,3 +104,8 @@ export const libraryBookDetailSchema = z.object({
   log: z.array(logEntrySchema),
 });
 export type LibraryBookDetail = z.infer<typeof libraryBookDetailSchema>;
+
+export const updateTagsBodySchema = z.object({ tags: z.array(z.string()) });
+export type UpdateTagsBody = z.infer<typeof updateTagsBodySchema>;
+
+export const updateTagsResponseSchema = z.object({ ok: z.literal(true) });

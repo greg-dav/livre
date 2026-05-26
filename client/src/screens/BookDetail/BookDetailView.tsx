@@ -1,6 +1,6 @@
 import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Text, Lightbox, Pill } from '@livre/primitives';
+import { Text, Lightbox } from '@livre/primitives';
 import { type BookVolume } from '@livre/types';
 import { Layout } from '../../components';
 import {
@@ -19,12 +19,12 @@ import {
   Description,
   DescriptionSection,
   SectionLabel,
-  Categories,
   HeroActions,
   MetaGrid,
   MetaLabel,
   MetaValue,
 } from './BookDetail.styles';
+import { TagList } from './TagList';
 import {
   dedupeAuthors,
   formatIsbn,
@@ -37,8 +37,10 @@ interface BookDetailViewProps {
   book: BookVolume;
   inLibrary?: boolean;
   justAcquired?: boolean;
+  editable?: boolean;
   actions: ReactNode;
   statusIndicator?: ReactNode;
+  onTagsChange?: (tags: string[]) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
   journal?: ReactNode;
 }
@@ -54,8 +56,10 @@ export const BookDetailView = ({
   book,
   inLibrary,
   justAcquired,
+  editable,
   actions,
   statusIndicator,
+  onTagsChange,
   journal,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
@@ -157,17 +161,7 @@ export const BookDetailView = ({
                   </Text>
                 ))}
             </Description>
-            {book.tags.length > 0 && (
-              <Categories>
-                {book.tags.map((tag) => (
-                  <Pill key={tag}>
-                    <Text variant="ui-sm" color="muted">
-                      {tag}
-                    </Text>
-                  </Pill>
-                ))}
-              </Categories>
-            )}
+            <TagList tags={book.tags} editable={editable} onChange={onTagsChange} />
           </DescriptionSection>
         </>
       )}

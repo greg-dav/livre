@@ -18,6 +18,8 @@ export {
   bookSearchResultSchema,
   bookSearchResponseSchema,
   libraryBookDetailSchema,
+  updateTagsBodySchema,
+  updateTagsResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -27,6 +29,7 @@ export type {
   BookSearchResult,
   BookSearchResponse,
   LibraryBookDetail,
+  UpdateTagsBody,
 } from './schemas/books';
 export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';

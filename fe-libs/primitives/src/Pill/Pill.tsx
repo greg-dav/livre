@@ -15,12 +15,7 @@ const PillRoot = styled('span')<PillRootProps>(({ theme, $variant }) => ({
   borderRadius: theme.radius.full,
   background: $variant === 'ghost' ? 'transparent' : theme.bgElevated,
   borderStyle: $variant === 'ghost' ? 'dashed' : 'solid',
-  transition: 'border-color 0.15s ease, background 0.15s ease',
   cursor: 'default',
-
-  '&:hover': {
-    borderColor: theme.textMuted,
-  },
 }));
 
 interface PillProps {
