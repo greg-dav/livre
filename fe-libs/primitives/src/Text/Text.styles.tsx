@@ -18,7 +18,14 @@ export type TextVariant =
   | 'label'
   | 'mono';
 
-export type TextColor = 'default' | 'muted' | 'accent' | 'onColor' | 'onColorMuted';
+export type TextColor =
+  | 'default'
+  | 'muted'
+  | 'accent'
+  | 'onColor'
+  | 'onColorMuted'
+  | 'onDark'
+  | 'onDarkMuted';
 
 const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
   const display = {
@@ -83,6 +90,8 @@ const colorValue = (color: TextColor, theme: DefaultTheme): string =>
     accent: theme.accent,
     onColor: theme.textOnColor,
     onColorMuted: theme.textOnColorMuted,
+    onDark: theme.textOnDark,
+    onDarkMuted: theme.textOnDarkMuted,
   })[color];
 
 export const StyledText = styled('span')<{ $variant: TextVariant; $color: TextColor }>(

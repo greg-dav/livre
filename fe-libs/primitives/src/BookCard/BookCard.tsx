@@ -58,10 +58,10 @@ export const BookCard = ({
           />
         ) : (
           <Face>
-            <Text variant="body2" color="onColor">
+            <Text variant="body2" color="onDark">
               {title}
             </Text>
-            <Text variant="ui-xs" color="onColorMuted">
+            <Text variant="ui-xs" color="onDarkMuted">
               {author}
             </Text>
           </Face>

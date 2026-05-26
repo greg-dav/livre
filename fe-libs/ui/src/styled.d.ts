@@ -9,6 +9,8 @@ declare module 'styled-components' {
     textMuted: string;
     textOnColor: string;
     textOnColorMuted: string;
+    textOnDark: string;
+    textOnDarkMuted: string;
     accent: string;
     accentSoft: string;
     border: string;

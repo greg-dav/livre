@@ -101,10 +101,10 @@ export const BookDetailView = ({
           </Lightbox>
         ) : (
           <CoverPlaceholder>
-            <Text variant="body2" color="onColor">
+            <Text variant="body2" color="onDark">
               {book.title}
             </Text>
-            <Text variant="ui-xs" color="onColorMuted">
+            <Text variant="ui-xs" color="onDarkMuted">
               {dedupeAuthors(book.authors).join(', ')}
             </Text>
           </CoverPlaceholder>
