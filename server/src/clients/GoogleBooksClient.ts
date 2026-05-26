@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { z } from 'zod';
 import createError from 'http-errors';
+import { type BookGenre } from '@livre/types';
 import { type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
 
 const googleVolumeSchema = z.object({
@@ -34,6 +35,96 @@ const googleBooksResponseSchema = z.object({
 });
 
 type GoogleVolume = z.infer<typeof googleVolumeSchema>;
+
+const BISAC_ROOT_TO_GENRE: Record<string, BookGenre> = {
+  'ANTIQUES & COLLECTIBLES': 'antiques-collectibles',
+  ARCHITECTURE: 'architecture',
+  ART: 'art',
+  BIBLES: 'bibles',
+  'BIOGRAPHY & AUTOBIOGRAPHY': 'biography-autobiography',
+  'BODY, MIND & SPIRIT': 'body-mind-spirit',
+  'BUSINESS & ECONOMICS': 'business-economics',
+  'COMICS & GRAPHIC NOVELS': 'comics-graphic-novels',
+  COMPUTERS: 'computers',
+  COOKING: 'cooking',
+  'CRAFTS & HOBBIES': 'crafts-hobbies',
+  DESIGN: 'design',
+  DRAMA: 'drama',
+  EDUCATION: 'education',
+  'FAMILY & RELATIONSHIPS': 'family-relationships',
+  FICTION: 'fiction',
+  'FOREIGN LANGUAGE STUDY': 'foreign-language-study',
+  'GAMES & ACTIVITIES': 'games-activities',
+  GARDENING: 'gardening',
+  'HEALTH & FITNESS': 'health-fitness',
+  HISTORY: 'history',
+  'HOUSE & HOME': 'house-home',
+  HUMOR: 'humor',
+  'JUVENILE FICTION': 'juvenile-fiction',
+  'JUVENILE NONFICTION': 'juvenile-nonfiction',
+  'LANGUAGE ARTS & DISCIPLINES': 'language-arts-disciplines',
+  LAW: 'law',
+  'LITERARY COLLECTIONS': 'literary-collections',
+  'LITERARY CRITICISM': 'literary-criticism',
+  MATHEMATICS: 'mathematics',
+  MEDICAL: 'medical',
+  MUSIC: 'music',
+  NATURE: 'nature',
+  'PERFORMING ARTS': 'performing-arts',
+  PETS: 'pets',
+  PHILOSOPHY: 'philosophy',
+  PHOTOGRAPHY: 'photography',
+  POETRY: 'poetry',
+  'POLITICAL SCIENCE': 'political-science',
+  PSYCHOLOGY: 'psychology',
+  REFERENCE: 'reference',
+  RELIGION: 'religion',
+  SCIENCE: 'science',
+  'SELF-HELP': 'self-help',
+  'SOCIAL SCIENCE': 'social-science',
+  'SPORTS & RECREATION': 'sports-recreation',
+  'STUDY AIDS': 'study-aids',
+  'TECHNOLOGY & ENGINEERING': 'technology-engineering',
+  TRANSPORTATION: 'transportation',
+  TRAVEL: 'travel',
+  'TRUE CRIME': 'true-crime',
+  'YOUNG ADULT FICTION': 'young-adult-fiction',
+  'YOUNG ADULT NONFICTION': 'young-adult-nonfiction',
+};
+
+function extractGenre(raw: string[]): BookGenre {
+  if (raw.length === 0) return 'unknown';
+  const root = raw[0].split(' / ')[0].trim().toUpperCase();
+  return BISAC_ROOT_TO_GENRE[root] ?? 'unknown';
+}
+
+function extractFiction(raw: string[]): boolean {
+  return raw.some((cat) => {
+    const root = cat.split(' / ')[0].toLowerCase();
+    return root === 'fiction' || root === 'juvenile fiction' || root === 'young adult fiction';
+  });
+}
+
+// BISAC subject strings are slash-separated paths ("Fiction / Science Fiction / Alien Contact").
+// Trim each to its most specific meaningful segment: drop a trailing "General" leaf (it adds no
+// information) and then take the last segment. Deduplicate the resulting strings.
+function normalizeCategories(raw: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const category of raw) {
+    const segments = category.split(' / ');
+    const last = segments[segments.length - 1];
+    const leaf =
+      last.toLowerCase() === 'general' && segments.length > 1
+        ? segments[segments.length - 2]
+        : last;
+    if (!seen.has(leaf)) {
+      seen.add(leaf);
+      result.push(leaf);
+    }
+  }
+  return result;
+}
 
 // Google Books descriptions are HTML snippets. Convert block-level tags to newlines,
 // strip remaining markup, and decode common entities so callers get plain text.
@@ -89,7 +180,9 @@ function mapVolume(v: GoogleVolume): SourcedBook {
     description: v.volumeInfo.description ? cleanDescription(v.volumeInfo.description) : undefined,
     publisher: v.volumeInfo.publisher,
     pageCount: v.volumeInfo.pageCount,
-    categories: v.volumeInfo.categories ?? [],
+    tags: normalizeCategories(v.volumeInfo.categories ?? []),
+    fiction: extractFiction(v.volumeInfo.categories ?? []),
+    genre: extractGenre(v.volumeInfo.categories ?? []),
     language: v.volumeInfo.language,
     thumbnail,
     largeThumbnail,

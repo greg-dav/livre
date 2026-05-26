@@ -11,6 +11,7 @@ export { apiErrorSchema } from './schemas/api';
 export type { ApiError } from './schemas/api';
 export {
   bookSourceSchema,
+  bookGenreSchema,
   bookMetadataSchema,
   bookRefSchema,
   bookVolumeSchema,
@@ -20,6 +21,7 @@ export {
 } from './schemas/books';
 export type {
   BookSource,
+  BookGenre,
   BookMetadata,
   BookVolume,
   BookSearchResult,

@@ -5,6 +5,7 @@ import { libraryBooks, readingLog } from '../db/schema';
 import {
   shelfEntrySchema,
   bookVolumeSchema,
+  bookGenreSchema,
   type BookMetadata,
   type BookSource,
   type LibraryBookDetail,
@@ -53,7 +54,9 @@ const fullSelect = {
   pageCount: libraryBooks.pageCount,
   publisher: libraryBooks.publisher,
   publishedDate: libraryBooks.publishedDate,
-  categories: libraryBooks.categories,
+  tags: libraryBooks.tags,
+  fiction: libraryBooks.fiction,
+  genre: libraryBooks.genre,
   language: libraryBooks.language,
   rating: libraryBooks.rating,
   review: libraryBooks.review,
@@ -75,7 +78,9 @@ type FullRow = {
   pageCount: number | null;
   publisher: string | null;
   publishedDate: string | null;
-  categories: string | null;
+  tags: string | null;
+  fiction: boolean;
+  genre: string;
   language: string | null;
   rating: number | null;
   review: string | null;
@@ -113,7 +118,9 @@ const toBookVolume = (r: FullRow) =>
     pageCount: r.pageCount ?? undefined,
     publisher: r.publisher ?? undefined,
     publishedDate: r.publishedDate ?? undefined,
-    categories: r.categories ? z.array(z.string()).parse(JSON.parse(r.categories)) : [],
+    tags: r.tags ? z.array(z.string()).parse(JSON.parse(r.tags)) : [],
+    fiction: r.fiction,
+    genre: bookGenreSchema.parse(r.genre),
     language: r.language ?? undefined,
   });
 
@@ -194,7 +201,9 @@ export class LibraryBooksRepository {
         pageCount: metadata.pageCount ?? null,
         publisher: metadata.publisher ?? null,
         publishedDate: metadata.publishedDate ?? null,
-        categories: metadata.categories.length > 0 ? JSON.stringify(metadata.categories) : null,
+        tags: metadata.tags.length > 0 ? JSON.stringify(metadata.tags) : null,
+        fiction: metadata.fiction,
+        genre: metadata.genre,
         language: metadata.language ?? null,
       })
       .returning({ id: libraryBooks.id })

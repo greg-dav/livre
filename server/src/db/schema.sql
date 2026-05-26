@@ -35,7 +35,9 @@ CREATE TABLE IF NOT EXISTS book_cache (
   page_count       INTEGER,
   publisher        TEXT,
   published_date   TEXT,
-  categories       TEXT,           -- JSON array
+  tags             TEXT,           -- JSON array of normalized tags
+  fiction          INTEGER NOT NULL DEFAULT 0,
+  genre            TEXT    NOT NULL DEFAULT 'unknown',
   language         TEXT,
   cache_expires_at TEXT NOT NULL,
   UNIQUE (source, external_id)
@@ -62,7 +64,9 @@ CREATE TABLE IF NOT EXISTS library_books (
   page_count       INTEGER,
   publisher        TEXT,
   published_date   TEXT,
-  categories       TEXT,           -- JSON array
+  tags             TEXT,           -- JSON array of normalized tags
+  fiction          INTEGER NOT NULL DEFAULT 0,
+  genre            TEXT    NOT NULL DEFAULT 'unknown',
   language         TEXT,
   -- user fields
   rating         INTEGER CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5)),

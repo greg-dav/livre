@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { and, eq, lt } from 'drizzle-orm';
 import { db } from '../db';
 import { bookCache } from '../db/schema';
-import { type BookSource } from '@livre/types';
+import { bookGenreSchema, type BookSource } from '@livre/types';
 import { type SourcedBook } from '../lib/bookRef';
 
 /**
@@ -45,7 +45,9 @@ export class BookCacheRepository {
       pageCount: book.pageCount ?? null,
       publisher: book.publisher ?? null,
       publishedDate: book.publishedDate ?? null,
-      categories: book.categories.length > 0 ? JSON.stringify(book.categories) : null,
+      tags: book.tags.length > 0 ? JSON.stringify(book.tags) : null,
+      fiction: book.fiction,
+      genre: book.genre,
       language: book.language ?? null,
       cacheExpiresAt,
     };
@@ -73,7 +75,9 @@ export class BookCacheRepository {
       pageCount: row.pageCount ?? undefined,
       publisher: row.publisher ?? undefined,
       publishedDate: row.publishedDate ?? undefined,
-      categories: row.categories ? z.array(z.string()).parse(JSON.parse(row.categories)) : [],
+      tags: row.tags ? z.array(z.string()).parse(JSON.parse(row.tags)) : [],
+      fiction: row.fiction ?? false,
+      genre: bookGenreSchema.parse(row.genre ?? 'unknown'),
       language: row.language ?? undefined,
     };
   }

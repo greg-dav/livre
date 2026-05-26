@@ -157,12 +157,12 @@ export const BookDetailView = ({
                   </Text>
                 ))}
             </Description>
-            {book.categories.length > 0 && (
+            {book.tags.length > 0 && (
               <Categories>
-                {book.categories.map((category) => (
-                  <Pill key={category}>
+                {book.tags.map((tag) => (
+                  <Pill key={tag}>
                     <Text variant="ui-sm" color="muted">
-                      {category}
+                      {tag}
                     </Text>
                   </Pill>
                 ))}

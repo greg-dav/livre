@@ -22,6 +22,28 @@ if (!userColumns.includes('public_key'))
 if (!userColumns.includes('private_key'))
   sqlite.exec('ALTER TABLE users ADD COLUMN private_key TEXT');
 
+const bookCacheColumns = sqlite
+  .prepare("SELECT name FROM pragma_table_info('book_cache')")
+  .all()
+  .map((r) => (r as { name: string }).name);
+if (bookCacheColumns.includes('categories') && !bookCacheColumns.includes('tags'))
+  sqlite.exec('ALTER TABLE book_cache RENAME COLUMN categories TO tags');
+if (!bookCacheColumns.includes('fiction'))
+  sqlite.exec('ALTER TABLE book_cache ADD COLUMN fiction INTEGER NOT NULL DEFAULT 0');
+if (!bookCacheColumns.includes('genre'))
+  sqlite.exec("ALTER TABLE book_cache ADD COLUMN genre TEXT NOT NULL DEFAULT 'unknown'");
+
+const libraryBooksColumns = sqlite
+  .prepare("SELECT name FROM pragma_table_info('library_books')")
+  .all()
+  .map((r) => (r as { name: string }).name);
+if (libraryBooksColumns.includes('categories') && !libraryBooksColumns.includes('tags'))
+  sqlite.exec('ALTER TABLE library_books RENAME COLUMN categories TO tags');
+if (!libraryBooksColumns.includes('fiction'))
+  sqlite.exec('ALTER TABLE library_books ADD COLUMN fiction INTEGER NOT NULL DEFAULT 0');
+if (!libraryBooksColumns.includes('genre'))
+  sqlite.exec("ALTER TABLE library_books ADD COLUMN genre TEXT NOT NULL DEFAULT 'unknown'");
+
 export const db = drizzle(sqlite, { schema });
 
 // The transaction callback receives BetterSQLiteTransaction, which differs from typeof db
