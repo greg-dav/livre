@@ -17,45 +17,49 @@ export const IsbnLookupResult = ({
   book,
   onSaveIsbnOnly,
   onSaveWithMetadata,
-}: IsbnLookupResultProps) => (
-  <>
-    <ResultCard>
-      {book.thumbnail && <ResultCover src={book.thumbnail} alt={book.title} />}
-      <ResultMeta>
-        <Text variant="ui-md">{book.title}</Text>
-        {book.authors.length > 0 && (
-          <Text variant="ui-sm" color="muted">
-            {book.authors.join(', ')}
-          </Text>
-        )}
-        {book.publisher && (
-          <Text variant="ui-xs" color="muted">
-            {book.publisher}
-            {book.publishedDate ? ` · ${book.publishedDate.slice(0, 4)}` : ''}
-          </Text>
-        )}
-        {book.pageCount && (
-          <Text variant="ui-xs" color="muted">
-            {book.pageCount} pp
-          </Text>
-        )}
-      </ResultMeta>
-    </ResultCard>
+}: IsbnLookupResultProps) => {
+  const byline = [
+    book.publishedDate?.slice(0, 4),
+    book.publisher,
+    book.pageCount ? `${book.pageCount} pp` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-    <ResultActions>
-      <Dialog.Close asChild>
-        <Button variant="ghost" size="sm" type="button">
-          <Text variant="label">Cancel</Text>
+  return (
+    <>
+      <ResultCard>
+        {book.thumbnail && <ResultCover src={book.thumbnail} alt={book.title} />}
+        <ResultMeta>
+          <Text variant="ui-md">{book.title}</Text>
+          {book.authors.length > 0 && (
+            <Text variant="ui-sm" color="muted">
+              {book.authors.join(', ')}
+            </Text>
+          )}
+          {byline && (
+            <Text variant="ui-xs" color="muted">
+              {byline}
+            </Text>
+          )}
+        </ResultMeta>
+      </ResultCard>
+
+      <ResultActions>
+        <Dialog.Close asChild>
+          <Button variant="ghost" size="sm" type="button">
+            <Text variant="label">Cancel</Text>
+          </Button>
+        </Dialog.Close>
+        <Button variant="ghost" size="sm" type="button" onClick={onSaveIsbnOnly}>
+          <Text variant="label">Save ISBN only</Text>
         </Button>
-      </Dialog.Close>
-      <Button variant="ghost" size="sm" type="button" onClick={onSaveIsbnOnly}>
-        <Text variant="label">Save ISBN only</Text>
-      </Button>
-      <Button variant="primary" size="sm" type="button" onClick={onSaveWithMetadata}>
-        <Text variant="label" color="onColor">
-          Update metadata
-        </Text>
-      </Button>
-    </ResultActions>
-  </>
-);
+        <Button variant="primary" size="sm" type="button" onClick={onSaveWithMetadata}>
+          <Text variant="label" color="onColor">
+            Update metadata
+          </Text>
+        </Button>
+      </ResultActions>
+    </>
+  );
+};
