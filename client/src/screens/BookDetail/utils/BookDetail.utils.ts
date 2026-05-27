@@ -1,5 +1,5 @@
 import { type LogEventType, type ShelfStatus } from '@livre/types';
-import { escapeHtml } from '../../lib/contentEditable';
+import { escapeHtml } from '../../../lib/contentEditable';
 
 export const STATUS_LABELS: Record<ShelfStatus, string> = {
   want: 'Want to Read',
@@ -96,12 +96,16 @@ export const toDescriptionHTML = (text: string): string =>
     .map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
     .join('');
 
-/** Reads <p> children from a contenteditable back to \n\n-separated plain text. */
+/**
+ * Reads a contenteditable back to \n\n-separated plain text. Targets direct <p> and <div>
+ * children because Chrome uses <p> when splitting an existing paragraph but falls back to <div>
+ * in other scenarios (e.g. Enter at the end of the last paragraph). Mixing both is common.
+ */
 export const readDescriptionContent = (el: HTMLElement): string => {
-  const paragraphs = Array.from(el.querySelectorAll('p'));
-  if (paragraphs.length === 0) return el.innerText.trim();
-  return paragraphs
-    .map((p) => p.innerText.trimEnd())
+  const blocks = Array.from(el.querySelectorAll(':scope > p, :scope > div'));
+  if (blocks.length === 0) return el.innerText.trim();
+  return blocks
+    .map((block) => (block as HTMLElement).innerText.trimEnd())
     .filter(Boolean)
     .join('\n\n');
 };

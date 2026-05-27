@@ -24,6 +24,8 @@ export {
   updateDescriptionResponseSchema,
   updateCoverBodySchema,
   updateCoverResponseSchema,
+  updateTitleBodySchema,
+  updateTitleResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -36,6 +38,7 @@ export type {
   UpdateTagsBody,
   UpdateDescriptionBody,
   UpdateCoverBody,
+  UpdateTitleBody,
 } from './schemas/books';
 export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';

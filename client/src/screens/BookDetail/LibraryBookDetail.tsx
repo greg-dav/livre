@@ -6,10 +6,10 @@ import { type LogEventType } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
-import { ReadingSince, ReadingSinceDot } from './BookDetail.styles';
-import { STATUS_LABELS, SELECTABLE_EVENTS, formatReadingSince } from './BookDetail.utils';
-import { BookDetailView } from './BookDetailView';
-import { Journal } from './Journal';
+import { ReadingSince, ReadingSinceDot } from './components/BookDetailView/BookDetailView.styles';
+import { STATUS_LABELS, SELECTABLE_EVENTS, formatReadingSince } from './utils/BookDetail.utils';
+import { BookDetailView } from './components/BookDetailView/BookDetailView';
+import { Journal } from './components/Journal/Journal';
 import { navigationStateSchema } from '../../schemas/navigation';
 
 /**
@@ -49,6 +49,14 @@ export const LibraryBookDetail = () => {
 
   const { mutate: saveTags } = useMutation({
     mutationFn: (tags: string[]) => api.books.updateTags(libraryBookId, tags),
+  });
+
+  const { mutate: saveTitle } = useMutation({
+    mutationFn: (title: string) => api.books.updateTitle(libraryBookId, title),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
   });
 
   const { mutate: saveDescription } = useMutation({
@@ -94,6 +102,7 @@ export const LibraryBookDetail = () => {
       editable
       justAcquired={justAcquired}
       onTagsChange={saveTags}
+      onTitleChange={saveTitle}
       onDescriptionChange={saveDescription}
       onCoverChange={saveCover}
       journal={<Journal entry={entry} log={data.log} justAcquired={justAcquired} />}

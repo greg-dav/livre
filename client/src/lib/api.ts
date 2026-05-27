@@ -14,6 +14,7 @@ import {
   updateTagsResponseSchema,
   updateDescriptionResponseSchema,
   updateCoverResponseSchema,
+  updateTitleResponseSchema,
   type LogEventType,
   type ShelfStatus,
 } from '@livre/types';
@@ -100,6 +101,11 @@ export const api = {
       request(`/books/library/${libraryBookId}/cover`, updateCoverResponseSchema, {
         method: 'PATCH',
         body: JSON.stringify({ url }),
+      }),
+    updateTitle: (libraryBookId: number, title: string) =>
+      request(`/books/library/${libraryBookId}/title`, updateTitleResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ title }),
       }),
   },
   shelves: {

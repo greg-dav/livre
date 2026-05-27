@@ -1,10 +1,11 @@
 import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
-import { useDescriptionEdit } from './useDescriptionEdit';
-import { useCoverEdit } from './useCoverEdit';
+import { useDescriptionEdit } from '../../hooks/useDescriptionEdit';
+import { useTitleEdit } from '../../hooks/useTitleEdit';
+import { useCoverEdit } from '../../hooks/useCoverEdit';
 import type { ReactNode } from 'react';
 import { Text, Lightbox, Dialog, Input, Button } from '@livre/primitives';
 import { type BookVolume } from '@livre/types';
-import { Layout } from '../../components';
+import { Layout } from '../../../../components';
 import {
   LayoutGrid,
   LeftColumn,
@@ -23,6 +24,7 @@ import {
   Description,
   DescriptionSection,
   DescriptionInlineEditor,
+  TitleInlineEditor,
   SectionLabel,
   HeroActions,
   MetaGrid,
@@ -30,9 +32,14 @@ import {
   MetaValue,
   CoverDialogForm,
   CoverDialogActions,
-} from './BookDetail.styles';
-import { TagList } from './TagList';
-import { dedupeAuthors, formatIsbn, formatLanguage, formatPublishedDate } from './BookDetail.utils';
+} from './BookDetailView.styles';
+import { TagList } from '../TagList/TagList';
+import {
+  dedupeAuthors,
+  formatIsbn,
+  formatLanguage,
+  formatPublishedDate,
+} from '../../utils/BookDetail.utils';
 
 interface BookDetailViewProps {
   book: BookVolume;
@@ -42,6 +49,7 @@ interface BookDetailViewProps {
   actions: ReactNode;
   statusIndicator?: ReactNode;
   onTagsChange?: (tags: string[]) => void;
+  onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
   onCoverChange?: (url: string) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
@@ -63,6 +71,7 @@ export const BookDetailView = ({
   actions,
   statusIndicator,
   onTagsChange,
+  onTitleChange,
   onDescriptionChange,
   onCoverChange,
   journal,
@@ -73,6 +82,7 @@ export const BookDetailView = ({
   const coverSrcs = [book.largeThumbnail, book.thumbnail].filter((u): u is string => !!u);
   const coverSrc = coverSrcs[coverIndex];
 
+  const titleEdit = useTitleEdit(book.title, onTitleChange);
   const description = useDescriptionEdit(book.description, onDescriptionChange);
   const coverEdit = useCoverEdit(onCoverChange);
 
@@ -95,6 +105,7 @@ export const BookDetailView = ({
     Boolean
   );
 
+  const titleEditable = editable && !!onTitleChange;
   const descriptionEditable = editable && !!onDescriptionChange;
   const coverEditable = editable && !!onCoverChange;
 
@@ -136,7 +147,21 @@ export const BookDetailView = ({
         )}
         <HeroMeta>
           <Text variant="h2" as="h1">
-            {book.title}
+            {titleEditable ? (
+              <TitleInlineEditor
+                ref={titleEdit.editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                spellCheck={false}
+                onFocus={titleEdit.handleFocus}
+                onBlur={titleEdit.handleBlur}
+                onInput={titleEdit.handleInput}
+                onKeyDown={titleEdit.handleKeyDown}
+                onPaste={titleEdit.handlePaste}
+              />
+            ) : (
+              book.title
+            )}
           </Text>
           <AuthorList>
             {dedupeAuthors(book.authors).map((author, i) => (

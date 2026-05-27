@@ -119,3 +119,8 @@ export const updateCoverBodySchema = z.object({ url: z.string() });
 export type UpdateCoverBody = z.infer<typeof updateCoverBodySchema>;
 
 export const updateCoverResponseSchema = z.object({ ok: z.literal(true) });
+
+export const updateTitleBodySchema = z.object({ title: z.string().min(1) });
+export type UpdateTitleBody = z.infer<typeof updateTitleBodySchema>;
+
+export const updateTitleResponseSchema = z.object({ ok: z.literal(true) });

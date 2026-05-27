@@ -238,6 +238,19 @@ export const Description = styled('div')(({ theme }) => ({
   },
 }));
 
+/**
+ * Contenteditable span for inline title editing. Inherits font from the wrapping <Text> element
+ * so token references stay out of this file. Single-line — Enter is handled at the hook level
+ * to blur instead of inserting a newline.
+ */
+export const TitleInlineEditor = styled('span')({
+  outline: 'none',
+  font: 'inherit',
+  cursor: 'text',
+  display: 'block',
+  wordBreak: 'break-word',
+});
+
 /*
  * Contenteditable div for inline description editing. Mirrors the read-mode paragraph structure:
  * <p> children with the same 12px inter-paragraph gap and the same drop-cap ::first-letter.
@@ -269,6 +282,11 @@ export const DescriptionInlineEditor = styled('div')(({ theme }) => ({
     float: 'left',
     margin: `${theme.spacing(1)} ${theme.spacing(2)} 0 0`,
     color: theme.accent,
+  },
+
+  // Collapse the drop cap on focus rather than let Chromium corrupt its color mid-edit.
+  '&:focus > p:first-child::first-letter': {
+    all: 'unset',
   },
 }));
 

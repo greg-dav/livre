@@ -7,8 +7,8 @@ import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
 import { useLibrary } from '../../context/LibraryContext';
-import { SELECTABLE_EVENTS } from './BookDetail.utils';
-import { BookDetailView } from './BookDetailView';
+import { SELECTABLE_EVENTS } from './utils/BookDetail.utils';
+import { BookDetailView } from './components/BookDetailView/BookDetailView';
 
 /**
  * Discovery view for a book not yet in the library. Identified entirely by the opaque
