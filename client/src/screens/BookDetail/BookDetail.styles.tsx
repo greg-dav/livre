@@ -36,6 +36,36 @@ export const Hero = styled('div')(({ theme }) => ({
 // keyframes so the shadow doesn't disappear during the grab.
 const coverDropShadow = '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06)';
 
+/*
+ * Gradient overlay that fades in when the user hovers over the cover. The button inside it fires
+ * the cover-change dialog. Pointer events pass through the gradient itself so only the button is
+ * interactive; the overlay background doesn't block the Lightbox click in read-only mode.
+ */
+export const CoverEditOverlay = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.55) 100%)',
+  opacity: 0,
+  transition: 'opacity 0.15s ease',
+  display: 'flex',
+  alignItems: 'flex-end',
+  justifyContent: 'center',
+  paddingBottom: theme.spacing(3),
+  pointerEvents: 'none',
+}));
+
+export const CoverEditButton = styled('button')(({ theme }) => ({
+  background: theme.bgElevated,
+  border: 'none',
+  borderRadius: theme.radius.sm,
+  color: theme.text,
+  cursor: 'pointer',
+  padding: '6px 10px',
+  transition: 'opacity 0.15s',
+  pointerEvents: 'auto',
+  '&:hover': { opacity: 0.88 },
+}));
+
 export const CoverWrapper = styled('div')<{ $inLibrary?: boolean; $justAcquired?: boolean }>(
   ({ $inLibrary, $justAcquired, theme }) => ({
     position: 'relative',
@@ -47,6 +77,8 @@ export const CoverWrapper = styled('div')<{ $inLibrary?: boolean; $justAcquired?
     isolation: 'isolate',
     background: theme.bgElevated,
     boxShadow: $inLibrary ? `0 0 0 2px ${theme.accent}, ${coverDropShadow}` : coverDropShadow,
+
+    [`&:hover ${CoverEditOverlay}`]: { opacity: 1 },
 
     // Acquisition sequence: ring quietly slips out from the cover's edge (200ms), then a snappy
     // shimmer streaks diagonally (350ms, overlapping with the ring slip for cohesion). Both use
@@ -83,10 +115,12 @@ export const Cover = styled('img')<{ $loaded: boolean }>(({ $loaded }) => ({
 }));
 
 export const CoverPlaceholder = styled('div')(({ theme }) => ({
+  position: 'relative',
   width: 'clamp(155px, 16vw, 200px)',
   aspectRatio: '2 / 3',
   borderRadius: theme.radius.sm,
   flexShrink: 0,
+  overflow: 'hidden',
   background: '#2a2a2a',
   boxShadow: coverDropShadow,
   display: 'flex',
@@ -96,6 +130,8 @@ export const CoverPlaceholder = styled('div')(({ theme }) => ({
   padding: theme.spacing(5),
   gap: theme.spacing(2),
   textAlign: 'center' as const,
+
+  [`&:hover ${CoverEditOverlay}`]: { opacity: 1 },
 }));
 
 export const HeroMeta = styled('div')(({ theme }) => ({
@@ -268,3 +304,16 @@ export const MetaLabel = styled('dt')({
 export const MetaValue = styled('dd')({
   margin: 0,
 });
+
+export const CoverDialogForm = styled('form')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(4),
+  marginTop: theme.spacing(4),
+}));
+
+export const CoverDialogActions = styled('div')(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: theme.spacing(2),
+}));

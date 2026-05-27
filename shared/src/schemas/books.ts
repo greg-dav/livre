@@ -114,3 +114,8 @@ export const updateDescriptionBodySchema = z.object({ description: z.string() })
 export type UpdateDescriptionBody = z.infer<typeof updateDescriptionBodySchema>;
 
 export const updateDescriptionResponseSchema = z.object({ ok: z.literal(true) });
+
+export const updateCoverBodySchema = z.object({ url: z.string() });
+export type UpdateCoverBody = z.infer<typeof updateCoverBodySchema>;
+
+export const updateCoverResponseSchema = z.object({ ok: z.literal(true) });

@@ -130,6 +130,12 @@ export class BooksService {
     return true;
   }
 
+  updateCover(userId: number, libraryBookId: number, url: string): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updateCover(libraryBookId, url);
+    return true;
+  }
+
   /** Cache-aware lookup that falls through to the source on miss and writes back on the way out. */
   private async fetchSourced(source: BookSource, externalId: string): Promise<SourcedBook> {
     const cached = this.bookCache.get(source, externalId);

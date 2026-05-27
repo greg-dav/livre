@@ -195,6 +195,13 @@ export class LibraryBooksRepository {
       .run();
   }
 
+  updateCover(libraryBookId: number, url: string): void {
+    db.update(libraryBooks)
+      .set({ largeThumbnail: url, thumbnail: url })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
   /**
    * Copy a metadata snapshot into the user's library. Caller is responsible for ensuring no
    * duplicate exists (use findIdBySource first). Returns the new library_books.id.

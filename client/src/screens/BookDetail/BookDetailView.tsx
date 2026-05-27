@@ -1,7 +1,8 @@
 import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
 import { useDescriptionEdit } from './useDescriptionEdit';
+import { useCoverEdit } from './useCoverEdit';
 import type { ReactNode } from 'react';
-import { Text, Lightbox } from '@livre/primitives';
+import { Text, Lightbox, Dialog, Input, Button } from '@livre/primitives';
 import { type BookVolume } from '@livre/types';
 import { Layout } from '../../components';
 import {
@@ -9,6 +10,8 @@ import {
   LeftColumn,
   Hero,
   CoverWrapper,
+  CoverEditOverlay,
+  CoverEditButton,
   Cover,
   CoverPlaceholder,
   HeroMeta,
@@ -25,6 +28,8 @@ import {
   MetaGrid,
   MetaLabel,
   MetaValue,
+  CoverDialogForm,
+  CoverDialogActions,
 } from './BookDetail.styles';
 import { TagList } from './TagList';
 import { dedupeAuthors, formatIsbn, formatLanguage, formatPublishedDate } from './BookDetail.utils';
@@ -38,6 +43,7 @@ interface BookDetailViewProps {
   statusIndicator?: ReactNode;
   onTagsChange?: (tags: string[]) => void;
   onDescriptionChange?: (description: string) => void;
+  onCoverChange?: (url: string) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
   journal?: ReactNode;
 }
@@ -58,6 +64,7 @@ export const BookDetailView = ({
   statusIndicator,
   onTagsChange,
   onDescriptionChange,
+  onCoverChange,
   journal,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
@@ -67,6 +74,11 @@ export const BookDetailView = ({
   const coverSrc = coverSrcs[coverIndex];
 
   const description = useDescriptionEdit(book.description, onDescriptionChange);
+  const coverEdit = useCoverEdit(onCoverChange);
+
+  useEffect(() => {
+    setCoverIndex(0);
+  }, [book.largeThumbnail, book.thumbnail]);
 
   useEffect(() => {
     setImgLoaded(false);
@@ -84,6 +96,15 @@ export const BookDetailView = ({
   );
 
   const descriptionEditable = editable && !!onDescriptionChange;
+  const coverEditable = editable && !!onCoverChange;
+
+  const coverEditOverlay = coverEditable ? (
+    <CoverEditOverlay>
+      <CoverEditButton type="button" onClick={coverEdit.openDialog}>
+        <Text variant="label">Change cover</Text>
+      </CoverEditButton>
+    </CoverEditOverlay>
+  ) : null;
 
   const content = (
     <>
@@ -99,6 +120,7 @@ export const BookDetailView = ({
                 onLoad={() => setImgLoaded(true)}
                 onError={handleCoverError}
               />
+              {coverEditOverlay}
             </CoverWrapper>
           </Lightbox>
         ) : (
@@ -109,6 +131,7 @@ export const BookDetailView = ({
             <Text variant="ui-xs" color="onDarkMuted">
               {dedupeAuthors(book.authors).join(', ')}
             </Text>
+            {coverEditOverlay}
           </CoverPlaceholder>
         )}
         <HeroMeta>
@@ -232,6 +255,37 @@ export const BookDetailView = ({
           </>
         )}
       </MetaGrid>
+
+      {coverEditable && (
+        <Dialog
+          open={coverEdit.open}
+          onOpenChange={coverEdit.handleOpenChange}
+          title="Change cover"
+          description="Paste an image URL to use as this book's cover."
+        >
+          <CoverDialogForm onSubmit={coverEdit.handleSave}>
+            <Input
+              type="url"
+              placeholder="https://..."
+              value={coverEdit.url}
+              onChange={(e) => coverEdit.setUrl(e.target.value)}
+              autoFocus
+            />
+            <CoverDialogActions>
+              <Dialog.Close asChild>
+                <Button variant="ghost" size="sm" type="button">
+                  <Text variant="label">Cancel</Text>
+                </Button>
+              </Dialog.Close>
+              <Button variant="primary" size="sm" type="submit" disabled={!coverEdit.url.trim()}>
+                <Text variant="label" color="onColor">
+                  Save
+                </Text>
+              </Button>
+            </CoverDialogActions>
+          </CoverDialogForm>
+        </Dialog>
+      )}
     </>
   );
 

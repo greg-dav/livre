@@ -68,6 +68,8 @@ color: '#6B6860';
 
 **Never reference `fontFamily`, `fontWeight`, or `fontSize` in any component or styles file.** All typography goes through `<Text>` from `@livre/primitives`.
 
+**Bounded exception — `font: inherit` in contenteditable:** Contenteditable elements can't receive font via `<Text>` children because React's reconciler conflicts with direct DOM mutation via `innerHTML`. Wrap the contenteditable in `<Text variant="..." as="div">` and set `font: inherit` on the inner element so it picks up the font from the wrapper. Selector-based typography on the same element (drop caps via `::first-letter`, inter-paragraph spacing via `& > p + p`) is also permitted when CSS pseudo-elements are the only viable approach. Do not generalize either exception.
+
 ```tsx
 // correct
 <Text variant="h3">Blood Meridian</Text>
@@ -190,6 +192,12 @@ gap: '1.75rem 1.25rem'
 Common values: `spacing(1)` = 4px · `spacing(2)` = 8px · `spacing(4)` = 16px · `spacing(6)` = 24px · `spacing(9)` = 36px
 
 **Exception**: leave sub-4px values (1px, 2px, 3px) and oddball legacy sizes (5px, 7px) as raw literals — they don't map cleanly to the grid. Typography values (`fontSize`, `lineHeight`, `letterSpacing`) are never spacing — those are owned by `<Text>`.
+
+## Inline editing pattern
+
+Editable fields extract all state and event handlers into a `use*Edit` hook that lives alongside the screen (e.g. `useDescriptionEdit.ts`, `useCoverEdit.ts`). The view receives only the hook's return value and wires it to JSX — it never owns editing state directly.
+
+`useContentEditable` (`client/src/hooks/`) is the shared primitive for contenteditable fields: focus tracking, debounced save (3.5s default), and Escape-to-revert. Field-specific hooks call it and add any DOM initialisation logic (e.g. a `useLayoutEffect` to set `innerHTML` from props without triggering React reconciliation). DOM init must live in the field hook, not in the view.
 
 ## Theming
 

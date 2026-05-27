@@ -166,7 +166,8 @@ function mapVolume(v: GoogleVolume): SourcedBook {
       .first()
       .value() as string | undefined;
 
-  const thumbnail = pickUrl(['thumbnail', 'smallThumbnail']);
+  const rawThumbnail = pickUrl(['thumbnail', 'smallThumbnail']);
+  const thumbnail = rawThumbnail ? upgradeCoverUrl(rawThumbnail) : undefined;
   const largeThumbnail =
     pickUrl(['extraLarge', 'large', 'medium', 'small']) ??
     (thumbnail ? upgradeCoverUrl(thumbnail) : undefined);

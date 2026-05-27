@@ -12,6 +12,8 @@ import {
   updateTagsResponseSchema,
   updateDescriptionBodySchema,
   updateDescriptionResponseSchema,
+  updateCoverBodySchema,
+  updateCoverResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { requireAuth } from '../middleware/auth';
@@ -108,6 +110,21 @@ export function createBooksRouter(service: BooksService): Router {
       if (!user) throw createError(401, 'Unauthorized');
       const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
       const ok = service.updateDescription(user.id, libraryBookId, body.description);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the cover image URL on a library book. */
+  router.patch(
+    '/library/:libraryBookId/cover',
+    updateCoverBodySchema,
+    updateCoverResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updateCover(user.id, libraryBookId, body.url);
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
