@@ -26,6 +26,18 @@ export {
   updateCoverResponseSchema,
   updateTitleBodySchema,
   updateTitleResponseSchema,
+  updatePublisherBodySchema,
+  updatePublisherResponseSchema,
+  updatePageCountBodySchema,
+  updatePageCountResponseSchema,
+  updatePublishedDateBodySchema,
+  updatePublishedDateResponseSchema,
+  updateLanguageBodySchema,
+  updateLanguageResponseSchema,
+  updateIsbnBodySchema,
+  updateIsbnResponseSchema,
+  refreshMetadataBodySchema,
+  refreshMetadataResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -39,6 +51,12 @@ export type {
   UpdateDescriptionBody,
   UpdateCoverBody,
   UpdateTitleBody,
+  UpdatePublisherBody,
+  UpdatePageCountBody,
+  UpdatePublishedDateBody,
+  UpdateLanguageBody,
+  UpdateIsbnBody,
+  RefreshMetadataBody,
 } from './schemas/books';
 export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';

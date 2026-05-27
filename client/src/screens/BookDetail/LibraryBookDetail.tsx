@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, Button, DropdownMenu, Loader } from '@livre/primitives';
-import { type LogEventType } from '@livre/types';
+import { type LogEventType, type RefreshMetadataBody } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
@@ -74,6 +74,43 @@ export const LibraryBookDetail = () => {
     },
   });
 
+  const invalidateDetail = () =>
+    queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+
+  const { mutate: savePublisher } = useMutation({
+    mutationFn: (publisher: string) => api.books.updatePublisher(libraryBookId, publisher),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: savePageCount } = useMutation({
+    mutationFn: (pageCount: number) => api.books.updatePageCount(libraryBookId, pageCount),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: savePublishedDate } = useMutation({
+    mutationFn: (publishedDate: string) =>
+      api.books.updatePublishedDate(libraryBookId, publishedDate),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: saveLanguage } = useMutation({
+    mutationFn: (language: string) => api.books.updateLanguage(libraryBookId, language),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: saveIsbn } = useMutation({
+    mutationFn: (isbn: string) => api.books.updateIsbn(libraryBookId, isbn),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: refreshMetadata } = useMutation({
+    mutationFn: (fields: RefreshMetadataBody) => api.books.refreshMetadata(libraryBookId, fields),
+    onSuccess: () => {
+      invalidateDetail();
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
   useEffect(() => {
     if (!data || !data.entry.bookRef) return;
     pushRecentBook({
@@ -105,6 +142,12 @@ export const LibraryBookDetail = () => {
       onTitleChange={saveTitle}
       onDescriptionChange={saveDescription}
       onCoverChange={saveCover}
+      onPublisherChange={savePublisher}
+      onPageCountChange={savePageCount}
+      onPublishedDateChange={savePublishedDate}
+      onLanguageChange={saveLanguage}
+      onIsbnChange={saveIsbn}
+      onRefreshMetadata={refreshMetadata}
       journal={<Journal entry={entry} log={data.log} justAcquired={justAcquired} />}
       actions={
         <DropdownMenu

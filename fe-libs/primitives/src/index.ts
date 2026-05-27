@@ -19,4 +19,6 @@ export { BookCard, BookGrid } from './BookCard/BookCard';
 export type { BookCardProps } from './BookCard/BookCard';
 export { Lightbox } from './Lightbox/Lightbox';
 export { Loader } from './Loader/Loader';
+export { Select } from './Select/Select';
+export type { SelectProps, SelectOption } from './Select/Select';
 export { PrimitivesGlobalStyle } from './PrimitivesGlobalStyle';

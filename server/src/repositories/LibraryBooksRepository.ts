@@ -206,6 +206,54 @@ export class LibraryBooksRepository {
     db.update(libraryBooks).set({ title }).where(eq(libraryBooks.id, libraryBookId)).run();
   }
 
+  updatePublisher(libraryBookId: number, publisher: string): void {
+    db.update(libraryBooks)
+      .set({ publisher: publisher || null })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
+  updatePageCount(libraryBookId: number, pageCount: number): void {
+    db.update(libraryBooks).set({ pageCount }).where(eq(libraryBooks.id, libraryBookId)).run();
+  }
+
+  updatePublishedDate(libraryBookId: number, publishedDate: string): void {
+    db.update(libraryBooks)
+      .set({ publishedDate: publishedDate || null })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
+  updateLanguage(libraryBookId: number, language: string): void {
+    db.update(libraryBooks)
+      .set({ language: language || null })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
+  updateIsbn(libraryBookId: number, isbn: string): void {
+    db.update(libraryBooks)
+      .set({ isbn: isbn || null })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
+  refreshMetadata(libraryBookId: number, fields: import('@livre/types').RefreshMetadataBody): void {
+    const set: Record<string, unknown> = {};
+    if (fields.title !== undefined) set.title = fields.title;
+    if (fields.authors !== undefined) set.authors = fields.authors.join('|') || null;
+    if (fields.description !== undefined) set.description = fields.description || null;
+    if (fields.thumbnail !== undefined) set.thumbnail = fields.thumbnail || null;
+    if (fields.largeThumbnail !== undefined) set.largeThumbnail = fields.largeThumbnail || null;
+    if (fields.isbn !== undefined) set.isbn = fields.isbn || null;
+    if (fields.pageCount !== undefined) set.pageCount = fields.pageCount ?? null;
+    if (fields.publisher !== undefined) set.publisher = fields.publisher || null;
+    if (fields.publishedDate !== undefined) set.publishedDate = fields.publishedDate || null;
+    if (fields.language !== undefined) set.language = fields.language || null;
+    if (Object.keys(set).length === 0) return;
+    db.update(libraryBooks).set(set).where(eq(libraryBooks.id, libraryBookId)).run();
+  }
+
   /**
    * Copy a metadata snapshot into the user's library. Caller is responsible for ensuring no
    * duplicate exists (use findIdBySource first). Returns the new library_books.id.

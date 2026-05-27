@@ -16,6 +16,18 @@ import {
   updateCoverResponseSchema,
   updateTitleBodySchema,
   updateTitleResponseSchema,
+  updatePublisherBodySchema,
+  updatePublisherResponseSchema,
+  updatePageCountBodySchema,
+  updatePageCountResponseSchema,
+  updatePublishedDateBodySchema,
+  updatePublishedDateResponseSchema,
+  updateLanguageBodySchema,
+  updateLanguageResponseSchema,
+  updateIsbnBodySchema,
+  updateIsbnResponseSchema,
+  refreshMetadataBodySchema,
+  refreshMetadataResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { requireAuth } from '../middleware/auth';
@@ -142,6 +154,96 @@ export function createBooksRouter(service: BooksService): Router {
       if (!user) throw createError(401, 'Unauthorized');
       const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
       const ok = service.updateTitle(user.id, libraryBookId, body.title);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the publisher on a library book. */
+  router.patch(
+    '/library/:libraryBookId/publisher',
+    updatePublisherBodySchema,
+    updatePublisherResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updatePublisher(user.id, libraryBookId, body.publisher);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the page count on a library book. */
+  router.patch(
+    '/library/:libraryBookId/page-count',
+    updatePageCountBodySchema,
+    updatePageCountResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updatePageCount(user.id, libraryBookId, body.pageCount);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the published date on a library book. */
+  router.patch(
+    '/library/:libraryBookId/published-date',
+    updatePublishedDateBodySchema,
+    updatePublishedDateResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updatePublishedDate(user.id, libraryBookId, body.publishedDate);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the language on a library book. */
+  router.patch(
+    '/library/:libraryBookId/language',
+    updateLanguageBodySchema,
+    updateLanguageResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updateLanguage(user.id, libraryBookId, body.language);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the ISBN on a library book. */
+  router.patch(
+    '/library/:libraryBookId/isbn',
+    updateIsbnBodySchema,
+    updateIsbnResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updateIsbn(user.id, libraryBookId, body.isbn);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Bulk-refresh metadata on a library book (e.g. after an ISBN lookup). */
+  router.patch(
+    '/library/:libraryBookId/metadata',
+    refreshMetadataBodySchema,
+    refreshMetadataResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.refreshMetadata(user.id, libraryBookId, body);
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }

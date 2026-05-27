@@ -2,9 +2,14 @@ import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
 import { useDescriptionEdit } from '../../hooks/useDescriptionEdit';
 import { useTitleEdit } from '../../hooks/useTitleEdit';
 import { useCoverEdit } from '../../hooks/useCoverEdit';
+import { usePublisherEdit } from '../../hooks/usePublisherEdit';
+import { usePageCountEdit } from '../../hooks/usePageCountEdit';
+import { useDateEdit } from '../../hooks/useDateEdit';
+import { useLanguageEdit } from '../../hooks/useLanguageEdit';
+import { useIsbnEdit } from '../../hooks/useIsbnEdit';
 import type { ReactNode } from 'react';
 import { Text, Lightbox, Dialog, Input, Button } from '@livre/primitives';
-import { type BookVolume } from '@livre/types';
+import { type BookVolume, type RefreshMetadataBody } from '@livre/types';
 import { Layout } from '../../../../components';
 import {
   LayoutGrid,
@@ -30,10 +35,16 @@ import {
   MetaGrid,
   MetaLabel,
   MetaValue,
+  MetaValueButton,
   CoverDialogForm,
   CoverDialogActions,
 } from './BookDetailView.styles';
 import { TagList } from '../TagList/TagList';
+import { PublisherDialog } from '../MetaEditDialogs/PublisherDialog';
+import { PageCountDialog } from '../MetaEditDialogs/PageCountDialog';
+import { DateDialog } from '../MetaEditDialogs/DateDialog';
+import { LanguageDialog } from '../MetaEditDialogs/LanguageDialog';
+import { IsbnDialog } from '../MetaEditDialogs/IsbnDialog';
 import {
   dedupeAuthors,
   formatIsbn,
@@ -52,6 +63,12 @@ interface BookDetailViewProps {
   onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
   onCoverChange?: (url: string) => void;
+  onPublisherChange?: (publisher: string) => void;
+  onPageCountChange?: (pageCount: number) => void;
+  onPublishedDateChange?: (publishedDate: string) => void;
+  onLanguageChange?: (language: string) => void;
+  onIsbnChange?: (isbn: string) => void;
+  onRefreshMetadata?: (fields: RefreshMetadataBody) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
   journal?: ReactNode;
 }
@@ -62,6 +79,10 @@ interface BookDetailViewProps {
  * — are passed as slots so both the discovery and library views reuse this structure without
  * coupling to each other's data or mutation logic. When journal is provided, the page becomes a
  * two-column layout (content + sticky rail); otherwise it stays single-column.
+ *
+ * Metadata fields (ISBN, language, publisher, published date, page count) are editable via modal
+ * dialogs when the corresponding onChange callbacks are provided alongside editable=true. Raw text
+ * fields (title, description) use inline contenteditable editing.
  */
 export const BookDetailView = ({
   book,
@@ -74,6 +95,12 @@ export const BookDetailView = ({
   onTitleChange,
   onDescriptionChange,
   onCoverChange,
+  onPublisherChange,
+  onPageCountChange,
+  onPublishedDateChange,
+  onLanguageChange,
+  onIsbnChange,
+  onRefreshMetadata,
   journal,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
@@ -83,8 +110,13 @@ export const BookDetailView = ({
   const coverSrc = coverSrcs[coverIndex];
 
   const titleEdit = useTitleEdit(book.title, onTitleChange);
-  const description = useDescriptionEdit(book.description, onDescriptionChange);
+  const descriptionEdit = useDescriptionEdit(book.description, onDescriptionChange);
   const coverEdit = useCoverEdit(onCoverChange);
+  const publisherEdit = usePublisherEdit(book.publisher, onPublisherChange);
+  const pageCountEdit = usePageCountEdit(book.pageCount, onPageCountChange);
+  const dateEdit = useDateEdit(book.publishedDate, onPublishedDateChange);
+  const languageEdit = useLanguageEdit(book.language, onLanguageChange);
+  const isbnEdit = useIsbnEdit(book.isbn, onIsbnChange, onRefreshMetadata);
 
   useEffect(() => {
     setCoverIndex(0);
@@ -108,6 +140,15 @@ export const BookDetailView = ({
   const titleEditable = editable && !!onTitleChange;
   const descriptionEditable = editable && !!onDescriptionChange;
   const coverEditable = editable && !!onCoverChange;
+  const metaEditable =
+    editable &&
+    !!(
+      onPublisherChange ||
+      onPageCountChange ||
+      onPublishedDateChange ||
+      onLanguageChange ||
+      onIsbnChange
+    );
 
   const coverEditOverlay = coverEditable ? (
     <CoverEditOverlay>
@@ -206,14 +247,14 @@ export const BookDetailView = ({
               {descriptionEditable ? (
                 <Text variant="body1" as="div">
                   <DescriptionInlineEditor
-                    ref={description.editorRef}
+                    ref={descriptionEdit.editorRef}
                     contentEditable
                     suppressContentEditableWarning
                     spellCheck={false}
-                    onFocus={description.handleFocus}
-                    onBlur={description.handleBlur}
-                    onInput={description.handleInput}
-                    onKeyDown={description.handleKeyDown}
+                    onFocus={descriptionEdit.handleFocus}
+                    onBlur={descriptionEdit.handleBlur}
+                    onInput={descriptionEdit.handleInput}
+                    onKeyDown={descriptionEdit.handleKeyDown}
                   />
                 </Text>
               ) : (
@@ -239,7 +280,13 @@ export const BookDetailView = ({
               </Text>
             </MetaLabel>
             <MetaValue>
-              <Text variant="mono">{formatIsbn(book.isbn)}</Text>
+              {metaEditable && onIsbnChange ? (
+                <MetaValueButton type="button" onClick={isbnEdit.openDialog}>
+                  <Text variant="mono">{formatIsbn(book.isbn)}</Text>
+                </MetaValueButton>
+              ) : (
+                <Text variant="mono">{formatIsbn(book.isbn)}</Text>
+              )}
             </MetaValue>
           </>
         )}
@@ -251,7 +298,13 @@ export const BookDetailView = ({
               </Text>
             </MetaLabel>
             <MetaValue>
-              <Text variant="ui-sm">{formatLanguage(book.language)}</Text>
+              {metaEditable && onLanguageChange ? (
+                <MetaValueButton type="button" onClick={languageEdit.openDialog}>
+                  <Text variant="ui-sm">{formatLanguage(book.language)}</Text>
+                </MetaValueButton>
+              ) : (
+                <Text variant="ui-sm">{formatLanguage(book.language)}</Text>
+              )}
             </MetaValue>
           </>
         )}
@@ -263,7 +316,13 @@ export const BookDetailView = ({
               </Text>
             </MetaLabel>
             <MetaValue>
-              <Text variant="ui-sm">{book.publisher}</Text>
+              {metaEditable && onPublisherChange ? (
+                <MetaValueButton type="button" onClick={publisherEdit.openDialog}>
+                  <Text variant="ui-sm">{book.publisher}</Text>
+                </MetaValueButton>
+              ) : (
+                <Text variant="ui-sm">{book.publisher}</Text>
+              )}
             </MetaValue>
           </>
         )}
@@ -275,7 +334,31 @@ export const BookDetailView = ({
               </Text>
             </MetaLabel>
             <MetaValue>
-              <Text variant="ui-sm">{formatPublishedDate(book.publishedDate)}</Text>
+              {metaEditable && onPublishedDateChange ? (
+                <MetaValueButton type="button" onClick={dateEdit.openDialog}>
+                  <Text variant="ui-sm">{formatPublishedDate(book.publishedDate)}</Text>
+                </MetaValueButton>
+              ) : (
+                <Text variant="ui-sm">{formatPublishedDate(book.publishedDate)}</Text>
+              )}
+            </MetaValue>
+          </>
+        )}
+        {book.pageCount && (
+          <>
+            <MetaLabel>
+              <Text variant="label" color="muted">
+                Pages
+              </Text>
+            </MetaLabel>
+            <MetaValue>
+              {metaEditable && onPageCountChange ? (
+                <MetaValueButton type="button" onClick={pageCountEdit.openDialog}>
+                  <Text variant="ui-sm">{book.pageCount}</Text>
+                </MetaValueButton>
+              ) : (
+                <Text variant="ui-sm">{book.pageCount}</Text>
+              )}
             </MetaValue>
           </>
         )}
@@ -310,6 +393,16 @@ export const BookDetailView = ({
             </CoverDialogActions>
           </CoverDialogForm>
         </Dialog>
+      )}
+
+      {metaEditable && (
+        <>
+          {onPublisherChange && <PublisherDialog {...publisherEdit} />}
+          {onPageCountChange && <PageCountDialog {...pageCountEdit} />}
+          {onPublishedDateChange && <DateDialog {...dateEdit} />}
+          {onLanguageChange && <LanguageDialog {...languageEdit} />}
+          {onIsbnChange && <IsbnDialog {...isbnEdit} />}
+        </>
       )}
     </>
   );

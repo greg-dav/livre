@@ -8,6 +8,7 @@ import {
   type LibraryResponse,
   type ShelfStatus,
   type LogEventType,
+  type RefreshMetadataBody,
 } from '@livre/types';
 import { db } from '../db';
 import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
@@ -139,6 +140,42 @@ export class BooksService {
   updateTitle(userId: number, libraryBookId: number, title: string): boolean {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
     this.libraryBooksRepo.updateTitle(libraryBookId, title);
+    return true;
+  }
+
+  updatePublisher(userId: number, libraryBookId: number, publisher: string): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updatePublisher(libraryBookId, publisher);
+    return true;
+  }
+
+  updatePageCount(userId: number, libraryBookId: number, pageCount: number): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updatePageCount(libraryBookId, pageCount);
+    return true;
+  }
+
+  updatePublishedDate(userId: number, libraryBookId: number, publishedDate: string): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updatePublishedDate(libraryBookId, publishedDate);
+    return true;
+  }
+
+  updateLanguage(userId: number, libraryBookId: number, language: string): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updateLanguage(libraryBookId, language);
+    return true;
+  }
+
+  updateIsbn(userId: number, libraryBookId: number, isbn: string): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updateIsbn(libraryBookId, isbn);
+    return true;
+  }
+
+  refreshMetadata(userId: number, libraryBookId: number, fields: RefreshMetadataBody): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.refreshMetadata(libraryBookId, fields);
     return true;
   }
 

@@ -15,6 +15,13 @@ import {
   updateDescriptionResponseSchema,
   updateCoverResponseSchema,
   updateTitleResponseSchema,
+  updatePublisherResponseSchema,
+  updatePageCountResponseSchema,
+  updatePublishedDateResponseSchema,
+  updateLanguageResponseSchema,
+  updateIsbnResponseSchema,
+  refreshMetadataResponseSchema,
+  type RefreshMetadataBody,
   type LogEventType,
   type ShelfStatus,
 } from '@livre/types';
@@ -106,6 +113,36 @@ export const api = {
       request(`/books/library/${libraryBookId}/title`, updateTitleResponseSchema, {
         method: 'PATCH',
         body: JSON.stringify({ title }),
+      }),
+    updatePublisher: (libraryBookId: number, publisher: string) =>
+      request(`/books/library/${libraryBookId}/publisher`, updatePublisherResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ publisher }),
+      }),
+    updatePageCount: (libraryBookId: number, pageCount: number) =>
+      request(`/books/library/${libraryBookId}/page-count`, updatePageCountResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ pageCount }),
+      }),
+    updatePublishedDate: (libraryBookId: number, publishedDate: string) =>
+      request(`/books/library/${libraryBookId}/published-date`, updatePublishedDateResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ publishedDate }),
+      }),
+    updateLanguage: (libraryBookId: number, language: string) =>
+      request(`/books/library/${libraryBookId}/language`, updateLanguageResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ language }),
+      }),
+    updateIsbn: (libraryBookId: number, isbn: string) =>
+      request(`/books/library/${libraryBookId}/isbn`, updateIsbnResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ isbn }),
+      }),
+    refreshMetadata: (libraryBookId: number, fields: RefreshMetadataBody) =>
+      request(`/books/library/${libraryBookId}/metadata`, refreshMetadataResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify(fields),
       }),
   },
   shelves: {
