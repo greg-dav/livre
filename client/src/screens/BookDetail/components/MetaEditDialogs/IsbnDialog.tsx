@@ -1,14 +1,20 @@
-import { Text, Input, Button } from '@livre/primitives';
+import { Text } from '@livre/primitives';
 import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
 import { IsbnLookupResult } from './IsbnLookupResult';
-import { LookupRow } from './IsbnDialog.styles';
+import {
+  IsbnInputWrapper,
+  IsbnBareInput,
+  InlineDivider,
+  InlineLookupButton,
+  StatusText,
+} from './IsbnDialog.styles';
 import type { useIsbnEdit } from '../../hooks/useIsbnEdit';
 
 /**
- * Modal for editing the ISBN. Phase 1: enter an ISBN-10 or ISBN-13 and optionally look it up
- * against the books service. Phase 2 (on a hit): show the found book with options to update
- * all metadata or save the ISBN only. The hook drives the phase machine; this component is
- * purely presentational.
+ * Modal for editing the ISBN. Phase 1: enter an ISBN-10 or ISBN-13 via an auto-hyphen mask;
+ * the Look up button sits inline at the end of the input. Phase 2 (on a hit): show the found
+ * book with options to update all metadata or save the ISBN only. The hook drives the phase
+ * machine; this component is purely presentational.
  */
 export const IsbnDialog = (props: ReturnType<typeof useIsbnEdit>) => {
   const { phase, foundBook, lookupError } = props;
@@ -20,7 +26,7 @@ export const IsbnDialog = (props: ReturnType<typeof useIsbnEdit>) => {
       ? 'A matching book was found. You can update all metadata, or save the ISBN only.'
       : phase === 'not-found'
         ? 'No book was found for that ISBN. You can still save it.'
-        : 'Enter an ISBN-10 or ISBN-13.';
+        : undefined;
 
   return (
     <MetaEditDialog
@@ -34,35 +40,32 @@ export const IsbnDialog = (props: ReturnType<typeof useIsbnEdit>) => {
     >
       {phase !== 'found' && (
         <>
-          <Input
-            type="text"
-            inputMode="numeric"
-            placeholder="e.g. 978-1-250-23723-1"
-            value={props.draft}
-            onChange={(e) => props.setDraft(e.target.value)}
-            autoFocus
-          />
-          <LookupRow>
-            <Button
-              variant="ghost"
-              size="sm"
+          <IsbnInputWrapper>
+            <IsbnBareInput
+              type="text"
+              inputMode="numeric"
+              placeholder="978-X-XXX-XXXXX-X"
+              maxLength={17}
+              value={props.draft}
+              onChange={(e) => props.handleIsbnChange(e.target.value)}
+              autoFocus
+            />
+            <InlineDivider />
+            <InlineLookupButton
               type="button"
               disabled={!props.isValidFormat || phase === 'looking'}
               onClick={props.handleLookup}
             >
               <Text variant="label">{phase === 'looking' ? 'Looking up…' : 'Look up'}</Text>
-            </Button>
-            {lookupError && (
+            </InlineLookupButton>
+          </IsbnInputWrapper>
+          {lookupError && (
+            <StatusText>
               <Text variant="ui-xs" color="muted">
                 {lookupError}
               </Text>
-            )}
-            {phase === 'not-found' && (
-              <Text variant="ui-xs" color="muted">
-                No match found.
-              </Text>
-            )}
-          </LookupRow>
+            </StatusText>
+          )}
         </>
       )}
 

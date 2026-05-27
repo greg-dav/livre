@@ -1,14 +1,10 @@
-import { Select, Input } from '@livre/primitives';
+import { Select } from '@livre/primitives';
 import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
 import { LANGUAGE_OPTIONS } from '../../hooks/useLanguageEdit';
 import type { useLanguageEdit } from '../../hooks/useLanguageEdit';
 
-const OTHER_OPTION = { value: '__other__', label: 'Other…' };
-const OPTIONS = [...LANGUAGE_OPTIONS, OTHER_OPTION];
-
 /**
- * Modal for editing the language. Shows a Select with common languages and an "Other" option
- * that reveals a free-text BCP 47 code input (e.g. "zh-Hant", "pt-BR").
+ * Modal for editing the language. Presents a curated list of common languages via a Select.
  */
 export const LanguageDialog = (props: ReturnType<typeof useLanguageEdit>) => (
   <MetaEditDialog
@@ -21,17 +17,8 @@ export const LanguageDialog = (props: ReturnType<typeof useLanguageEdit>) => (
     <Select
       value={props.draft}
       onValueChange={props.setDraft}
-      options={OPTIONS}
+      options={LANGUAGE_OPTIONS}
       placeholder="Select a language…"
     />
-    {props.showCustom && (
-      <Input
-        type="text"
-        placeholder="BCP 47 language code, e.g. zh-Hant"
-        value={props.customCode}
-        onChange={(e) => props.setCustomCode(e.target.value)}
-        autoFocus
-      />
-    )}
   </MetaEditDialog>
 );

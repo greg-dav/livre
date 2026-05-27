@@ -7,6 +7,17 @@ type Phase = 'enter' | 'looking' | 'found' | 'not-found';
 
 const stripIsbn = (raw: string) => raw.replace(/[^0-9Xx]/g, '').toUpperCase();
 
+// ISBN-13: XXX-X-XXX-XXXXX-X  (3-1-3-5-1)
+// ISBN-10: X-XXX-XXXXX-X      (1-3-5-1)
+const applyIsbnMask = (raw: string): string => {
+  const d = raw.replace(/\D/g, '').slice(0, 13);
+  if (d.length <= 3) return d;
+  if (d.length <= 4) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3, 4)}-${d.slice(4)}`;
+  if (d.length <= 12) return `${d.slice(0, 3)}-${d.slice(3, 4)}-${d.slice(4, 7)}-${d.slice(7)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 4)}-${d.slice(4, 7)}-${d.slice(7, 12)}-${d.slice(12)}`;
+};
+
 const validateIsbn = (raw: string): boolean => {
   const digits = stripIsbn(raw);
   if (digits.length === 13) {
@@ -29,7 +40,11 @@ export const useIsbnEdit = (
   onSave: ((isbn: string) => void) | undefined,
   onRefreshMetadata: ((fields: RefreshMetadataBody) => void) | undefined
 ) => {
-  const { open, draft, setDraft, openDialog, handleOpenChange } = useMetaEdit(isbn ?? '');
+  const { open, draft, setDraft, openDialog, handleOpenChange } = useMetaEdit(
+    applyIsbnMask(isbn ?? '')
+  );
+
+  const handleIsbnChange = useCallback((raw: string) => setDraft(applyIsbnMask(raw)), [setDraft]);
   const [phase, setPhase] = useState<Phase>('enter');
   const [foundBook, setFoundBook] = useState<BookVolume | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
@@ -95,7 +110,7 @@ export const useIsbnEdit = (
     openDialog,
     handleOpenChange: handleOpenChangeWrapped,
     draft,
-    setDraft,
+    handleIsbnChange,
     phase,
     foundBook,
     lookupError,

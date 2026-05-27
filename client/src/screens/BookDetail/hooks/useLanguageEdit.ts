@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useMetaEdit } from './useMetaEdit';
 import type { SelectOption } from '@livre/primitives';
 
@@ -12,7 +11,6 @@ const label = (code: string) => {
   }
 };
 
-// Common languages in approximate reading-frequency order.
 const COMMON_CODES = [
   'en',
   'fr',
@@ -47,43 +45,23 @@ const COMMON_CODES = [
 
 export const LANGUAGE_OPTIONS: SelectOption[] = COMMON_CODES.map((code) => ({
   value: code,
-  label: `${label(code)} (${code})`,
+  label: label(code) ?? code,
 }));
-
-const OTHER = '__other__';
 
 export const useLanguageEdit = (
   language: string | undefined,
   onSave: ((language: string) => void) | undefined
 ) => {
   const currentCode = language ?? '';
-  const isCommon = COMMON_CODES.includes(currentCode);
-
   const { open, draft, setDraft, openDialog, handleOpenChange } = useMetaEdit(
-    isCommon ? currentCode : currentCode ? OTHER : ''
+    COMMON_CODES.includes(currentCode) ? currentCode : ''
   );
 
-  // When using the "Other" option, the user types a raw BCP-47 tag.
-  const [customCode, setCustomCode] = useState(isCommon ? '' : currentCode);
-
-  const effectiveCode = draft === OTHER ? customCode.trim().toLowerCase() : draft;
-  const isValid = effectiveCode.length >= 2;
+  const isValid = draft.length > 0;
 
   const handleSave = () => {
-    if (isValid) onSave?.(effectiveCode);
+    if (isValid) onSave?.(draft);
   };
 
-  return {
-    open,
-    handleOpenChange,
-    openDialog,
-    draft,
-    setDraft,
-    customCode,
-    setCustomCode,
-    showCustom: draft === OTHER,
-    isValid,
-    handleSave,
-    OTHER,
-  };
+  return { open, handleOpenChange, openDialog, draft, setDraft, isValid, handleSave };
 };

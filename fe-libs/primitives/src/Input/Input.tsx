@@ -19,4 +19,10 @@ export const Input = styled('input')(({ theme }) => ({
     borderColor: theme.accent,
     boxShadow: `0 0 0 3px ${theme.accentSoft}`,
   },
+  // Remove browser-default spinner chrome — appearance varies by OS/theme.
+  '&[type="number"]': { MozAppearance: 'textfield' },
+  '&[type="number"]::-webkit-outer-spin-button, &[type="number"]::-webkit-inner-spin-button': {
+    WebkitAppearance: 'none',
+    margin: 0,
+  },
 }));
