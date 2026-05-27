@@ -1,4 +1,5 @@
 import { type LogEventType, type ShelfStatus } from '@livre/types';
+import { escapeHtml } from '../../lib/contentEditable';
 
 export const STATUS_LABELS: Record<ShelfStatus, string> = {
   want: 'Want to Read',
@@ -40,14 +41,6 @@ export const formatIsbn = (raw: string): string => {
   }
   return raw;
 };
-
-/*
- * Publisher descriptions from Google often start with marketing preambles like
- * "NEW YORK TIMES BESTSELLER" or "OVER 5 MILLION COPIES SOLD" on their own line. They're noise
- * for our use case. Strip leading lines that are entirely uppercase letters and spaces.
- */
-export const stripDescriptionPreamble = (description: string): string =>
-  description.replace(/^([A-Z ]+\n+)+/, '');
 
 export const formatPublishedDate = (raw: string): string => {
   // Google returns YYYY, YYYY-MM, or YYYY-MM-DD; render the most specific form we can.
@@ -95,3 +88,20 @@ export const dedupeAuthors = (authors: string[]): string[] => {
 
 export const formatReadingSince = (iso: string): string =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+/** Converts a plain-text description (paragraphs separated by \n\n) to <p> HTML for a contenteditable. */
+export const toDescriptionHTML = (text: string): string =>
+  text
+    .split(/\n\n+/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+/** Reads <p> children from a contenteditable back to \n\n-separated plain text. */
+export const readDescriptionContent = (el: HTMLElement): string => {
+  const paragraphs = Array.from(el.querySelectorAll('p'));
+  if (paragraphs.length === 0) return el.innerText.trim();
+  return paragraphs
+    .map((p) => p.innerText.trimEnd())
+    .filter(Boolean)
+    .join('\n\n');
+};

@@ -109,3 +109,8 @@ export const updateTagsBodySchema = z.object({ tags: z.array(z.string()) });
 export type UpdateTagsBody = z.infer<typeof updateTagsBodySchema>;
 
 export const updateTagsResponseSchema = z.object({ ok: z.literal(true) });
+
+export const updateDescriptionBodySchema = z.object({ description: z.string() });
+export type UpdateDescriptionBody = z.infer<typeof updateDescriptionBodySchema>;
+
+export const updateDescriptionResponseSchema = z.object({ ok: z.literal(true) });

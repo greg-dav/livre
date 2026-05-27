@@ -1,4 +1,5 @@
 import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
+import { useDescriptionEdit } from './useDescriptionEdit';
 import type { ReactNode } from 'react';
 import { Text, Lightbox } from '@livre/primitives';
 import { type BookVolume } from '@livre/types';
@@ -18,6 +19,7 @@ import {
   Divider,
   Description,
   DescriptionSection,
+  DescriptionInlineEditor,
   SectionLabel,
   HeroActions,
   MetaGrid,
@@ -25,13 +27,7 @@ import {
   MetaValue,
 } from './BookDetail.styles';
 import { TagList } from './TagList';
-import {
-  dedupeAuthors,
-  formatIsbn,
-  formatLanguage,
-  formatPublishedDate,
-  stripDescriptionPreamble,
-} from './BookDetail.utils';
+import { dedupeAuthors, formatIsbn, formatLanguage, formatPublishedDate } from './BookDetail.utils';
 
 interface BookDetailViewProps {
   book: BookVolume;
@@ -41,6 +37,7 @@ interface BookDetailViewProps {
   actions: ReactNode;
   statusIndicator?: ReactNode;
   onTagsChange?: (tags: string[]) => void;
+  onDescriptionChange?: (description: string) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
   journal?: ReactNode;
 }
@@ -60,6 +57,7 @@ export const BookDetailView = ({
   actions,
   statusIndicator,
   onTagsChange,
+  onDescriptionChange,
   journal,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
@@ -67,6 +65,8 @@ export const BookDetailView = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const coverSrcs = [book.largeThumbnail, book.thumbnail].filter((u): u is string => !!u);
   const coverSrc = coverSrcs[coverIndex];
+
+  const description = useDescriptionEdit(book.description, onDescriptionChange);
 
   useEffect(() => {
     setImgLoaded(false);
@@ -82,6 +82,8 @@ export const BookDetailView = ({
   const byline = [year, book.publisher, book.pageCount ? `${book.pageCount} pp` : undefined].filter(
     Boolean
   );
+
+  const descriptionEditable = editable && !!onDescriptionChange;
 
   const content = (
     <>
@@ -143,7 +145,7 @@ export const BookDetailView = ({
         </HeroMeta>
       </Hero>
 
-      {book.description && (
+      {(book.description || descriptionEditable) && (
         <>
           <Divider />
           <DescriptionSection>
@@ -153,13 +155,26 @@ export const BookDetailView = ({
               </Text>
             </SectionLabel>
             <Description>
-              {stripDescriptionPreamble(book.description)
-                .split(/\n\n+/)
-                .map((paragraph, i) => (
+              {descriptionEditable ? (
+                <Text variant="body1" as="div">
+                  <DescriptionInlineEditor
+                    ref={description.editorRef}
+                    contentEditable
+                    suppressContentEditableWarning
+                    spellCheck={false}
+                    onFocus={description.handleFocus}
+                    onBlur={description.handleBlur}
+                    onInput={description.handleInput}
+                    onKeyDown={description.handleKeyDown}
+                  />
+                </Text>
+              ) : (
+                (book.description ?? '').split(/\n\n+/).map((paragraph, i) => (
                   <Text key={i} variant="body1">
                     {paragraph}
                   </Text>
-                ))}
+                ))
+              )}
             </Description>
             <TagList tags={book.tags} editable={editable} onChange={onTagsChange} />
           </DescriptionSection>

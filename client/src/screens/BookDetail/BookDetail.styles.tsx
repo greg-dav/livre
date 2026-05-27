@@ -202,6 +202,40 @@ export const Description = styled('div')(({ theme }) => ({
   },
 }));
 
+/*
+ * Contenteditable div for inline description editing. Mirrors the read-mode paragraph structure:
+ * <p> children with the same 12px inter-paragraph gap and the same drop-cap ::first-letter.
+ * Uses font: inherit from the <Text variant="body1" as="div"> wrapper — the only way to pass font
+ * to a contenteditable element without referencing tokens directly. Bounded exception (font
+ * properties on pseudo-elements and child selectors); do not generalize.
+ */
+export const DescriptionInlineEditor = styled('div')(({ theme }) => ({
+  outline: 'none',
+  font: 'inherit',
+  cursor: 'text',
+  minHeight: '1em',
+
+  '& > p': {
+    whiteSpace: 'pre-line',
+    font: 'inherit',
+  },
+
+  '& > p + p': {
+    marginTop: theme.spacing(3),
+  },
+
+  '& > p:first-child::first-letter': {
+    fontFamily: theme.fontDisplay,
+    fontStyle: 'italic',
+    fontWeight: 500,
+    fontSize: '3.5rem',
+    lineHeight: 0.9,
+    float: 'left',
+    margin: `${theme.spacing(1)} ${theme.spacing(2)} 0 0`,
+    color: theme.accent,
+  },
+}));
+
 export const ReadingSince = styled('div')(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',

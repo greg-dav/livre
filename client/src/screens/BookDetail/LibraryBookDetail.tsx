@@ -51,6 +51,13 @@ export const LibraryBookDetail = () => {
     mutationFn: (tags: string[]) => api.books.updateTags(libraryBookId, tags),
   });
 
+  const { mutate: saveDescription } = useMutation({
+    mutationFn: (description: string) => api.books.updateDescription(libraryBookId, description),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+    },
+  });
+
   useEffect(() => {
     if (!data || !data.entry.bookRef) return;
     pushRecentBook({
@@ -79,6 +86,7 @@ export const LibraryBookDetail = () => {
       editable
       justAcquired={justAcquired}
       onTagsChange={saveTags}
+      onDescriptionChange={saveDescription}
       journal={<Journal entry={entry} log={data.log} justAcquired={justAcquired} />}
       actions={
         <DropdownMenu
