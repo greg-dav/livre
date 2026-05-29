@@ -173,19 +173,21 @@ export const ComposerSpacer = styled('div')({ flex: 1 });
 // Single rail drawn on the container so it flows through the CycleDivider unbroken,
 // matching the prototype's .timeline::before approach. left: 4px → center at 4.5px,
 // which is where all pin types center (18px timeline padding − 13.5px entry offset).
-export const Timeline = styled('div')(({ theme }) => ({
+export const Timeline = styled('div')<{ $single?: boolean }>(({ theme, $single }) => ({
   position: 'relative',
   paddingLeft: theme.spacing(4.5),
   marginTop: theme.spacing(5),
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    left: '4px',
-    top: '12px',
-    bottom: '20px',
-    width: '1px',
-    background: theme.borderSoft,
-  },
+  ...(!$single && {
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      left: '4px',
+      top: '12px',
+      bottom: '20px',
+      width: '1px',
+      background: theme.borderSoft,
+    },
+  }),
 }));
 
 // Flex label + dashed fill-line. No background masking needed — the label sits on the

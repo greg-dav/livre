@@ -268,7 +268,9 @@ export const Journal = ({
     editable ? { $clickable: true, onClick: () => logEntryEdit.openEdit(logEntry) } : {};
 
   const timeline = totalEntries > 0 && (
-    <Timeline>
+    <Timeline
+      $single={(headEvent ? 1 : 0) + restEntries.filter((e) => e.event !== 'format').length === 1}
+    >
       {headEvent && (
         <TimelineEntry $landmark $open {...clickProps(headEvent)}>
           <LandmarkHead>
