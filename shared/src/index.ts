@@ -42,6 +42,9 @@ export {
   updateRatingResponseSchema,
   updateReviewBodySchema,
   updateReviewResponseSchema,
+  updateLogEntryBodySchema,
+  updateLogEntryResponseSchema,
+  deleteLogEntryResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -63,6 +66,7 @@ export type {
   RefreshMetadataBody,
   UpdateRatingBody,
   UpdateReviewBody,
+  UpdateLogEntryBody,
 } from './schemas/books';
 export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';

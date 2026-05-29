@@ -10,6 +10,7 @@ import {
   type ShelfStatus,
   type LogEventType,
   type RefreshMetadataBody,
+  type UpdateLogEntryBody,
 } from '@livre/types';
 import { db } from '../db';
 import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
@@ -191,6 +192,25 @@ export class BooksService {
   refreshMetadata(userId: number, libraryBookId: number, fields: RefreshMetadataBody): boolean {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
     this.libraryBooksRepo.refreshMetadata(libraryBookId, fields);
+    return true;
+  }
+
+  updateLogEntry(
+    userId: number,
+    libraryBookId: number,
+    logId: number,
+    fields: UpdateLogEntryBody
+  ): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    if (!this.readingLogRepo.belongsToLibraryBook(logId, libraryBookId)) return false;
+    this.readingLogRepo.update(logId, fields);
+    return true;
+  }
+
+  deleteLogEntry(userId: number, libraryBookId: number, logId: number): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    if (!this.readingLogRepo.belongsToLibraryBook(logId, libraryBookId)) return false;
+    this.readingLogRepo.delete(logId);
     return true;
   }
 

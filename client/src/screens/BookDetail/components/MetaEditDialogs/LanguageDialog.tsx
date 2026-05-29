@@ -1,5 +1,5 @@
 import { Select } from '@livre/primitives';
-import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
+import { EditDialog } from '@livre/primitives';
 import { LANGUAGE_OPTIONS } from '../../hooks/useLanguageEdit';
 import type { useLanguageEdit } from '../../hooks/useLanguageEdit';
 
@@ -7,7 +7,7 @@ import type { useLanguageEdit } from '../../hooks/useLanguageEdit';
  * Modal for editing the language. Presents a curated list of common languages via a Select.
  */
 export const LanguageDialog = (props: ReturnType<typeof useLanguageEdit>) => (
-  <MetaEditDialog
+  <EditDialog
     open={props.open}
     onOpenChange={props.handleOpenChange}
     title="Edit language"
@@ -20,5 +20,5 @@ export const LanguageDialog = (props: ReturnType<typeof useLanguageEdit>) => (
       options={LANGUAGE_OPTIONS}
       placeholder="Select a language…"
     />
-  </MetaEditDialog>
+  </EditDialog>
 );

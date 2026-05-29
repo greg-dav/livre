@@ -376,41 +376,6 @@ export const MetaValue = styled('dd')({
   margin: 0,
 });
 
-/*
- * Wraps an editable MetaValue. Applies the .editable affordance from the prototype: soft accent
- * background on hover + dashed bottom border. Negative margin/padding compensation keeps the
- * text visually flush when the bg is absent, matching the non-editable MetaValue baseline.
- */
-export const MetaValueButton = styled('button')(({ theme }) => ({
-  all: 'unset',
-  display: 'block',
-  borderRadius: theme.radius.sm,
-  padding: '2px 4px',
-  margin: '-2px -4px',
-  cursor: 'pointer',
-  transition: 'background 0.15s ease',
-  position: 'relative',
-
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    left: '4px',
-    right: '4px',
-    bottom: '1px',
-    borderBottom: `1px dashed ${theme.border}`,
-    opacity: 0,
-    transition: 'opacity 0.15s ease',
-  },
-
-  '&:hover': {
-    background: theme.accentSoft,
-  },
-
-  '&:hover::after': {
-    opacity: 1,
-  },
-}));
-
 export const CoverDialogForm = styled('form')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',

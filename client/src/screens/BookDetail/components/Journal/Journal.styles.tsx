@@ -112,7 +112,7 @@ export const Composer = styled('div')(({ theme }) => ({
   borderRadius: theme.radius.md,
   overflow: 'hidden',
   transition: 'border-color 0.15s ease',
-  '&:focus-within': { borderColor: theme.accent },
+  '&:focus-within': { borderColor: theme.accent, boxShadow: `0 0 0 3px ${theme.accentSoft}` },
 }));
 
 export const ComposerInputWrap = styled('div')<{ $focusMode?: boolean }>(({ $focusMode }) => ({
@@ -204,11 +204,11 @@ export const CycleDivider = styled('div')(({ theme }) => ({
   },
 }));
 
-export const TimelineEntry = styled('div')<{ $landmark?: boolean; $open?: boolean }>(({
-  theme,
-  $landmark,
-  $open,
-}) => {
+export const TimelineEntry = styled('div')<{
+  $landmark?: boolean;
+  $open?: boolean;
+  $clickable?: boolean;
+}>(({ theme, $landmark, $open, $clickable }) => {
   // Pin values match the prototype verbatim. boxSizing: content-box opts the pseudo-element
   // out of the global border-box reset so width/height measure the content area (border adds
   // on top), exactly as the prototype CSS intends.
@@ -241,6 +241,25 @@ export const TimelineEntry = styled('div')<{ $landmark?: boolean; $open?: boolea
   return {
     position: 'relative',
     padding: `6px 0 ${theme.spacing(3.5)}`,
+    ...($clickable && {
+      cursor: 'pointer',
+      borderRadius: theme.radius.sm,
+      paddingLeft: '4px',
+      paddingRight: '4px',
+      transition: 'background 0.15s ease',
+      '&:hover': { background: theme.accentSoft },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        left: '4px',
+        right: '4px',
+        bottom: '1px',
+        borderBottom: `1px dashed ${theme.border}`,
+        opacity: 0,
+        transition: 'opacity 0.15s ease',
+      },
+      '&:hover::after': { opacity: 1 },
+    }),
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -311,5 +330,6 @@ export const ReviewEditor = styled('div')(({ theme }) => ({
   },
   '&:focus': {
     borderColor: theme.accent,
+    boxShadow: `0 0 0 3px ${theme.accentSoft}`,
   },
 }));

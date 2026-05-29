@@ -1,5 +1,5 @@
 import { Text } from '@livre/primitives';
-import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
+import { EditDialog } from '@livre/primitives';
 import { IsbnLookupResult } from './IsbnLookupResult';
 import {
   IsbnInputWrapper,
@@ -29,7 +29,7 @@ export const IsbnDialog = (props: ReturnType<typeof useIsbnEdit>) => {
         : undefined;
 
   return (
-    <MetaEditDialog
+    <EditDialog
       open={props.open}
       onOpenChange={props.handleOpenChange}
       title={title}
@@ -76,6 +76,6 @@ export const IsbnDialog = (props: ReturnType<typeof useIsbnEdit>) => {
           onSaveWithMetadata={props.handleSaveWithMetadata}
         />
       )}
-    </MetaEditDialog>
+    </EditDialog>
   );
 };

@@ -68,4 +68,26 @@ export class ReadingLogRepository {
 
     return !!head && !['started', 'restarted'].includes(head.event);
   }
+
+  belongsToLibraryBook(id: number, libraryBookId: number): boolean {
+    return !!db
+      .select({ id: readingLog.id })
+      .from(readingLog)
+      .where(and(eq(readingLog.id, id), eq(readingLog.libraryBookId, libraryBookId)))
+      .get();
+  }
+
+  update(id: number, fields: { text?: string; date?: string }): void {
+    db.update(readingLog)
+      .set({
+        ...(fields.text !== undefined ? { text: fields.text } : {}),
+        ...(fields.date !== undefined ? { date: fields.date } : {}),
+      })
+      .where(eq(readingLog.id, id))
+      .run();
+  }
+
+  delete(id: number): void {
+    db.delete(readingLog).where(eq(readingLog.id, id)).run();
+  }
 }

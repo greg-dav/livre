@@ -23,6 +23,8 @@ import {
   refreshMetadataResponseSchema,
   updateRatingResponseSchema,
   updateReviewResponseSchema,
+  updateLogEntryResponseSchema,
+  deleteLogEntryResponseSchema,
   type RefreshMetadataBody,
   type LogEventType,
   type BookFormat,
@@ -167,6 +169,19 @@ export const api = {
       request(`/books/library/${libraryBookId}/log`, createLogEventResponseSchema, {
         method: 'POST',
         body: JSON.stringify({ event: 'format', format }),
+      }),
+    updateLogEntry: (
+      libraryBookId: number,
+      logId: number,
+      fields: { text?: string; date?: string }
+    ) =>
+      request(`/books/library/${libraryBookId}/log/${logId}`, updateLogEntryResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify(fields),
+      }),
+    deleteLogEntry: (libraryBookId: number, logId: number) =>
+      request(`/books/library/${libraryBookId}/log/${logId}`, deleteLogEntryResponseSchema, {
+        method: 'DELETE',
       }),
   },
   shelves: {

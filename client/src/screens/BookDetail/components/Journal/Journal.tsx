@@ -4,6 +4,9 @@ import { type ShelfEntry, type LogEntry, type BookFormat } from '@livre/types';
 import { FORMAT_ICONS } from '../FormatIcons';
 import { useReviewEdit } from '../../hooks/useReviewEdit';
 import { useNoteComposer } from '../../hooks/useNoteComposer';
+import { useLogEntryEdit } from '../../hooks/useLogEntryEdit';
+import { parseDateLocal } from '../../../../lib/dateInput';
+import { LogEntryEditDialog } from '../LogEntryEditDialog/LogEntryEditDialog';
 import {
   Panel,
   Head,
@@ -44,6 +47,8 @@ interface JournalProps {
   onRatingChange?: (rating: number) => void;
   onReviewChange?: (review: string) => void;
   onNoteAdd?: (text: string, type: 'note' | 'quote') => void;
+  onLogEntryUpdate?: (logId: number, fields: { text?: string; date?: string }) => void;
+  onLogEntryDelete?: (logId: number) => void;
 }
 
 const STATUS_VERBS: Record<string, string> = {
@@ -55,7 +60,7 @@ const STATUS_VERBS: Record<string, string> = {
 };
 
 const formatLogDate = (iso: string): string => {
-  const d = new Date(iso);
+  const d = parseDateLocal(iso);
   if (Number.isNaN(d.getTime())) return iso;
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
   if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
@@ -74,6 +79,7 @@ const FORMAT_LABELS: Record<string, string> = {
  * mode it expands to a full-width two-column layout (left: rating + review; right: composer +
  * timeline), hiding the book section entirely. The composer is a real contenteditable div with
  * Note/Quote mode switching and Cmd+Enter to save. Rating uses half-star precision.
+ * Timeline entries are clickable to edit or delete when edit callbacks are provided.
  */
 export const Journal = ({
   entry,
@@ -84,12 +90,20 @@ export const Journal = ({
   onRatingChange,
   onReviewChange,
   onNoteAdd,
+  onLogEntryUpdate,
+  onLogEntryDelete,
 }: JournalProps) => {
   const rating = entry.rating ?? 0;
   const review = entry.review;
 
   const reviewEdit = useReviewEdit(review ?? undefined, onReviewChange);
   const noteComposer = useNoteComposer();
+  const logEntryEdit = useLogEntryEdit(
+    (logId, fields) => onLogEntryUpdate?.(logId, fields),
+    (logId) => onLogEntryDelete?.(logId)
+  );
+
+  const editable = !!(onLogEntryUpdate && onLogEntryDelete);
 
   const headStartIndex =
     entry.status === 'reading'
@@ -250,10 +264,13 @@ export const Journal = ({
     </Composer>
   );
 
+  const clickProps = (logEntry: LogEntry) =>
+    editable ? { $clickable: true, onClick: () => logEntryEdit.openEdit(logEntry) } : {};
+
   const timeline = totalEntries > 0 && (
     <Timeline>
       {headEvent && (
-        <TimelineEntry $landmark $open>
+        <TimelineEntry $landmark $open {...clickProps(headEvent)}>
           <LandmarkHead>
             <Text variant="label" color="accent">
               Reading
@@ -277,7 +294,7 @@ export const Journal = ({
           return (
             <Fragment key={logEntry.id}>
               {divider}
-              <TimelineEntry>
+              <TimelineEntry {...clickProps(logEntry)}>
                 <NoteMeta>
                   <Text variant="ui-xs" color="muted">
                     Note · {formatLogDate(logEntry.date)}
@@ -292,7 +309,7 @@ export const Journal = ({
           return (
             <Fragment key={logEntry.id}>
               {divider}
-              <TimelineEntry>
+              <TimelineEntry {...clickProps(logEntry)}>
                 <NoteMeta>
                   <Text variant="ui-xs" color="muted">
                     Quote · {formatLogDate(logEntry.date)}
@@ -312,7 +329,7 @@ export const Journal = ({
         return (
           <Fragment key={logEntry.id}>
             {divider}
-            <TimelineEntry $landmark>
+            <TimelineEntry $landmark {...clickProps(logEntry)}>
               <LandmarkHead>
                 <Text variant="label" color="accent">
                   {STATUS_VERBS[logEntry.event] ?? logEntry.event}
@@ -324,6 +341,7 @@ export const Journal = ({
           </Fragment>
         );
       })}
+      <LogEntryEditDialog {...logEntryEdit} />
     </Timeline>
   );
 

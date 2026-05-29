@@ -32,6 +32,9 @@ import {
   updateRatingResponseSchema,
   updateReviewBodySchema,
   updateReviewResponseSchema,
+  updateLogEntryBodySchema,
+  updateLogEntryResponseSchema,
+  deleteLogEntryResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { requireAuth } from '../middleware/auth';
@@ -296,6 +299,37 @@ export function createBooksRouter(service: BooksService): Router {
       const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
       const ok = service.updateReview(user.id, libraryBookId, body.review);
       if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update text and/or date on an existing log entry. */
+  router.patch(
+    '/library/:libraryBookId/log/:logId',
+    updateLogEntryBodySchema,
+    updateLogEntryResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const logId = z.coerce.number().int().positive().parse(req.params.logId);
+      const ok = service.updateLogEntry(user.id, libraryBookId, logId, body);
+      if (!ok) throw createError(404, 'Log entry not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Delete a log entry. */
+  router.delete(
+    '/library/:libraryBookId/log/:logId',
+    deleteLogEntryResponseSchema,
+    async (respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const logId = z.coerce.number().int().positive().parse(req.params.logId);
+      const ok = service.deleteLogEntry(user.id, libraryBookId, logId);
+      if (!ok) throw createError(404, 'Log entry not found');
       respond({ ok: true });
     }
   );

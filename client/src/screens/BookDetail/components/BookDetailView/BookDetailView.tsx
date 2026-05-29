@@ -8,7 +8,7 @@ import { useDateEdit } from '../../hooks/useDateEdit';
 import { useLanguageEdit } from '../../hooks/useLanguageEdit';
 import { useIsbnEdit } from '../../hooks/useIsbnEdit';
 import type { ReactNode } from 'react';
-import { Text, Lightbox, Dialog, Input, Button } from '@livre/primitives';
+import { Text, Lightbox, Dialog, Input, Button, EditableField } from '@livre/primitives';
 import { type BookVolume, type RefreshMetadataBody, type BookFormat } from '@livre/types';
 import { Layout } from '../../../../components';
 import { FormatSelector } from '../FormatSelector/FormatSelector';
@@ -41,7 +41,6 @@ import {
   MetaGrid,
   MetaLabel,
   MetaValue,
-  MetaValueButton,
   CoverDialogForm,
   CoverDialogActions,
 } from './BookDetailView.styles';
@@ -300,9 +299,9 @@ export const BookDetailView = ({
             </MetaLabel>
             <MetaValue>
               {metaEditable && onIsbnChange ? (
-                <MetaValueButton type="button" onClick={isbnEdit.openDialog}>
+                <EditableField type="button" onClick={isbnEdit.openDialog}>
                   <Text variant="mono">{formatIsbn(book.isbn)}</Text>
-                </MetaValueButton>
+                </EditableField>
               ) : (
                 <Text variant="mono">{formatIsbn(book.isbn)}</Text>
               )}
@@ -318,9 +317,9 @@ export const BookDetailView = ({
             </MetaLabel>
             <MetaValue>
               {metaEditable && onLanguageChange ? (
-                <MetaValueButton type="button" onClick={languageEdit.openDialog}>
+                <EditableField type="button" onClick={languageEdit.openDialog}>
                   <Text variant="ui-sm">{formatLanguage(book.language)}</Text>
-                </MetaValueButton>
+                </EditableField>
               ) : (
                 <Text variant="ui-sm">{formatLanguage(book.language)}</Text>
               )}
@@ -336,9 +335,9 @@ export const BookDetailView = ({
             </MetaLabel>
             <MetaValue>
               {metaEditable && onPublisherChange ? (
-                <MetaValueButton type="button" onClick={publisherEdit.openDialog}>
+                <EditableField type="button" onClick={publisherEdit.openDialog}>
                   <Text variant="ui-sm">{book.publisher}</Text>
-                </MetaValueButton>
+                </EditableField>
               ) : (
                 <Text variant="ui-sm">{book.publisher}</Text>
               )}
@@ -354,9 +353,9 @@ export const BookDetailView = ({
             </MetaLabel>
             <MetaValue>
               {metaEditable && onPublishedDateChange ? (
-                <MetaValueButton type="button" onClick={dateEdit.openDialog}>
+                <EditableField type="button" onClick={dateEdit.openDialog}>
                   <Text variant="ui-sm">{formatPublishedDate(book.publishedDate)}</Text>
-                </MetaValueButton>
+                </EditableField>
               ) : (
                 <Text variant="ui-sm">{formatPublishedDate(book.publishedDate)}</Text>
               )}
@@ -372,9 +371,9 @@ export const BookDetailView = ({
             </MetaLabel>
             <MetaValue>
               {metaEditable && onPageCountChange ? (
-                <MetaValueButton type="button" onClick={pageCountEdit.openDialog}>
+                <EditableField type="button" onClick={pageCountEdit.openDialog}>
                   <Text variant="ui-sm">{book.pageCount}</Text>
-                </MetaValueButton>
+                </EditableField>
               ) : (
                 <Text variant="ui-sm">{book.pageCount}</Text>
               )}

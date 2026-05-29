@@ -1,12 +1,11 @@
-import { Input } from '@livre/primitives';
-import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
+import { Input, EditDialog } from '@livre/primitives';
 import type { usePageCountEdit } from '../../hooks/usePageCountEdit';
 
 /**
  * Modal for editing the page count. Restricts to positive integer input.
  */
 export const PageCountDialog = (props: ReturnType<typeof usePageCountEdit>) => (
-  <MetaEditDialog
+  <EditDialog
     open={props.open}
     onOpenChange={props.handleOpenChange}
     title="Edit page count"
@@ -22,5 +21,5 @@ export const PageCountDialog = (props: ReturnType<typeof usePageCountEdit>) => (
       onChange={(e) => props.setDraft(e.target.value)}
       autoFocus
     />
-  </MetaEditDialog>
+  </EditDialog>
 );

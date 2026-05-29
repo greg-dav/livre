@@ -23,3 +23,6 @@ export { Loader } from './Loader/Loader';
 export { Select } from './Select/Select';
 export type { SelectProps, SelectOption } from './Select/Select';
 export { PrimitivesGlobalStyle } from './PrimitivesGlobalStyle';
+export { EditableField } from './EditableField/EditableField';
+export { EditDialog } from './EditDialog/EditDialog';
+export { Textarea } from './Textarea/Textarea';

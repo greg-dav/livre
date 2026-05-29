@@ -1,5 +1,5 @@
 import { Input } from '@livre/primitives';
-import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
+import { EditDialog } from '@livre/primitives';
 import type { usePublisherEdit } from '../../hooks/usePublisherEdit';
 
 /**
@@ -7,7 +7,7 @@ import type { usePublisherEdit } from '../../hooks/usePublisherEdit';
  * Receives the hook's return value directly so the caller owns open state.
  */
 export const PublisherDialog = (props: ReturnType<typeof usePublisherEdit>) => (
-  <MetaEditDialog
+  <EditDialog
     open={props.open}
     onOpenChange={props.handleOpenChange}
     title="Edit publisher"
@@ -21,5 +21,5 @@ export const PublisherDialog = (props: ReturnType<typeof usePublisherEdit>) => (
       onChange={(e) => props.setDraft(e.target.value)}
       autoFocus
     />
-  </MetaEditDialog>
+  </EditDialog>
 );

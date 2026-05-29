@@ -177,3 +177,14 @@ export const updateRatingResponseSchema = okResponse;
 export const updateReviewBodySchema = z.object({ review: z.string() });
 export type UpdateReviewBody = z.infer<typeof updateReviewBodySchema>;
 export const updateReviewResponseSchema = okResponse;
+
+export const updateLogEntryBodySchema = z.object({
+  text: z.string().optional(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
+export type UpdateLogEntryBody = z.infer<typeof updateLogEntryBodySchema>;
+export const updateLogEntryResponseSchema = okResponse;
+export const deleteLogEntryResponseSchema = okResponse;

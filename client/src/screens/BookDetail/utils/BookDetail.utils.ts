@@ -1,5 +1,6 @@
 import { type LogEventType, type ShelfStatus } from '@livre/types';
 import { escapeHtml } from '../../../lib/contentEditable';
+import { parseDateLocal } from '../../../lib/dateInput';
 
 export const STATUS_LABELS: Record<ShelfStatus, string> = {
   want: 'Want to Read',
@@ -46,13 +47,13 @@ export const formatPublishedDate = (raw: string): string => {
   // Google returns YYYY, YYYY-MM, or YYYY-MM-DD; render the most specific form we can.
   const parts = raw.split('-');
   if (parts.length === 3) {
-    const d = new Date(raw);
+    const d = parseDateLocal(raw);
     return Number.isNaN(d.getTime())
       ? raw
       : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
   if (parts.length === 2) {
-    const d = new Date(`${raw}-01`);
+    const d = parseDateLocal(`${raw}-01`);
     return Number.isNaN(d.getTime())
       ? raw
       : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
@@ -87,7 +88,7 @@ export const dedupeAuthors = (authors: string[]): string[] => {
 };
 
 export const formatReadingSince = (iso: string): string =>
-  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  parseDateLocal(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 /** Converts a plain-text description (paragraphs separated by \n\n) to <p> HTML for a contenteditable. */
 export const toDescriptionHTML = (text: string): string =>

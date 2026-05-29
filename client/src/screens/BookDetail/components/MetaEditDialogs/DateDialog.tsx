@@ -1,12 +1,11 @@
-import { Input } from '@livre/primitives';
-import { MetaEditDialog } from '../MetaEditDialog/MetaEditDialog';
+import { Input, EditDialog } from '@livre/primitives';
 import type { useDateEdit } from '../../hooks/useDateEdit';
 
 /**
  * Modal for editing the published date. Accepts MM/DD/YYYY via an auto-hyphen mask.
  */
 export const DateDialog = (props: ReturnType<typeof useDateEdit>) => (
-  <MetaEditDialog
+  <EditDialog
     open={props.open}
     onOpenChange={props.handleOpenChange}
     title="Edit published date"
@@ -22,5 +21,5 @@ export const DateDialog = (props: ReturnType<typeof useDateEdit>) => (
       onChange={(e) => props.handleChange(e.target.value)}
       autoFocus
     />
-  </MetaEditDialog>
+  </EditDialog>
 );

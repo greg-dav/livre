@@ -8,6 +8,7 @@ import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
 import { ReadingSince, ReadingSinceDot } from './components/BookDetailView/BookDetailView.styles';
 import { STATUS_LABELS, SELECTABLE_EVENTS, formatReadingSince } from './utils/BookDetail.utils';
+import { parseDateLocal } from '../../lib/dateInput';
 import { BookDetailView } from './components/BookDetailView/BookDetailView';
 import { Journal } from './components/Journal/Journal';
 import { navigationStateSchema } from '../../schemas/navigation';
@@ -138,6 +139,23 @@ export const LibraryBookDetail = () => {
     api.books.logByLibraryBookId(libraryBookId, type, undefined, text).then(invalidateDetail);
   };
 
+  const { mutate: updateLogEntry } = useMutation({
+    mutationFn: ({ logId, fields }: { logId: number; fields: { text?: string; date?: string } }) =>
+      api.books.updateLogEntry(libraryBookId, logId, fields),
+    onSuccess: () => {
+      invalidateDetail();
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
+  const { mutate: deleteLogEntry } = useMutation({
+    mutationFn: (logId: number) => api.books.deleteLogEntry(libraryBookId, logId),
+    onSuccess: () => {
+      invalidateDetail();
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
   useEffect(() => {
     if (!data || !data.entry.bookRef) return;
     pushRecentBook({
@@ -165,7 +183,7 @@ export const LibraryBookDetail = () => {
     currentFormatEntry && currentFormatEntry.event === 'format' ? currentFormatEntry.format : null;
 
   const formatStatusDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    parseDateLocal(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   const statusEventDate = (() => {
     const target =
@@ -221,6 +239,8 @@ export const LibraryBookDetail = () => {
           onRatingChange={saveRating}
           onReviewChange={saveReview}
           onNoteAdd={addNote}
+          onLogEntryUpdate={(logId, fields) => updateLogEntry({ logId, fields })}
+          onLogEntryDelete={(logId) => deleteLogEntry(logId)}
         />
       }
       actions={
