@@ -115,7 +115,10 @@ export const LibraryBookDetail = () => {
 
   const { mutate: saveRating } = useMutation({
     mutationFn: (rating: number) => api.books.updateRating(libraryBookId, rating || null),
-    onSuccess: invalidateDetail,
+    onSuccess: () => {
+      invalidateDetail();
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
   });
 
   const { mutate: saveReview } = useMutation({
