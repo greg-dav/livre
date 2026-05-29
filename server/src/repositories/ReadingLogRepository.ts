@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { readingLog } from '../db/schema';
-import { logEntrySchema, type LogEntry, type LogEventType } from '@livre/types';
+import { logEntrySchema, type BookFormat, type LogEntry, type LogEventType } from '@livre/types';
 
 export class ReadingLogRepository {
   findByLibraryBookId(libraryBookId: number): LogEntry[] {
@@ -10,7 +10,8 @@ export class ReadingLogRepository {
         id: readingLog.id,
         event: readingLog.event,
         date: readingLog.date,
-        note: readingLog.note,
+        text: readingLog.text,
+        format: readingLog.format,
       })
       .from(readingLog)
       .where(eq(readingLog.libraryBookId, libraryBookId))
@@ -19,10 +20,16 @@ export class ReadingLogRepository {
     return rows.map((r) => logEntrySchema.parse(r));
   }
 
-  insert(libraryBookId: number, event: LogEventType, date: string, note?: string): number {
+  insert(
+    libraryBookId: number,
+    event: LogEventType,
+    date: string,
+    text?: string,
+    format?: BookFormat
+  ): number {
     const row = db
       .insert(readingLog)
-      .values({ libraryBookId, event, date, note: note ?? null })
+      .values({ libraryBookId, event, date, text: text ?? null, format: format ?? null })
       .returning({ id: readingLog.id })
       .get();
     if (!row) throw new Error('Failed to insert log event');

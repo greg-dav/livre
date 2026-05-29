@@ -6,10 +6,10 @@ import { Link } from 'react-router-dom';
  * column is fixed; the left absorbs the remainder. align-items: start keeps the journal at the
  * top instead of vertically centring against tall left content.
  */
-export const LayoutGrid = styled('div')(({ theme }) => ({
+export const LayoutGrid = styled('div')<{ $focusMode?: boolean }>(({ theme, $focusMode }) => ({
   display: 'grid',
-  gridTemplateColumns: '1fr 380px',
-  gap: theme.spacing(14),
+  gridTemplateColumns: $focusMode ? '1fr' : '1fr 380px',
+  gap: $focusMode ? 0 : theme.spacing(14),
   alignItems: 'start',
 }));
 
@@ -18,11 +18,64 @@ export const LayoutGrid = styled('div')(({ theme }) => ({
  * Layout's Content normally provides via flex gap. minWidth: 0 lets the column shrink so long
  * unbroken text doesn't blow out the grid.
  */
-export const LeftColumn = styled('div')(({ theme }) => ({
-  display: 'flex',
+export const LeftColumn = styled('div')<{ $focusMode?: boolean }>(({ theme, $focusMode }) => ({
+  display: $focusMode ? 'none' : 'flex',
   flexDirection: 'column',
   gap: theme.spacing(8),
   minWidth: 0,
+}));
+
+export const FocusStrip = styled('div')(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '56px 1fr auto',
+  gap: '20px',
+  alignItems: 'center',
+  paddingBottom: '20px',
+  marginBottom: '32px',
+  borderBottom: `1px solid ${theme.borderSoft}`,
+}));
+
+export const FocusStripCover = styled('div')({
+  aspectRatio: '2/3',
+  boxShadow: '0 0 0 2px var(--accent, #7b6f5c)',
+  borderRadius: '3px',
+  overflow: 'hidden',
+  '& img': { width: '100%', height: '100%', objectFit: 'cover' },
+});
+
+// Wraps the FocusStrip accent ring using the theme token instead of the CSS variable fallback
+export const FocusStripCoverThemed = styled('div')(({ theme }) => ({
+  aspectRatio: '2/3',
+  boxShadow: `0 0 0 2px ${theme.accent}`,
+  borderRadius: '3px',
+  overflow: 'hidden',
+  '& img': { width: '100%', height: '100%', objectFit: 'cover' },
+}));
+
+export const FocusStripInfo = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+  minWidth: 0,
+});
+
+export const FocusStripSep = styled('span')({
+  margin: '0 8px',
+});
+
+export const ExitFocusButton = styled('button')(({ theme }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: '8px 16px',
+  border: `1px solid ${theme.border}`,
+  borderRadius: '8px',
+  background: theme.bgElevated,
+  cursor: 'pointer',
+  flexShrink: 0,
+  transition: 'all 0.15s ease',
+  '& span': { color: theme.text },
+  '&:hover': { borderColor: theme.textMuted },
 }));
 
 export const Hero = styled('div')(({ theme }) => ({

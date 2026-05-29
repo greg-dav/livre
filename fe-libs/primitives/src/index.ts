@@ -14,6 +14,7 @@ export { Tabs } from './Tabs/Tabs';
 export { Dialog } from './Dialog/Dialog';
 export { Tooltip, TooltipProvider } from './Tooltip/Tooltip';
 export { StarRating } from './StarRating/StarRating';
+export { RatingInput } from './RatingInput/RatingInput';
 export { ProgressBar } from './ProgressBar/ProgressBar';
 export { BookCard, BookGrid } from './BookCard/BookCard';
 export type { BookCardProps } from './BookCard/BookCard';

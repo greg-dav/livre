@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, Button, DropdownMenu, Loader } from '@livre/primitives';
-import { type LogEventType, type RefreshMetadataBody } from '@livre/types';
+import { type LogEventType, type RefreshMetadataBody, type BookFormat } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
@@ -26,6 +26,8 @@ export const LibraryBookDetail = () => {
   const queryClient = useQueryClient();
 
   const justAcquired = navigationStateSchema.safeParse(location.state).data?.justAcquired ?? false;
+  const [focusMode, setFocusMode] = useState(false);
+  const onToggleFocus = () => setFocusMode((f) => !f);
 
   const { data } = useQuery({
     queryKey: ['library', 'detail', libraryBookId],
@@ -111,6 +113,28 @@ export const LibraryBookDetail = () => {
     },
   });
 
+  const { mutate: saveRating } = useMutation({
+    mutationFn: (rating: number) => api.books.updateRating(libraryBookId, rating || null),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: saveReview } = useMutation({
+    mutationFn: (review: string) => api.books.updateReview(libraryBookId, review),
+    onSuccess: invalidateDetail,
+  });
+
+  const { mutate: saveFormat } = useMutation({
+    mutationFn: (format: BookFormat) => api.books.logFormatChange(libraryBookId, format),
+    onSuccess: () => {
+      invalidateDetail();
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
+  const addNote = (text: string, type: 'note' | 'quote') => {
+    api.books.logByLibraryBookId(libraryBookId, type, undefined, text).then(invalidateDetail);
+  };
+
   useEffect(() => {
     if (!data || !data.entry.bookRef) return;
     pushRecentBook({
@@ -132,12 +156,48 @@ export const LibraryBookDetail = () => {
   const { entry, book } = data;
   const { status: savedStatus, startedDate: readingStartedDate } = entry;
 
+  // Most recent format event in the log (log is desc-sorted so first match = current)
+  const currentFormatEntry = data.log.find((e) => e.event === 'format');
+  const currentFormat =
+    currentFormatEntry && currentFormatEntry.event === 'format' ? currentFormatEntry.format : null;
+
+  const formatStatusDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const statusEventDate = (() => {
+    const target =
+      savedStatus === 'read'
+        ? 'finished'
+        : savedStatus === 'want'
+          ? 'shelved'
+          : savedStatus === 'dnf'
+            ? 'dnf'
+            : null;
+    return target ? data.log.find((e) => e.event === target)?.date : null;
+  })();
+
+  const focusStripMeta =
+    savedStatus === 'reading' && readingStartedDate
+      ? `Reading since ${formatReadingSince(readingStartedDate)}`
+      : savedStatus === 'read' && statusEventDate
+        ? `Finished ${formatStatusDate(statusEventDate)}`
+        : savedStatus === 'want' && statusEventDate
+          ? `Shelved ${formatStatusDate(statusEventDate)}`
+          : savedStatus === 'dnf' && statusEventDate
+            ? `Did not finish ${formatStatusDate(statusEventDate)}`
+            : null;
+
   return (
     <BookDetailView
       book={book}
       inLibrary
       editable
       justAcquired={justAcquired}
+      focusMode={focusMode}
+      onExitFocus={onToggleFocus}
+      focusStripMeta={focusStripMeta}
+      currentFormat={currentFormat}
+      onFormatChange={saveFormat}
       onTagsChange={saveTags}
       onTitleChange={saveTitle}
       onDescriptionChange={saveDescription}
@@ -148,7 +208,18 @@ export const LibraryBookDetail = () => {
       onLanguageChange={saveLanguage}
       onIsbnChange={saveIsbn}
       onRefreshMetadata={refreshMetadata}
-      journal={<Journal entry={entry} log={data.log} justAcquired={justAcquired} />}
+      journal={
+        <Journal
+          entry={entry}
+          log={data.log}
+          justAcquired={justAcquired}
+          focusMode={focusMode}
+          onToggleFocus={onToggleFocus}
+          onRatingChange={saveRating}
+          onReviewChange={saveReview}
+          onNoteAdd={addNote}
+        />
+      }
       actions={
         <DropdownMenu
           trigger={

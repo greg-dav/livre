@@ -28,6 +28,10 @@ import {
   updateIsbnResponseSchema,
   refreshMetadataBodySchema,
   refreshMetadataResponseSchema,
+  updateRatingBodySchema,
+  updateRatingResponseSchema,
+  updateReviewBodySchema,
+  updateReviewResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { requireAuth } from '../middleware/auth';
@@ -258,9 +262,41 @@ export function createBooksRouter(service: BooksService): Router {
       const user = req.user;
       if (!user) throw createError(401, 'Unauthorized');
       const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const result = service.logEvent(user.id, libraryBookId, body.event, body.date);
+      const text = body.event === 'note' || body.event === 'quote' ? body.text : undefined;
+      const format = body.event === 'format' ? body.format : undefined;
+      const result = service.logEvent(user.id, libraryBookId, body.event, body.date, text, format);
       if (!result) throw createError(404, 'Book not found');
       respond(result);
+    }
+  );
+
+  /** Update the star rating on a library book. */
+  router.patch(
+    '/library/:libraryBookId/rating',
+    updateRatingBodySchema,
+    updateRatingResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updateRating(user.id, libraryBookId, body.rating);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Update the review text on a library book. */
+  router.patch(
+    '/library/:libraryBookId/review',
+    updateReviewBodySchema,
+    updateReviewResponseSchema,
+    async (body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.updateReview(user.id, libraryBookId, body.review);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
     }
   );
 

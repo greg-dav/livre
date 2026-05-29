@@ -44,6 +44,34 @@ if (!libraryBooksColumns.includes('fiction'))
 if (!libraryBooksColumns.includes('genre'))
   sqlite.exec("ALTER TABLE library_books ADD COLUMN genre TEXT NOT NULL DEFAULT 'unknown'");
 
+// Migrate reading_log: rename note→text, add format column, add quote/format event types.
+// Sentinel: presence of the text column indicates the migration has already run.
+const readingLogColumns = sqlite
+  .prepare("SELECT name FROM pragma_table_info('reading_log')")
+  .all()
+  .map((r) => (r as { name: string }).name);
+if (!readingLogColumns.includes('text')) {
+  sqlite.exec(`
+    PRAGMA foreign_keys = OFF;
+    CREATE TABLE reading_log_new (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      library_book_id INTEGER NOT NULL REFERENCES library_books(id) ON DELETE CASCADE,
+      event           TEXT    NOT NULL CHECK (event IN ('shelved', 'started', 'finished', 'dnf', 'restarted', 'note', 'quote', 'format')),
+      text            TEXT,
+      format          TEXT    CHECK (format IS NULL OR format IN ('physical', 'ereader', 'audio')),
+      date            TEXT    NOT NULL,
+      created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    INSERT INTO reading_log_new (id, library_book_id, event, text, date, created_at)
+      SELECT id, library_book_id, event, note, date, created_at FROM reading_log;
+    DROP TABLE reading_log;
+    ALTER TABLE reading_log_new RENAME TO reading_log;
+    CREATE INDEX IF NOT EXISTS idx_reading_log_lb   ON reading_log(library_book_id);
+    CREATE INDEX IF NOT EXISTS idx_reading_log_date ON reading_log(date);
+    PRAGMA foreign_keys = ON;
+  `);
+}
+
 export const db = drizzle(sqlite, { schema });
 
 // The transaction callback receives BetterSQLiteTransaction, which differs from typeof db

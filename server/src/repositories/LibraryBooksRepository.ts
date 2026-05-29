@@ -238,6 +238,17 @@ export class LibraryBooksRepository {
       .run();
   }
 
+  updateRating(libraryBookId: number, rating: number | null): void {
+    db.update(libraryBooks).set({ rating }).where(eq(libraryBooks.id, libraryBookId)).run();
+  }
+
+  updateReview(libraryBookId: number, review: string): void {
+    db.update(libraryBooks)
+      .set({ review: review || null })
+      .where(eq(libraryBooks.id, libraryBookId))
+      .run();
+  }
+
   refreshMetadata(libraryBookId: number, fields: import('@livre/types').RefreshMetadataBody): void {
     const set: Record<string, unknown> = {};
     if (fields.title !== undefined) set.title = fields.title;

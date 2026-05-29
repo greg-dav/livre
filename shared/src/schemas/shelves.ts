@@ -11,8 +11,13 @@ export const logEventTypeSchema = z.enum([
   'dnf',
   'restarted',
   'note',
+  'quote',
+  'format',
 ]);
 export type LogEventType = z.infer<typeof logEventTypeSchema>;
+
+export const bookFormatSchema = z.enum(['physical', 'ereader', 'audio']);
+export type BookFormat = z.infer<typeof bookFormatSchema>;
 
 export const shelfEntrySchema = z.object({
   libraryBookId: z.number(),
@@ -21,7 +26,6 @@ export const shelfEntrySchema = z.object({
   rating: z.number().nullable(),
   review: z.string().nullable(),
   addedDate: z.string(),
-  // Nullable to support future manual entries with no upstream source.
   bookRef: bookRefSchema.nullable(),
   title: z.string(),
   authors: z.array(z.string()),
@@ -43,10 +47,14 @@ export const shelfResponseSchema = z.object({
 });
 export type ShelfResponse = z.infer<typeof shelfResponseSchema>;
 
-export const createLogEventBodySchema = z.object({
-  event: logEventTypeSchema,
-  date: z.string().optional(),
-});
+export const createLogEventBodySchema = z.union([
+  z.object({
+    event: z.enum(['shelved', 'started', 'restarted', 'finished', 'dnf']),
+    date: z.string().optional(),
+  }),
+  z.object({ event: z.enum(['note', 'quote']), date: z.string().optional(), text: z.string() }),
+  z.object({ event: z.literal('format'), date: z.string().optional(), format: bookFormatSchema }),
+]);
 export type CreateLogEventBody = z.infer<typeof createLogEventBodySchema>;
 
 export const createLogEventResponseSchema = z.object({
@@ -58,10 +66,23 @@ export type CreateLogEventResponse = z.infer<typeof createLogEventResponseSchema
 export const libraryResponseSchema = z.array(shelfEntrySchema);
 export type LibraryResponse = z.infer<typeof libraryResponseSchema>;
 
-export const logEntrySchema = z.object({
-  id: z.number(),
-  event: logEventTypeSchema,
-  date: z.string(),
-  note: z.string().nullable(),
-});
+export const logEntrySchema = z.union([
+  z.object({
+    id: z.number(),
+    event: z.enum(['shelved', 'started', 'restarted', 'finished', 'dnf']),
+    date: z.string(),
+  }),
+  z.object({
+    id: z.number(),
+    event: z.enum(['note', 'quote']),
+    date: z.string(),
+    text: z.string(),
+  }),
+  z.object({
+    id: z.number(),
+    event: z.literal('format'),
+    date: z.string(),
+    format: bookFormatSchema,
+  }),
+]);
 export type LogEntry = z.infer<typeof logEntrySchema>;

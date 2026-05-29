@@ -17,8 +17,10 @@ const defaultElement: Record<TextVariant, ElementType> = {
   'ui-sm': 'span',
   'ui-tight': 'span',
   'ui-xs': 'span',
+  tiny: 'span',
   label: 'span',
   mono: 'span',
+  quote: 'span',
 };
 
 export interface TextProps {

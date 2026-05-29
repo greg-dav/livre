@@ -1,4 +1,5 @@
 import {
+  type BookFormat,
   type BookVolume,
   type BookSearchResponse,
   type BookSource,
@@ -92,7 +93,9 @@ export class BooksService {
     userId: number,
     libraryBookId: number,
     event: LogEventType,
-    date?: string
+    date?: string,
+    text?: string,
+    format?: BookFormat
   ): CreateLogEventResponse | null {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return null;
 
@@ -102,7 +105,7 @@ export class BooksService {
           ? 'restarted'
           : event;
       const logDate = date ?? new Date().toISOString().slice(0, 10);
-      const logId = this.readingLogRepo.insert(libraryBookId, resolvedEvent, logDate);
+      const logId = this.readingLogRepo.insert(libraryBookId, resolvedEvent, logDate, text, format);
       return { libraryBookId, logId };
     });
   }
@@ -170,6 +173,18 @@ export class BooksService {
   updateIsbn(userId: number, libraryBookId: number, isbn: string): boolean {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
     this.libraryBooksRepo.updateIsbn(libraryBookId, isbn);
+    return true;
+  }
+
+  updateRating(userId: number, libraryBookId: number, rating: number | null): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updateRating(libraryBookId, rating);
+    return true;
+  }
+
+  updateReview(userId: number, libraryBookId: number, review: string): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.updateReview(libraryBookId, review);
     return true;
   }
 

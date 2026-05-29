@@ -18,17 +18,19 @@ export const TopBar = styled('header')(({ theme }) => ({
   background: theme.bg,
 }));
 
-export const Content = styled('main')<{ $fullWidth?: boolean }>(({ theme, $fullWidth }) =>
-  $fullWidth
-    ? {}
-    : {
-        maxWidth: '1320px',
-        margin: '0 auto',
-        padding: `${theme.spacing(8)} ${theme.spacing(12)} ${theme.spacing(20)}`,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: theme.spacing(8),
-      }
+export const Content = styled('main')<{ $fullWidth?: boolean; $focusMode?: boolean }>(
+  ({ theme, $fullWidth, $focusMode }) =>
+    $fullWidth
+      ? {}
+      : {
+          maxWidth: $focusMode ? '1240px' : '1320px',
+          margin: '0 auto',
+          padding: `${theme.spacing(8)} ${theme.spacing(12)} ${theme.spacing(20)}`,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: theme.spacing(8),
+          transition: 'max-width 0.25s ease',
+        }
 );
 
 export const BackButton = styled('button')(({ theme }) => ({

@@ -135,26 +135,22 @@ export const updatePageCountBodySchema = z.object({ pageCount: z.number().int().
 export type UpdatePageCountBody = z.infer<typeof updatePageCountBodySchema>;
 export const updatePageCountResponseSchema = okResponse;
 
-// Accepts YYYY, YYYY-MM, or YYYY-MM-DD — matching Google Books' published date formats.
 export const updatePublishedDateBodySchema = z.object({
   publishedDate: z.string().regex(/^\d{4}(-\d{2}(-\d{2})?)?$/),
 });
 export type UpdatePublishedDateBody = z.infer<typeof updatePublishedDateBodySchema>;
 export const updatePublishedDateResponseSchema = okResponse;
 
-// BCP 47 language tag — lower-cased alpha codes like "en", "fr", "zh".
 export const updateLanguageBodySchema = z.object({
   language: z.string().min(2).max(10),
 });
 export type UpdateLanguageBody = z.infer<typeof updateLanguageBodySchema>;
 export const updateLanguageResponseSchema = okResponse;
 
-// Raw ISBN digits only (no hyphens); 10 or 13 digits, validated by the server.
 export const updateIsbnBodySchema = z.object({ isbn: z.string() });
 export type UpdateIsbnBody = z.infer<typeof updateIsbnBodySchema>;
 export const updateIsbnResponseSchema = okResponse;
 
-// Subset of BookMetadata fields that can be bulk-refreshed from an ISBN lookup result.
 export const refreshMetadataBodySchema = bookMetadataSchema
   .pick({
     title: true,
@@ -171,3 +167,13 @@ export const refreshMetadataBodySchema = bookMetadataSchema
   .partial();
 export type RefreshMetadataBody = z.infer<typeof refreshMetadataBodySchema>;
 export const refreshMetadataResponseSchema = okResponse;
+
+export const updateRatingBodySchema = z.object({
+  rating: z.number().min(1).max(5).multipleOf(0.5).nullable(),
+});
+export type UpdateRatingBody = z.infer<typeof updateRatingBodySchema>;
+export const updateRatingResponseSchema = okResponse;
+
+export const updateReviewBodySchema = z.object({ review: z.string() });
+export type UpdateReviewBody = z.infer<typeof updateReviewBodySchema>;
+export const updateReviewResponseSchema = okResponse;

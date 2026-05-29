@@ -1,23 +1,31 @@
 import styled from 'styled-components';
 
-/*
- * Sticky right-rail container. Holds the journal contents (rating, review, log, composer) and
- * remains in view as the user scrolls past long descriptions. max-height + overflow lets the
- * panel scroll independently when its own content exceeds the viewport.
- */
-export const Panel = styled('aside')<{ $justAcquired?: boolean }>(({ theme, $justAcquired }) => ({
-  position: 'sticky',
-  top: theme.spacing(24),
-  background: theme.bgElevated,
-  border: `1px solid ${theme.border}`,
-  borderRadius: theme.radius.lg,
-  padding: theme.spacing(6),
-  maxHeight: 'calc(100vh - 128px)',
-  overflowY: 'auto',
-  ...($justAcquired && {
-    animation: 'journal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
-  }),
-}));
+export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boolean }>(
+  ({ theme, $justAcquired, $focusMode }) => ({
+    position: 'sticky',
+    top: theme.spacing(32),
+    background: theme.bgElevated,
+    border: `1px solid ${theme.border}`,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing(6),
+    maxHeight: `calc(100vh - ${theme.spacing(32)} - ${theme.spacing(8)})`,
+    overflowY: 'auto',
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': { display: 'none' },
+    ...($justAcquired && {
+      animation: 'journal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
+    }),
+    ...($focusMode && {
+      position: 'static',
+      maxHeight: 'none',
+      overflow: 'visible',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: 0,
+      padding: 0,
+    }),
+  })
+);
 
 export const Head = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -26,7 +34,7 @@ export const Head = styled('div')(({ theme }) => ({
   marginBottom: theme.spacing(5),
 }));
 
-export const FocusButton = styled('button')(({ theme }) => ({
+const headerButton = (theme: import('styled-components').DefaultTheme) => ({
   background: 'none',
   border: 'none',
   cursor: 'pointer',
@@ -36,20 +44,21 @@ export const FocusButton = styled('button')(({ theme }) => ({
   alignItems: 'center',
   gap: '6px',
   transition: 'all 0.15s ease',
-  '& span': {
-    color: theme.textMuted,
-    transition: 'color 0.15s',
-  },
+  '& span': { color: theme.textMuted, transition: 'color 0.15s' },
   '&:hover': { background: theme.bg },
   '&:hover span': { color: theme.text },
-}));
+});
 
-export const RatingRow = styled('div')(({ theme }) => ({
+export const FocusButton = styled('button')(({ theme }) => headerButton(theme));
+
+export const CollapseButton = styled('button')(({ theme }) => headerButton(theme));
+
+export const RatingRow = styled('div')<{ $focusMode?: boolean }>(({ theme, $focusMode }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  paddingBottom: theme.spacing(4),
-  marginBottom: theme.spacing(4),
+  paddingBottom: $focusMode ? '20px' : theme.spacing(4),
+  marginBottom: $focusMode ? theme.spacing(6) : theme.spacing(4),
   borderBottom: `1px solid ${theme.borderSoft}`,
 }));
 
@@ -57,11 +66,13 @@ export const RatingRow = styled('div')(({ theme }) => ({
  * Visual delineation between review and timeline. 18px (4.5 × 4px) is half-step on the grid —
  * intentional: the prototype uses tighter rhythm inside the panel than on the page itself.
  */
-export const ReviewSection = styled('section')(({ theme }) => ({
-  paddingBottom: theme.spacing(4.5),
-  marginBottom: theme.spacing(4.5),
-  borderBottom: `1px solid ${theme.borderSoft}`,
-}));
+export const ReviewSection = styled('section')<{ $focusMode?: boolean }>(
+  ({ theme, $focusMode }) => ({
+    paddingBottom: $focusMode ? 0 : theme.spacing(4.5),
+    marginBottom: $focusMode ? 0 : theme.spacing(4.5),
+    borderBottom: $focusMode ? 'none' : `1px solid ${theme.borderSoft}`,
+  })
+);
 
 export const ReviewHead = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -104,9 +115,25 @@ export const Composer = styled('div')(({ theme }) => ({
   '&:focus-within': { borderColor: theme.accent },
 }));
 
-export const ComposerInput = styled('div')(({ theme }) => ({
-  padding: `${theme.spacing(2.5)} ${theme.spacing(3)}`,
-  minHeight: theme.spacing(15),
+export const ComposerInputWrap = styled('div')<{ $focusMode?: boolean }>(({ $focusMode }) => ({
+  padding: `10px 12px`,
+  minHeight: $focusMode ? '80px' : '60px',
+  cursor: 'text',
+}));
+
+export const ComposerEditable = styled('div')(({ theme }) => ({
+  font: 'inherit',
+  outline: 'none',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  color: theme.textMuted,
+  '&:focus': { color: theme.text },
+  '&:empty::before': {
+    content: 'attr(data-placeholder)',
+    color: theme.textMuted,
+    pointerEvents: 'none',
+    display: 'block',
+  },
 }));
 
 export const ComposerBar = styled('div')(({ theme }) => ({
@@ -143,45 +170,55 @@ export const ComposerSpacer = styled('div')({ flex: 1 });
  * center instead of overshooting them. The container only provides padding-left for nodes to
  * jut into and vertical rhythm before the first entry.
  */
+// Single rail drawn on the container so it flows through the CycleDivider unbroken,
+// matching the prototype's .timeline::before approach. left: 4px → center at 4.5px,
+// which is where all pin types center (18px timeline padding − 13.5px entry offset).
 export const Timeline = styled('div')(({ theme }) => ({
   position: 'relative',
   paddingLeft: theme.spacing(4.5),
   marginTop: theme.spacing(5),
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    left: '4px',
+    top: '12px',
+    bottom: '20px',
+    width: '1px',
+    background: theme.borderSoft,
+  },
 }));
 
-/*
- * Three node states: plain dot (notes/quotes), filled accent dot (closed landmark — Started,
- * Finished), and open ring (active landmark — currently reading). The ring distinguishes
- * "in-progress" from completed events without needing a separate icon.
- *
- * The connecting hairline is rendered per-entry on ::after rather than as a single rail on
- * Timeline so we can clip it at the first/last node's vertical center — no overshoot above
- * the first node, no overshoot below the last. The line sits at left: -15px (matching the
- * 9px landmark and 7px regular dots, whose horizontal centers both land at left: -14.5px
- * relative to the entry), and is hidden when the entry is the only child.
- *
- * z-index keeps the node ::before painted on top of the ::after line where they overlap, so
- * the line visually terminates at the node edge without needing extra geometry.
- */
+// Flex label + dashed fill-line. No background masking needed — the label sits on the
+// left and the ::after dashed line fills the remaining width automatically.
+export const CycleDivider = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  margin: '2px 0 10px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+  '&::after': {
+    content: '""',
+    flex: 1,
+    borderTop: `1px dashed ${theme.border}`,
+  },
+}));
+
 export const TimelineEntry = styled('div')<{ $landmark?: boolean; $open?: boolean }>(({
   theme,
   $landmark,
   $open,
 }) => {
-  // All three node types are sized and positioned so their horizontal centers land at the
-  // same x (entry coord -14.5px) as the connecting line — the line at left: -15px / width 1px
-  // also centers at -14.5. Closed landmark needs no border (the accent fill carries it).
-  //
-  // The app's global box-sizing: border-box means width includes the border. The open
-  // landmark is therefore sized 13px (= 9px ring + 2px border each side) to render the same
-  // 13px visual the prototype intended under a content-box reading.
+  // Pin values match the prototype verbatim. boxSizing: content-box opts the pseudo-element
+  // out of the global border-box reset so width/height measure the content area (border adds
+  // on top), exactly as the prototype CSS intends.
   const node = $landmark
     ? $open
       ? {
-          left: '-21px',
+          left: '-20px',
           top: '10px',
-          width: '13px',
-          height: '13px',
+          width: '9px',
+          height: '9px',
           background: theme.bgElevated,
           border: `2px solid ${theme.accent}`,
         }
@@ -191,18 +228,16 @@ export const TimelineEntry = styled('div')<{ $landmark?: boolean; $open?: boolea
           width: '9px',
           height: '9px',
           background: theme.accent,
+          border: `1px solid ${theme.accent}`,
         }
     : {
-        left: '-19px',
+        left: '-18px',
         top: '13px',
         width: '7px',
         height: '7px',
         background: theme.bgElevated,
         border: `1px solid ${theme.textMuted}`,
       };
-  // Node vertical center, measured from entry top. Used to clip the line at the first/last
-  // entry so it terminates at the node center rather than overshooting into empty padding.
-  const nodeCenterY = $landmark ? '15px' : '16px';
   return {
     position: 'relative',
     padding: `6px 0 ${theme.spacing(3.5)}`,
@@ -210,22 +245,10 @@ export const TimelineEntry = styled('div')<{ $landmark?: boolean; $open?: boolea
       content: '""',
       position: 'absolute',
       borderRadius: '50%',
+      boxSizing: 'content-box',
       zIndex: 1,
       ...node,
     },
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      left: '-15px',
-      top: 0,
-      bottom: 0,
-      width: '1px',
-      background: theme.borderSoft,
-      zIndex: 0,
-    },
-    '&:first-child::after': { top: nodeCenterY },
-    '&:last-child::after': { bottom: 'auto', height: nodeCenterY },
-    '&:only-child::after': { display: 'none' },
   };
 });
 
@@ -237,4 +260,56 @@ export const LandmarkHead = styled('div')(({ theme }) => ({
 
 export const NoteMeta = styled('div')(({ theme }) => ({
   marginBottom: theme.spacing(1),
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+}));
+
+export const QuoteBlock = styled('div')(({ theme }) => ({
+  fontStyle: 'italic',
+  borderLeft: `2px solid ${theme.accent}`,
+  paddingLeft: theme.spacing(3),
+}));
+
+// Format badge shown inline below a cycle's terminal landmark (Reading / Finished / DNF).
+export const CycleMethod = styled('div')({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '4px',
+  marginTop: '3px',
+  opacity: 0.7,
+});
+
+export const JournalGrid = styled('div')({
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+  gap: '56px',
+  marginTop: '8px',
+});
+
+export const JournalLeftCol = styled('div')({});
+
+export const JournalRightCol = styled('div')({});
+
+export const RightColHead = styled('div')(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+}));
+
+export const ReviewEditor = styled('div')(({ theme }) => ({
+  minHeight: '320px',
+  padding: '14px 18px',
+  background: theme.bgElevated,
+  border: `1px solid ${theme.border}`,
+  borderRadius: '10px',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  font: 'inherit',
+  outline: 'none',
+  '&:empty::before': {
+    content: '"Write your review…"',
+    color: theme.textMuted,
+    pointerEvents: 'none',
+  },
+  '&:focus': {
+    borderColor: theme.accent,
+  },
 }));

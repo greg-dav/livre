@@ -38,6 +38,10 @@ export {
   updateIsbnResponseSchema,
   refreshMetadataBodySchema,
   refreshMetadataResponseSchema,
+  updateRatingBodySchema,
+  updateRatingResponseSchema,
+  updateReviewBodySchema,
+  updateReviewResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -57,12 +61,15 @@ export type {
   UpdateLanguageBody,
   UpdateIsbnBody,
   RefreshMetadataBody,
+  UpdateRatingBody,
+  UpdateReviewBody,
 } from './schemas/books';
 export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';
 export {
   shelfStatusSchema,
   logEventTypeSchema,
+  bookFormatSchema,
   shelfEntrySchema,
   shelfCountsSchema,
   shelfResponseSchema,
@@ -74,6 +81,7 @@ export {
 export type {
   ShelfStatus,
   LogEventType,
+  BookFormat,
   ShelfEntry,
   ShelfCounts,
   ShelfResponse,

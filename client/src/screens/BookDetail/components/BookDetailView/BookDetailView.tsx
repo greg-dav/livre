@@ -9,11 +9,17 @@ import { useLanguageEdit } from '../../hooks/useLanguageEdit';
 import { useIsbnEdit } from '../../hooks/useIsbnEdit';
 import type { ReactNode } from 'react';
 import { Text, Lightbox, Dialog, Input, Button } from '@livre/primitives';
-import { type BookVolume, type RefreshMetadataBody } from '@livre/types';
+import { type BookVolume, type RefreshMetadataBody, type BookFormat } from '@livre/types';
 import { Layout } from '../../../../components';
+import { FormatSelector } from '../FormatSelector/FormatSelector';
 import {
   LayoutGrid,
   LeftColumn,
+  FocusStrip,
+  FocusStripCoverThemed,
+  FocusStripInfo,
+  FocusStripSep,
+  ExitFocusButton,
   Hero,
   CoverWrapper,
   CoverEditOverlay,
@@ -71,6 +77,11 @@ interface BookDetailViewProps {
   onRefreshMetadata?: (fields: RefreshMetadataBody) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
   journal?: ReactNode;
+  focusMode?: boolean;
+  onExitFocus?: () => void;
+  focusStripMeta?: ReactNode;
+  currentFormat?: BookFormat | null;
+  onFormatChange?: (format: BookFormat) => void;
 }
 
 /**
@@ -102,6 +113,11 @@ export const BookDetailView = ({
   onIsbnChange,
   onRefreshMetadata,
   journal,
+  focusMode,
+  onExitFocus,
+  focusStripMeta,
+  currentFormat,
+  onFormatChange,
 }: BookDetailViewProps) => {
   const [coverIndex, setCoverIndex] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -230,6 +246,9 @@ export const BookDetailView = ({
             </Byline>
           )}
           <HeroActions>{actions}</HeroActions>
+          {editable && onFormatChange && (
+            <FormatSelector value={currentFormat ?? null} onChange={onFormatChange} />
+          )}
           {statusIndicator}
         </HeroMeta>
       </Hero>
@@ -407,13 +426,42 @@ export const BookDetailView = ({
     </>
   );
 
+  const focusStrip =
+    focusMode && journal ? (
+      <FocusStrip>
+        <FocusStripCoverThemed>
+          {coverSrc && <img src={coverSrc} alt={book.title} />}
+        </FocusStripCoverThemed>
+        <FocusStripInfo>
+          <Text variant="h4" as="span">
+            {book.title}
+          </Text>
+          <Text variant="ui-tight" color="muted">
+            {dedupeAuthors(book.authors).join(', ')}
+            {focusStripMeta && (
+              <>
+                <FocusStripSep>·</FocusStripSep>
+                {focusStripMeta}
+              </>
+            )}
+          </Text>
+        </FocusStripInfo>
+        <ExitFocusButton type="button" onClick={onExitFocus}>
+          <Text variant="label">↩ Back to book</Text>
+        </ExitFocusButton>
+      </FocusStrip>
+    ) : null;
+
   return (
-    <Layout>
+    <Layout focusMode={focusMode}>
       {journal ? (
-        <LayoutGrid>
-          <LeftColumn>{content}</LeftColumn>
-          {journal}
-        </LayoutGrid>
+        <>
+          {focusStrip}
+          <LayoutGrid $focusMode={focusMode}>
+            <LeftColumn $focusMode={focusMode}>{content}</LeftColumn>
+            {journal}
+          </LayoutGrid>
+        </>
       ) : (
         content
       )}

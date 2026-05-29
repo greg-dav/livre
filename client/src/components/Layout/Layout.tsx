@@ -9,6 +9,7 @@ import { Page, TopBar, Content, BackButton } from './Layout.styles';
 interface LayoutProps {
   children: ReactNode;
   fullWidth?: boolean;
+  focusMode?: boolean;
 }
 
 const backLabelSchema = z.object({ backLabel: z.string() });
@@ -20,7 +21,7 @@ const backLabelSchema = z.object({ backLabel: z.string() });
  * destination, with backLabel in navigation state supplying the display text. Wraps children in
  * a centred, padded content column.
  */
-export const Layout = ({ children, fullWidth }: LayoutProps) => {
+export const Layout = ({ children, fullWidth, focusMode }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isRoot = location.pathname === '/library' || location.pathname === '/';
@@ -33,7 +34,7 @@ export const Layout = ({ children, fullWidth }: LayoutProps) => {
         <BookSearch />
         <UserMenu />
       </TopBar>
-      <Content $fullWidth={fullWidth}>
+      <Content $fullWidth={fullWidth} $focusMode={focusMode}>
         {!isRoot && (
           <BackButton onClick={() => navigate(-1)}>
             <Text variant="ui-sm">← Back to {backLabel}</Text>

@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS library_books (
   genre            TEXT    NOT NULL DEFAULT 'unknown',
   language         TEXT,
   -- user fields
-  rating         INTEGER CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5)),
+  rating         REAL CHECK (rating IS NULL OR (rating >= 1 AND rating <= 5)),
   review         TEXT,
   added_date     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
@@ -83,8 +83,9 @@ CREATE INDEX IF NOT EXISTS idx_library_books_user ON library_books(user_id);
 CREATE TABLE IF NOT EXISTS reading_log (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   library_book_id INTEGER NOT NULL REFERENCES library_books(id) ON DELETE CASCADE,
-  event           TEXT    NOT NULL CHECK (event IN ('shelved', 'started', 'finished', 'dnf', 'restarted', 'note')),
-  note            TEXT,
+  event           TEXT    NOT NULL CHECK (event IN ('shelved', 'started', 'finished', 'dnf', 'restarted', 'note', 'quote', 'format')),
+  text            TEXT,
+  format          TEXT    CHECK (format IS NULL OR format IN ('physical', 'ereader', 'audio')),
   date            TEXT    NOT NULL,
   created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
 );

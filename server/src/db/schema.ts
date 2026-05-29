@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -64,7 +64,7 @@ export const libraryBooks = sqliteTable('library_books', {
   fiction: integer('fiction', { mode: 'boolean' }).notNull().default(false),
   genre: text('genre').notNull().default('unknown'),
   language: text('language'),
-  rating: integer('rating'),
+  rating: real('rating'),
   review: text('review'),
   addedDate: text('added_date')
     .notNull()
@@ -77,9 +77,10 @@ export const readingLog = sqliteTable('reading_log', {
     .notNull()
     .references(() => libraryBooks.id, { onDelete: 'cascade' }),
   event: text('event', {
-    enum: ['shelved', 'started', 'finished', 'dnf', 'restarted', 'note'],
+    enum: ['shelved', 'started', 'finished', 'dnf', 'restarted', 'note', 'quote', 'format'],
   }).notNull(),
-  note: text('note'),
+  text: text('text'),
+  format: text('format'),
   date: text('date').notNull(),
   createdAt: text('created_at')
     .notNull()

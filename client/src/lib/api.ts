@@ -21,8 +21,11 @@ import {
   updateLanguageResponseSchema,
   updateIsbnResponseSchema,
   refreshMetadataResponseSchema,
+  updateRatingResponseSchema,
+  updateReviewResponseSchema,
   type RefreshMetadataBody,
   type LogEventType,
+  type BookFormat,
   type ShelfStatus,
 } from '@livre/types';
 
@@ -89,10 +92,16 @@ export const api = {
           body: JSON.stringify({ event, date }),
         }
       ),
-    logByLibraryBookId: (libraryBookId: number, event: LogEventType, date?: string) =>
+    logByLibraryBookId: (
+      libraryBookId: number,
+      event: LogEventType,
+      date?: string,
+      text?: string,
+      format?: BookFormat
+    ) =>
       request(`/books/library/${libraryBookId}/log`, createLogEventResponseSchema, {
         method: 'POST',
-        body: JSON.stringify({ event, date }),
+        body: JSON.stringify({ event, date, text, format }),
       }),
     updateTags: (libraryBookId: number, tags: string[]) =>
       request(`/books/library/${libraryBookId}/tags`, updateTagsResponseSchema, {
@@ -143,6 +152,21 @@ export const api = {
       request(`/books/library/${libraryBookId}/metadata`, refreshMetadataResponseSchema, {
         method: 'PATCH',
         body: JSON.stringify(fields),
+      }),
+    updateRating: (libraryBookId: number, rating: number | null) =>
+      request(`/books/library/${libraryBookId}/rating`, updateRatingResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ rating }),
+      }),
+    updateReview: (libraryBookId: number, review: string) =>
+      request(`/books/library/${libraryBookId}/review`, updateReviewResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ review }),
+      }),
+    logFormatChange: (libraryBookId: number, format: BookFormat) =>
+      request(`/books/library/${libraryBookId}/log`, createLogEventResponseSchema, {
+        method: 'POST',
+        body: JSON.stringify({ event: 'format', format }),
       }),
   },
   shelves: {

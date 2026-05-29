@@ -15,8 +15,10 @@ export type TextVariant =
   | 'ui-sm'
   | 'ui-tight'
   | 'ui-xs'
+  | 'tiny'
   | 'label'
-  | 'mono';
+  | 'mono'
+  | 'quote';
 
 export type TextColor =
   | 'default'
@@ -64,6 +66,8 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
       return { ...ui, fontSize: '0.8125rem', fontWeight: 400, lineHeight: 1.4 };
     case 'ui-xs':
       return { ...ui, fontSize: '0.6875rem', fontWeight: 400, lineHeight: 1.4 };
+    case 'tiny':
+      return { ...ui, fontSize: '0.625rem', fontWeight: 400, lineHeight: 1.4 };
     case 'label':
       return {
         ...ui,
@@ -80,6 +84,8 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
         fontWeight: 400,
         lineHeight: 1.4,
       };
+    case 'quote':
+      return { ...display, fontSize: '1.0625rem', lineHeight: 1.4 };
   }
 };
 
