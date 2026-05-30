@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Livre — B. Centered grid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      /* ── Shell ───────────────────────────────────────────────── */
+      html, body { height: 100%; overflow: hidden; }
+      .shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+      .topbar {
+        display: flex; align-items: center; gap: 12px;
+        padding: 0 32px; height: 52px;
+        border-bottom: 1px solid var(--border-soft);
+        background: var(--bg); flex-shrink: 0; z-index: 10;
+      }
+      .tb-back { display: flex; align-items: center; gap: 6px; font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); transition: color 0.15s; cursor: pointer; border: none; background: none; }
+      .tb-back:hover { color: var(--text); }
+      .tb-sep { width: 1px; height: 18px; background: var(--border-soft); }
+      .tb-title { font-family: var(--font-display); font-style: italic; font-size: 1.25rem; font-weight: 500; letter-spacing: -0.01em; }
+      .tb-spacer { flex: 1; }
+      .tb-avatar { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-ui); font-size: 0.75rem; color: var(--text-muted); }
+
+      /*
+       * APPROACH: max-width container centered on the page.
+       * The two-column grid is bounded, so neither column has dead space.
+       * Left gets the book info, right gets the journal — both feel intentionally sized.
+       * The journal is NOT edge-to-edge; it's a contained panel within the centered layout.
+       */
+      .body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 48px 48px 100px;
+      }
+      .content-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 56px;
+        align-items: start;
+      }
+
+      /* ── Left column ─────────────────────────────────────────── */
+      .left { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+
+      .hero { display: flex; gap: 32px; align-items: flex-start; }
+      .cover {
+        width: clamp(140px, 14vw, 180px);
+        aspect-ratio: 2/3;
+        border-radius: 3px 7px 7px 3px;
+        box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0,0,0,0.25);
+        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 10px;
+      }
+      .cover span { font-family: var(--font-body); font-size: 0.5625rem; color: rgba(255,255,255,0.75); line-height: 1.3; }
+      .hero-meta { flex: 1; padding-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+      .book-title { font-family: var(--font-display); font-style: italic; font-size: 2.25rem; font-weight: 500; letter-spacing: -0.02em; line-height: 1.05; }
+      .book-author { font-family: var(--font-ui); font-size: 0.9375rem; color: var(--text-muted); }
+      .byline { display: flex; align-items: center; gap: 6px; font-family: var(--font-ui); font-size: 0.75rem; color: var(--text-muted); }
+      .byline .dot { opacity: 0.4; }
+      .reading-since { display: flex; align-items: center; gap: 8px; font-family: var(--font-ui); font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+      .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); flex-shrink: 0; }
+      .hero-actions { display: flex; gap: 8px; margin-top: 8px; }
+      .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; transition: all 0.15s; background: var(--bg-elevated); cursor: pointer; }
+      .btn:hover { border-color: var(--text-muted); }
+      .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+      .btn.primary:hover { filter: brightness(1.08); }
+
+      hr.divider { border: none; border-top: 1px solid var(--border-soft); }
+
+      .section-label { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; }
+      .description { font-family: var(--font-body); font-size: 0.9375rem; line-height: 1.75; color: var(--text); }
+      .description::first-letter {
+        font-family: var(--font-display); font-style: italic; font-weight: 500;
+        font-size: 3.25rem; line-height: 0.85; float: left;
+        margin: 4px 8px 0 0; color: var(--accent);
+      }
+      .pills-row { display: flex; flex-wrap: wrap; gap: 6px; }
+      .pill { display: inline-flex; align-items: center; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); background: var(--bg-elevated); transition: all 0.15s; }
+      .pill:hover { border-color: var(--text-muted); color: var(--text); }
+      .pill.dashed { border-style: dashed; }
+      .meta-grid { display: grid; grid-template-columns: max-content 1fr; column-gap: 28px; row-gap: 6px; }
+      .meta-grid .key { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+      .meta-grid .val { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text); }
+
+      /* ── Right column — journal panel (flows with page, not sticky) ── */
+      .journal {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 20px 24px;
+      }
+
+      .sc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+      .sc-head h2 { font-family: var(--font-display); font-style: italic; font-size: 1.125rem; font-weight: 500; letter-spacing: -0.01em; }
+      .sc-focus-btn { display: flex; align-items: center; gap: 5px; font-family: var(--font-ui); font-size: 0.6875rem; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; transition: all 0.15s; cursor: pointer; }
+      .sc-focus-btn:hover { color: var(--text); border-color: var(--text-muted); }
+      .sc-rating-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-soft); }
+      .sc-stars { display: flex; gap: 3px; font-size: 1.25rem; color: var(--accent); cursor: pointer; }
+      .sc-review { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border-soft); }
+      .sc-review-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+      .sc-lbl { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+      .sc-expand { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--text-muted); transition: color 0.15s; cursor: pointer; }
+      .sc-expand:hover { color: var(--accent); }
+      .sc-review-body { font-family: var(--font-body); font-size: 0.875rem; line-height: 1.65; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .sc-composer { margin-top: 12px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--bg); overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; }
+      .sc-composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+      .sc-input { padding: 10px 12px; font-family: var(--font-body); font-size: 0.9375rem; line-height: 1.5; color: var(--text-muted); min-height: 56px; outline: none; cursor: text; }
+      .sc-input:focus { color: var(--text); }
+      .sc-bar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-top: 1px solid var(--border-soft); background: var(--bg-elevated); }
+      .sc-bar button { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 4px 8px; border-radius: 5px; color: var(--text-muted); transition: all 0.15s; cursor: pointer; }
+      .sc-bar button:hover { color: var(--text); background: var(--bg); }
+      .sc-bar button.active { color: var(--accent); background: var(--accent-soft); }
+      .sc-bar .save { margin-left: auto; color: var(--bg); background: var(--accent); padding: 4px 12px; border-radius: 5px; }
+      .sc-bar .save:hover { filter: brightness(1.08); }
+      .timeline { position: relative; padding-left: 18px; margin-top: 20px; }
+      .timeline::before { content: ''; position: absolute; left: 4px; top: 12px; bottom: 20px; width: 1px; background: var(--border-soft); }
+      .tl-entry { position: relative; padding: 6px 0 14px; }
+      .tl-entry::before { content: ''; position: absolute; border-radius: 50%; box-sizing: content-box; z-index: 1; left: -18px; top: 13px; width: 7px; height: 7px; background: var(--bg-elevated); border: 1px solid var(--text-muted); }
+      .tl-entry.landmark::before { left: -19px; top: 11px; width: 9px; height: 9px; background: var(--accent); border: 1px solid var(--accent); }
+      .tl-entry.finished::before { background: #4a8c5c; border-color: #4a8c5c; }
+      .tl-entry .meta { font-family: var(--font-ui); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; }
+      .tl-entry .head { display: flex; align-items: baseline; gap: 10px; }
+      .tl-entry .verb { font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+      .tl-entry .date { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-muted); }
+      .tl-entry .body { font-family: var(--font-body); font-size: 0.875rem; line-height: 1.6; color: var(--text); }
+      .tl-entry blockquote { font-family: var(--font-display); font-style: italic; font-size: 0.9375rem; line-height: 1.55; color: var(--text); border-left: 2px solid var(--accent); padding-left: 12px; margin-top: 4px; }
+      .cycle-divider { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; color: var(--text-muted); }
+      .cycle-divider::after { content: ''; flex: 1; border-top: 1px dashed var(--border); }
+      .cycle-divider span { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="topbar">
+        <button class="tb-back">← Library</button>
+        <div class="tb-sep"></div>
+        <span class="tb-title">Blood Meridian</span>
+        <div class="tb-spacer"></div>
+        <div class="tb-avatar">G</div>
+      </div>
+
+      <div class="body">
+        <div class="content-grid">
+
+          <!-- Left: book info -->
+          <div class="left">
+            <div class="hero">
+              <div class="cover" style="background:#2a1810;"><span>Blood Meridian</span></div>
+              <div class="hero-meta">
+                <div class="book-title">Blood Meridian</div>
+                <div class="book-author">Cormac McCarthy</div>
+                <div class="byline">
+                  <span>1985</span><span class="dot">·</span>
+                  <span>Random House</span><span class="dot">·</span>
+                  <span>337 pp</span>
+                </div>
+                <div class="hero-actions">
+                  <button class="btn primary">Read ▾</button>
+                  <button class="btn">⋯</button>
+                </div>
+              </div>
+            </div>
+
+            <hr class="divider" />
+
+            <div>
+              <div class="section-label">Description</div>
+              <p class="description">An epic novel of the violence and depravity that attended America's westward expansion, following a fourteen-year-old Tennessean known only as the kid in the 1850s and his journey into the borderlands of the American West. The book chronicles the grotesque atrocities of the Glanton gang, led by a larger-than-life figure known only as Judge Holden.</p>
+            </div>
+
+            <div class="pills-row">
+              <span class="pill">Fiction</span>
+              <span class="pill">Western</span>
+              <span class="pill">Historical</span>
+              <span class="pill">American Literature</span>
+              <span class="pill dashed">+ Add tag</span>
+            </div>
+
+            <hr class="divider" />
+
+            <div>
+              <div class="section-label">Details</div>
+              <div class="meta-grid">
+                <div class="key">ISBN</div><div class="val" style="font-family:var(--font-mono);font-size:0.75rem;">978-0-679-72875-5</div>
+                <div class="key">Language</div><div class="val">English</div>
+                <div class="key">Publisher</div><div class="val">Random House</div>
+                <div class="key">Published</div><div class="val">1985</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: journal (sticky card) -->
+          <div class="journal">
+            <div class="sc-head">
+              <h2>Journal</h2>
+              <button class="sc-focus-btn">⤢ Focus</button>
+            </div>
+            <div class="sc-rating-row">
+              <span class="sc-lbl">Rating</span>
+              <div class="sc-stars">★★★★★</div>
+            </div>
+            <div class="sc-review">
+              <div class="sc-review-head">
+                <span class="sc-lbl">Review</span>
+                <button class="sc-expand">Expand to write →</button>
+              </div>
+              <div class="sc-review-body">McCarthy's prose achieves something like biblical authority — the long, comma-less sentences, the archaic vocabulary. The Judge is one of the most unsettling presences in American fiction. He's not evil in any legible way…</div>
+            </div>
+            <div class="sc-composer">
+              <div class="sc-input" contenteditable="true" data-placeholder="Capture a thought…"></div>
+              <div class="sc-bar">
+                <button class="active">Note</button><button>Quote</button><button>+ Event ▾</button>
+                <button class="save">Save</button>
+              </div>
+            </div>
+            <div class="timeline">
+              <div class="tl-entry landmark finished">
+                <div class="head"><span class="verb">Finished</span><span class="date">Feb 28, 2026</span></div>
+              </div>
+              <div class="tl-entry">
+                <div class="meta">Note · Mar 5</div>
+                <div class="body">The Judge is one of the most unsettling presences in American fiction. He's not evil in any legible way — he's something more like a force, a principle. Violence as philosophy.</div>
+              </div>
+              <div class="tl-entry">
+                <div class="meta">Quote · Feb 20</div>
+                <blockquote>"Whatever in creation exists without my knowledge exists without my consent."</blockquote>
+              </div>
+              <div class="tl-entry">
+                <div class="meta">Note · Feb 10</div>
+                <div class="body">McCarthy's prose achieves something like biblical authority — the long, comma-less sentences, the archaic vocabulary. It doesn't feel written. It feels discovered.</div>
+              </div>
+              <div class="tl-entry landmark">
+                <div class="head"><span class="verb">Started</span><span class="date">Feb 3, 2026</span></div>
+              </div>
+              <div class="cycle-divider"><span>Added</span></div>
+              <div class="tl-entry">
+                <div class="meta">Jan 18, 2026</div>
+                <div class="body" style="color:var(--text-muted);">Added to library</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <script>
+      const input = document.querySelector('.sc-input');
+      input.addEventListener('focus', () => { if (!input.textContent.trim()) input.textContent = ''; });
+      input.addEventListener('blur', () => { if (!input.textContent.trim()) input.textContent = ''; });
+    </script>
+  </body>
+</html>
