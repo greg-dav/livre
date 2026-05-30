@@ -86,7 +86,11 @@ export const Content = styled('main')<{ $focusMode?: boolean }>(({ theme, $focus
 export const BackButton = styled('button')(({ theme }) => ({
   background: 'none',
   border: 'none',
-  padding: 0,
+  // Padded hit-zone with a compensating negative margin: the button stays visually flush with the
+  // header edge while the cursor-pointer area extends past the glyph bounds, so nudging the pointer
+  // slightly off the text no longer drops the hover state.
+  padding: theme.spacing(2),
+  margin: theme.spacing(-2),
   cursor: 'pointer',
   textDecoration: 'none',
   display: 'inline-flex',

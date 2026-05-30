@@ -13,6 +13,14 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
   'html, body': {
     overscrollBehavior: 'none',
   },
+  // Hide scrollbars everywhere while keeping scroll behaviour intact. Firefox honours
+  // scrollbar-width; WebKit/Blink need the ::-webkit-scrollbar reset.
+  '*': {
+    scrollbarWidth: 'none',
+  },
+  '*::-webkit-scrollbar': {
+    display: 'none',
+  },
   html: {
     fontSize: '16px',
     WebkitFontSmoothing: 'antialiased',
