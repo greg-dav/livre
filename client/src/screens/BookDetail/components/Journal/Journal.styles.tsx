@@ -6,10 +6,19 @@ export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boo
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius.lg,
     padding: theme.spacing(6),
+    // spacing(17) ≈ topbar (padding + logo line-height)
+    // spacing(21) ≈ content padding-top + back-button + flex gap to LayoutGrid
+    // 48px        = 24px breathing room top + 24px bottom
+    maxHeight: `calc(100vh - ${theme.spacing(17)} - ${theme.spacing(21)} - 48px)`,
+    overflowY: 'auto',
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': { display: 'none' },
     ...($justAcquired && {
       animation: 'journal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
     }),
     ...($focusMode && {
+      maxHeight: 'none',
+      overflow: 'visible',
       background: 'transparent',
       border: 'none',
       borderRadius: 0,
