@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { BookCard, BookGrid, Loader, Text } from '@livre/primitives';
 import { Layout, CurrentlyReadingCard, ShelfTabs, type ShelfStatus } from '../../components';
 import { api } from '../../lib/api';
@@ -30,6 +30,7 @@ const formatDate = (iso: string) =>
  */
 export const Library = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
 
   const { data: readingData } = useQuery({
@@ -41,6 +42,21 @@ export const Library = () => {
     queryKey: ['shelves', activeShelf],
     queryFn: () => api.shelves.getByStatus(activeShelf),
     placeholderData: keepPreviousData,
+  });
+
+  const { mutate: logEntry } = useMutation({
+    mutationFn: ({
+      libraryBookId,
+      type,
+      text,
+    }: {
+      libraryBookId: number;
+      type: 'note' | 'quote';
+      text: string;
+    }) => api.books.logByLibraryBookId(libraryBookId, type, undefined, text),
+    onSuccess: (_data, { libraryBookId }) => {
+      queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+    },
   });
 
   const readingEntries = readingData?.entries ?? [];
@@ -67,6 +83,7 @@ export const Library = () => {
               coverUrl={entry.coverUrl ?? undefined}
               startedDate={formatDate(entry.startedDate ?? entry.addedDate)}
               onClick={() => navigate(`/library/${entry.libraryBookId}`)}
+              onLog={(type, text) => logEntry({ libraryBookId: entry.libraryBookId, type, text })}
             />
           ))}
         </LeftPanel>

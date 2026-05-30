@@ -1,4 +1,13 @@
-import { Book, Headphones, Library, NotebookPen, Search, Settings, Tablet } from 'lucide-react';
+import {
+  Book,
+  CornerDownLeft,
+  Headphones,
+  Library,
+  NotebookPen,
+  Search,
+  Settings,
+  Tablet,
+} from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 
 /**
@@ -9,6 +18,7 @@ import { type LucideIcon } from 'lucide-react';
 const ICONS = {
   library: Library,
   log: NotebookPen,
+  enter: CornerDownLeft,
   search: Search,
   settings: Settings,
   book: Book,

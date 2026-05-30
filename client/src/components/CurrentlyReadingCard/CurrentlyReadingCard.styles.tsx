@@ -94,3 +94,45 @@ export const ActionBtn = styled('button')(({ theme }) => ({
     borderColor: theme.accent,
   },
 }));
+
+export const Composer = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  borderTop: `1px solid ${theme.borderSoft}`,
+  paddingTop: theme.spacing(2),
+}));
+
+export const ComposerFieldWrap = styled('div')({
+  flex: 1,
+  minWidth: 0,
+});
+
+export const ComposerField = styled('div')(({ theme }) => ({
+  color: theme.text,
+  font: 'inherit',
+  outline: 'none',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+
+  '&:empty::before': {
+    content: 'attr(data-placeholder)',
+    color: theme.textMuted,
+  },
+}));
+
+export const ComposerSave = styled('button')<{ $enabled: boolean }>(({ theme, $enabled }) => ({
+  flexShrink: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: theme.spacing(7),
+  height: theme.spacing(7),
+  borderRadius: '6px',
+  border: 'none',
+  background: 'transparent',
+  color: $enabled ? theme.accent : theme.textMuted,
+  opacity: $enabled ? 1 : 0.4,
+  cursor: $enabled ? 'pointer' : 'default',
+  transition: 'color 0.15s, opacity 0.15s',
+}));
