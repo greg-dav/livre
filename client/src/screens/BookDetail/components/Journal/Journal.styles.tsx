@@ -2,23 +2,14 @@ import styled from 'styled-components';
 
 export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boolean }>(
   ({ theme, $justAcquired, $focusMode }) => ({
-    position: 'sticky',
-    top: theme.spacing(32),
     background: theme.bgElevated,
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius.lg,
     padding: theme.spacing(6),
-    maxHeight: `calc(100vh - ${theme.spacing(32)} - ${theme.spacing(8)})`,
-    overflowY: 'auto',
-    scrollbarWidth: 'none',
-    '&::-webkit-scrollbar': { display: 'none' },
     ...($justAcquired && {
       animation: 'journal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both',
     }),
     ...($focusMode && {
-      position: 'static',
-      maxHeight: 'none',
-      overflow: 'visible',
       background: 'transparent',
       border: 'none',
       borderRadius: 0,
