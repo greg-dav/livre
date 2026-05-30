@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import {
   authResponseSchema,
   instanceStatusSchema,
@@ -6,11 +6,10 @@ import {
   registerBodySchema,
   loginBodySchema,
 } from '@livre/types';
-import { requireAuth } from '../middleware/auth';
 import { SchemaRouter } from '../lib/SchemaRouter';
 import { type AuthService } from '../services/AuthService';
 
-export function createAuthRouter(service: AuthService): Router {
+export function createAuthRouter(service: AuthService, requireAuth: RequestHandler): Router {
   const open = new SchemaRouter();
   const authed = new SchemaRouter().use(requireAuth);
 

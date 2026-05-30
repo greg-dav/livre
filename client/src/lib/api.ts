@@ -10,7 +10,6 @@ import {
   libraryBookDetailSchema,
   shelfResponseSchema,
   libraryResponseSchema,
-  updateApiKeyResponseSchema,
   updateTagsResponseSchema,
   updateDescriptionResponseSchema,
   updateCoverResponseSchema,
@@ -25,13 +24,19 @@ import {
   updateReviewResponseSchema,
   updateLogEntryResponseSchema,
   deleteLogEntryResponseSchema,
+  okResponseSchema,
+  usersListResponseSchema,
+  managedUserSchema,
   type RefreshMetadataBody,
   type LogEventType,
   type BookFormat,
   type ShelfStatus,
+  type ThemeName,
+  type CreateUserBody,
+  type UpdateUserBody,
 } from '@livre/types';
 
-export type { User } from '@livre/types';
+export type { User, ManagedUser, ThemeName } from '@livre/types';
 
 const BASE = '/api';
 
@@ -190,9 +195,43 @@ export const api = {
   },
   config: {
     updateGoogleBooksKey: (apiKey: string) =>
-      request('/config/google-books-key', updateApiKeyResponseSchema, {
+      request('/config/google-books-key', okResponseSchema, {
         method: 'PUT',
         body: JSON.stringify({ apiKey }),
+      }),
+  },
+  account: {
+    updateUsername: (username: string) =>
+      request('/account/username', authResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ username }),
+      }),
+    updatePassword: (currentPassword: string, newPassword: string) =>
+      request('/account/password', authResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+    updateTheme: (theme: ThemeName) =>
+      request('/account/theme', authResponseSchema, {
+        method: 'PATCH',
+        body: JSON.stringify({ theme }),
+      }),
+  },
+  users: {
+    list: () => request('/users', usersListResponseSchema),
+    create: (body: CreateUserBody) =>
+      request('/users', managedUserSchema, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: UpdateUserBody) =>
+      request(`/users/${id}`, managedUserSchema, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request(`/users/${id}`, okResponseSchema, {
+        method: 'DELETE',
       }),
   },
 };

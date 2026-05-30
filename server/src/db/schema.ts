@@ -7,8 +7,9 @@ export const users = sqliteTable('users', {
   passwordHash: text('password_hash').notNull(),
   isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
   theme: text('theme').notNull().default('roman-light'),
-  publicKey: text('public_key'),
-  privateKey: text('private_key'),
+  // Bumped whenever outstanding sessions must be revoked (password change, role change). A JWT is
+  // valid only while its embedded version matches this column.
+  tokenVersion: integer('token_version').notNull().default(0),
   createdAt: text('created_at')
     .notNull()
     .default(sql`(datetime('now'))`),

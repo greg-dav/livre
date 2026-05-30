@@ -4,4 +4,3 @@ export { Sidebar } from './Sidebar/Sidebar';
 export { CurrentlyReadingCard } from './CurrentlyReadingCard/CurrentlyReadingCard';
 export { ShelfTabs } from './ShelfTabs/ShelfTabs';
 export type { ShelfStatus } from './ShelfTabs/ShelfTabs';
-export { UserMenu } from './UserMenu/UserMenu';

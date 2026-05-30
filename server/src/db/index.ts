@@ -17,10 +17,14 @@ const userColumns = sqlite
   .prepare("SELECT name FROM pragma_table_info('users')")
   .all()
   .map((r) => (r as { name: string }).name);
-if (!userColumns.includes('public_key'))
-  sqlite.exec('ALTER TABLE users ADD COLUMN public_key TEXT');
-if (!userColumns.includes('private_key'))
-  sqlite.exec('ALTER TABLE users ADD COLUMN private_key TEXT');
+if (!userColumns.includes('theme'))
+  sqlite.exec("ALTER TABLE users ADD COLUMN theme TEXT NOT NULL DEFAULT 'roman-light'");
+if (!userColumns.includes('token_version'))
+  sqlite.exec('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0');
+// Drop the never-read RSA keypair columns — they stored a plaintext private key per user. This
+// purges that secret from databases predating its removal.
+if (userColumns.includes('public_key')) sqlite.exec('ALTER TABLE users DROP COLUMN public_key');
+if (userColumns.includes('private_key')) sqlite.exec('ALTER TABLE users DROP COLUMN private_key');
 
 const bookCacheColumns = sqlite
   .prepare("SELECT name FROM pragma_table_info('book_cache')")

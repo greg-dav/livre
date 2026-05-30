@@ -1,5 +1,23 @@
-export { userSchema } from './schemas/user';
-export type { User } from './schemas/user';
+export { userSchema, themeNameSchema } from './schemas/user';
+export type { User, ThemeName } from './schemas/user';
+export {
+  updateUsernameBodySchema,
+  updatePasswordBodySchema,
+  updateThemeBodySchema,
+} from './schemas/account';
+export type { UpdateUsernameBody, UpdatePasswordBody, UpdateThemeBody } from './schemas/account';
+export {
+  managedUserSchema,
+  usersListResponseSchema,
+  createUserBodySchema,
+  updateUserBodySchema,
+} from './schemas/users';
+export type {
+  ManagedUser,
+  UsersListResponse,
+  CreateUserBody,
+  UpdateUserBody,
+} from './schemas/users';
 export {
   registerBodySchema,
   loginBodySchema,
@@ -7,8 +25,8 @@ export {
   authResponseSchema,
 } from './schemas/auth';
 export type { RegisterBody, LoginBody, InstanceStatus, AuthResponse } from './schemas/auth';
-export { apiErrorSchema } from './schemas/api';
-export type { ApiError } from './schemas/api';
+export { apiErrorSchema, okResponseSchema } from './schemas/api';
+export type { ApiError, OkResponse } from './schemas/api';
 export {
   bookSourceSchema,
   bookGenreSchema,
@@ -68,7 +86,7 @@ export type {
   UpdateReviewBody,
   UpdateLogEntryBody,
 } from './schemas/books';
-export { updateApiKeyBodySchema, updateApiKeyResponseSchema } from './schemas/config';
+export { updateApiKeyBodySchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';
 export {
   shelfStatusSchema,

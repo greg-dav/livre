@@ -1,12 +1,21 @@
 import {
   Book,
+  Check,
   CornerDownLeft,
   Headphones,
   Library,
+  LogOut,
   NotebookPen,
+  Palette,
+  Pencil,
+  Plus,
   Search,
   Settings,
+  SlidersHorizontal,
   Tablet,
+  Trash2,
+  User,
+  Users,
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 
@@ -24,6 +33,15 @@ const ICONS = {
   book: Book,
   tablet: Tablet,
   headphones: Headphones,
+  account: User,
+  users: Users,
+  appearance: Palette,
+  config: SlidersHorizontal,
+  logout: LogOut,
+  add: Plus,
+  edit: Pencil,
+  delete: Trash2,
+  check: Check,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

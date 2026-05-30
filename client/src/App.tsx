@@ -7,6 +7,7 @@ import {
   Library,
   Login,
   Setup,
+  Settings,
   SearchBookDetail,
   LibraryBookDetail,
   Author,
@@ -57,7 +58,7 @@ const AppRoutes = () => {
         <Route path="/library/:libraryBookId" element={<LibraryBookDetail />} />
         <Route path="/log" element={<ComingSoon title="Log" />} />
         <Route path="/search" element={<ComingSoon title="Search" />} />
-        <Route path="/settings" element={<ComingSoon title="Settings" />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/search/book/:bookRef" element={<SearchBookDetail />} />
         <Route path="/search/author/:name" element={<Author />} />
       </Route>
@@ -67,17 +68,18 @@ const AppRoutes = () => {
 };
 
 /**
- * Root of the app. ThemeProvider wraps everything so auth screens inherit the theme. AuthProvider
- * sits inside so it can call the API. AppRoutes reads auth state to decide which screen to render.
+ * Root of the app. AuthProvider sits outermost so ThemeProvider can read the authenticated user
+ * and apply their saved theme; auth screens still render inside both and inherit the theme from
+ * localStorage until a user is known. AppRoutes reads auth state to decide which screen to render.
  */
 export const App = () => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ThemeProvider>
           <AppRoutes />
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </BrowserRouter>
 );

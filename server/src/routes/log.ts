@@ -1,8 +1,7 @@
-import { type Router } from 'express';
-import { requireAuth } from '../middleware/auth';
+import { type Router, type RequestHandler } from 'express';
 import { SchemaRouter } from '../lib/SchemaRouter';
 
-export function createLogRouter(): Router {
+export function createLogRouter(requireAuth: RequestHandler): Router {
   const router = new SchemaRouter().use(requireAuth);
 
   /** Stub for the upcoming journal log endpoint — not yet implemented. */

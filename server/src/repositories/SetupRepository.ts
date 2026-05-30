@@ -7,8 +7,6 @@ import { ConfigRepository } from './ConfigRepository';
 type SetupData = {
   username: string;
   passwordHash: string;
-  publicKey: string;
-  privateKey: string;
   isAdmin: boolean;
   googleBooksApiKey: string;
 };
@@ -22,8 +20,6 @@ export class SetupRepository {
           username: data.username,
           passwordHash: data.passwordHash,
           isAdmin: data.isAdmin,
-          publicKey: data.publicKey,
-          privateKey: data.privateKey,
         })
         .returning({ id: users.id, username: users.username, isAdmin: users.isAdmin })
         .get();

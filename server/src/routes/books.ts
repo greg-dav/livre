@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { type Router } from 'express';
+import { type Router, type RequestHandler } from 'express';
 import {
   bookRefSchema,
   bookVolumeSchema,
@@ -37,7 +37,6 @@ import {
   deleteLogEntryResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
-import { requireAuth } from '../middleware/auth';
 import { SchemaRouter } from '../lib/SchemaRouter';
 import { decodeBookRef } from '../lib/bookRef';
 import { type BooksService } from '../services/BooksService';
@@ -54,7 +53,7 @@ const parseBookRef = (
   }
 };
 
-export function createBooksRouter(service: BooksService): Router {
+export function createBooksRouter(service: BooksService, requireAuth: RequestHandler): Router {
   const router = new SchemaRouter().use(requireAuth);
 
   /** Search by query string. */

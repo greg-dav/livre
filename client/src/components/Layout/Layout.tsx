@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { Text } from '@livre/primitives';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { BookSearch } from '../BookSearch/BookSearch';
-import { UserMenu } from '../UserMenu/UserMenu';
 import {
   Page,
   Main,
@@ -36,8 +35,8 @@ const backLabelSchema = z.object({ backLabel: z.string() });
  * neither is re-implemented per screen. The shell is fixed-height (no window scroll); the body
  * scrolls internally, mirroring the prototype. The header carries a context-aware back button on
  * every page except the Library root — navigate(-1) lets browser history pick the destination,
- * with backLabel from navigation state supplying the label — plus the optional page title, the
- * quick-search, and the account menu.
+ * with backLabel from navigation state supplying the label — plus the optional page title and the
+ * quick-search. Account actions and sign-out live on the nav rail, not here.
  */
 export const Layout = ({ children, title, fullWidth, focusMode }: LayoutProps) => {
   const location = useLocation();
@@ -68,9 +67,8 @@ export const Layout = ({ children, title, fullWidth, focusMode }: LayoutProps) =
           <SearchSlot>
             <BookSearch />
           </SearchSlot>
-          <HeaderRight>
-            <UserMenu />
-          </HeaderRight>
+          {/* Empty trailing track keeps the search centred in the header grid. */}
+          <HeaderRight />
         </Header>
         <Body $fullWidth={fullWidth}>
           {fullWidth ? children : <Content $focusMode={focusMode}>{children}</Content>}

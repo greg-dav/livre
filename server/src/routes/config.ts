@@ -1,12 +1,12 @@
-import { Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import { updateApiKeyBodySchema } from '@livre/types';
-import { requireAdmin } from '../middleware/auth';
 import { ConfigRepository } from '../repositories/ConfigRepository';
 import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
 
 export const createConfigRouter = (
   configRepository: ConfigRepository,
-  googleBooksProvider: GoogleBooksProvider
+  googleBooksProvider: GoogleBooksProvider,
+  requireAdmin: RequestHandler
 ) => {
   const router = Router();
 

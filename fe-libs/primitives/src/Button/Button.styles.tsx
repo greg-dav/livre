@@ -6,6 +6,7 @@ export const StyledButton = styled('button')<{ $variant: ButtonVariant; $size: B
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: theme.spacing(2),
     borderRadius: theme.radius.md,
     cursor: 'pointer',
     transition: 'opacity 0.15s',

@@ -1,11 +1,10 @@
-import { type Router } from 'express';
+import { type Router, type RequestHandler } from 'express';
 import createError from 'http-errors';
 import { shelfResponseSchema, shelfStatusSchema } from '@livre/types';
-import { requireAuth } from '../middleware/auth';
 import { SchemaRouter } from '../lib/SchemaRouter';
 import { type BooksService } from '../services/BooksService';
 
-export function createShelvesRouter(service: BooksService): Router {
+export function createShelvesRouter(service: BooksService, requireAuth: RequestHandler): Router {
   const router = new SchemaRouter().use(requireAuth);
 
   /** Return all books on a given shelf along with counts for all shelf statuses. */

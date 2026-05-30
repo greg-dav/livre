@@ -8,6 +8,7 @@ import { env } from './env';
 import './db';
 
 import { errorHandler } from './lib/route';
+import { createAuthMiddleware } from './middleware/auth';
 import { UsersRepository } from './repositories/UsersRepository';
 import { ConfigRepository } from './repositories/ConfigRepository';
 import { SetupRepository } from './repositories/SetupRepository';
@@ -17,8 +18,12 @@ import { ReadingLogRepository } from './repositories/ReadingLogRepository';
 import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
 import { BookCacheProvider } from './providers/BookCacheProvider';
 import { AuthService } from './services/AuthService';
+import { AccountService } from './services/AccountService';
+import { UsersService } from './services/UsersService';
 import { BooksService } from './services/BooksService';
 import { createAuthRouter } from './routes/auth';
+import { createAccountRouter } from './routes/account';
+import { createUsersRouter } from './routes/users';
 import { createBooksRouter } from './routes/books';
 import { createShelvesRouter } from './routes/shelves';
 import { createLogRouter } from './routes/log';
@@ -33,12 +38,15 @@ const readingLogRepository = new ReadingLogRepository();
 const googleBooksProvider = new GoogleBooksProvider(configRepository);
 const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
 const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
+const accountService = new AccountService(usersRepository);
+const usersService = new UsersService(usersRepository);
 const booksService = new BooksService(
   googleBooksProvider,
   bookCacheProvider,
   libraryBooksRepository,
   readingLogRepository
 );
+const { requireAuth, requireAdmin } = createAuthMiddleware(usersRepository);
 
 // Sweep expired book_cache entries on boot and every 24h thereafter.
 bookCacheProvider.startPeriodicSweep();
@@ -60,11 +68,13 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/auth', authLimiter, createAuthRouter(authService));
-app.use('/api/books', createBooksRouter(booksService));
-app.use('/api/shelves', createShelvesRouter(booksService));
-app.use('/api/log', createLogRouter());
-app.use('/api/config', createConfigRouter(configRepository, googleBooksProvider));
+app.use('/api/auth', authLimiter, createAuthRouter(authService, requireAuth));
+app.use('/api/account', authLimiter, createAccountRouter(accountService, requireAuth));
+app.use('/api/users', createUsersRouter(usersService, requireAdmin));
+app.use('/api/books', createBooksRouter(booksService, requireAuth));
+app.use('/api/shelves', createShelvesRouter(booksService, requireAuth));
+app.use('/api/log', createLogRouter(requireAuth));
+app.use('/api/config', createConfigRouter(configRepository, googleBooksProvider, requireAdmin));
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);
