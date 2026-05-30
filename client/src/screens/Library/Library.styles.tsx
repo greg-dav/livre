@@ -1,19 +1,19 @@
 import styled from 'styled-components';
 
 export const Split = styled('div')({
-  width: '100%',
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  display: 'flex',
 });
 
 export const LeftPanel = styled('div')(({ theme }) => ({
-  position: 'fixed',
-  top: '65px',
-  left: 0,
-  bottom: 0,
-  width: '280px',
+  width: '272px',
+  flexShrink: 0,
   background: theme.bg,
   borderRight: `1px solid ${theme.borderSoft}`,
   overflowY: 'auto',
-  padding: `${theme.spacing(12)} ${theme.spacing(5)} ${theme.spacing(10)}`,
+  padding: `${theme.spacing(6)} ${theme.spacing(4.5)} ${theme.spacing(10)}`,
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(3),
@@ -34,8 +34,10 @@ export const LeftPanelDivider = styled('hr')(({ theme }) => ({
 }));
 
 export const RightPanel = styled('div')(({ theme }) => ({
-  marginLeft: '280px',
-  padding: `${theme.spacing(7)} ${theme.spacing(10)} ${theme.spacing(20)}`,
+  flex: 1,
+  minWidth: 0,
+  overflowY: 'auto',
+  padding: `${theme.spacing(6)} ${theme.spacing(9)} ${theme.spacing(20)}`,
 }));
 
 export const ShelfHeading = styled('div')(({ theme }) => ({

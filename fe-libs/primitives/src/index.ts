@@ -2,6 +2,8 @@ export { Text } from './Text/Text';
 export type { TextProps, TextVariant, TextColor } from './Text/Text';
 export { Logo } from './Logo/Logo';
 export type { LogoProps, LogoSize } from './Logo/Logo';
+export { Icon } from './Icon/Icon';
+export type { IconProps, IconName } from './Icon/Icon';
 export { Button } from './Button/Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button/Button';
 export { Input } from './Input/Input';

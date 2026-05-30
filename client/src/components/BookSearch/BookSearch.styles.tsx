@@ -18,9 +18,9 @@ export const Container = styled('div')({
 export const SearchInput = styled(Input)(({ theme }) => ({
   background: theme.bgElevated,
   borderRadius: theme.radius.lg,
-  padding: `${theme.spacing(2.5)} ${theme.spacing(4.5)}`,
+  padding: `${theme.spacing(1.5)} ${theme.spacing(4)}`,
   fontFamily: theme.fontUi,
-  fontSize: '0.9375rem',
+  fontSize: '0.875rem',
   '&::placeholder': {
     color: theme.textMuted,
     opacity: 1,

@@ -3,7 +3,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LibraryProvider } from './context/LibraryContext';
-import { Library, Login, Setup, SearchBookDetail, LibraryBookDetail, Author } from './screens';
+import {
+  Library,
+  Login,
+  Setup,
+  SearchBookDetail,
+  LibraryBookDetail,
+  Author,
+  ComingSoon,
+} from './screens';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +55,9 @@ const AppRoutes = () => {
       <Route element={<AuthGuard />}>
         <Route path="/library" element={<Library />} />
         <Route path="/library/:libraryBookId" element={<LibraryBookDetail />} />
+        <Route path="/log" element={<ComingSoon title="Log" />} />
+        <Route path="/search" element={<ComingSoon title="Search" />} />
+        <Route path="/settings" element={<ComingSoon title="Settings" />} />
         <Route path="/search/book/:bookRef" element={<SearchBookDetail />} />
         <Route path="/search/author/:name" element={<Author />} />
       </Route>

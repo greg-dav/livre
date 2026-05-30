@@ -6,6 +6,7 @@ interface DropdownMenuProps {
   trigger: ReactNode;
   children: ReactNode;
   align?: Radix.DropdownMenuContentProps['align'];
+  side?: Radix.DropdownMenuContentProps['side'];
   sideOffset?: number;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -55,6 +56,7 @@ const DropdownMenuComponent = ({
   trigger,
   children,
   align = 'start',
+  side,
   sideOffset = 4,
   open,
   onOpenChange,
@@ -62,7 +64,7 @@ const DropdownMenuComponent = ({
   <Radix.Root open={open} onOpenChange={onOpenChange}>
     <Radix.Trigger asChild>{trigger}</Radix.Trigger>
     <Radix.Portal>
-      <StyledContent align={align} sideOffset={sideOffset}>
+      <StyledContent align={align} side={side} sideOffset={sideOffset}>
         {children}
       </StyledContent>
     </Radix.Portal>

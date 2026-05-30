@@ -50,7 +50,7 @@ export const Library = () => {
   const entryCount = data?.entries.length ?? 0;
 
   return (
-    <Layout fullWidth>
+    <Layout fullWidth title="Library">
       <Split>
         <LeftPanel>
           <LeftPanelHeader>

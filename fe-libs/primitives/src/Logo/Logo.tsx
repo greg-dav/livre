@@ -3,13 +3,14 @@ import { Text } from '../Text/Text';
 import { AccentPeriod, Wordmark } from './Logo.styles';
 import { useNavigate } from 'react-router-dom';
 
-export type LogoSize = 'small' | 'medium' | 'large';
+export type LogoSize = 'xsmall' | 'small' | 'medium' | 'large';
 
 export interface LogoProps {
   size?: LogoSize;
 }
 
 const sizeVariant: Record<LogoSize, TextVariant> = {
+  xsmall: 'h6',
   small: 'h4',
   medium: 'h2',
   large: 'h1',

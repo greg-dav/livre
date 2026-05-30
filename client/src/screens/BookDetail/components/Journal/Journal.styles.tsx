@@ -6,10 +6,9 @@ export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boo
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius.lg,
     padding: theme.spacing(6),
-    // spacing(17) ≈ topbar (padding + logo line-height)
-    // spacing(21) ≈ content padding-top + back-button + flex gap to LayoutGrid
-    // 48px        = 24px breathing room top + 24px bottom
-    maxHeight: `calc(100vh - ${theme.spacing(17)} - ${theme.spacing(21)} - 48px)`,
+    // spacing(13) = global header height; spacing(8) = body content padding-top.
+    // 48px        = 24px breathing room top + 24px bottom.
+    maxHeight: `calc(100dvh - ${theme.spacing(13)} - ${theme.spacing(8)} - 48px)`,
     overflowY: 'auto',
     scrollbarWidth: 'none',
     '&::-webkit-scrollbar': { display: 'none' },

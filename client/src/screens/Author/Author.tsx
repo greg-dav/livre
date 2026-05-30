@@ -48,11 +48,7 @@ export const Author = () => {
   const books = data?.results ?? [];
 
   return (
-    <Layout>
-      <Text variant="h3" as="h1">
-        {name}
-      </Text>
-
+    <Layout title={name}>
       {isFetching ? (
         <Loader />
       ) : books.length === 0 ? (

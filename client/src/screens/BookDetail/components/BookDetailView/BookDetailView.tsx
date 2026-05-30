@@ -452,7 +452,7 @@ export const BookDetailView = ({
     ) : null;
 
   return (
-    <Layout focusMode={focusMode}>
+    <Layout title={book.title} focusMode={focusMode}>
       {journal ? (
         <>
           {focusStrip}
