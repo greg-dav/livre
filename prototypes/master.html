@@ -231,6 +231,28 @@
       .crc-btn { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; color: var(--text-muted); border: 1px solid var(--border); transition: all 0.15s; }
       .crc-btn:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
 
+      /* Tag facet — left panel, below currently reading */
+      .lib-tags { display: flex; flex-direction: column; gap: 2px; }
+      .facet-row { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 8px; cursor: pointer; transition: background 0.13s; }
+      .facet-row:hover { background: var(--accent-soft); }
+      .facet-row.active { background: var(--accent-soft); }
+      .facet-row.disabled { opacity: 0.36; pointer-events: none; }
+      .facet-tick { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.13s; }
+      .facet-row.active .facet-tick { background: var(--accent); border-color: var(--accent); }
+      .facet-tick svg { opacity: 0; }
+      .facet-row.active .facet-tick svg { opacity: 1; }
+      .facet-name { flex: 1; font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); transition: color 0.13s; }
+      .facet-row:hover .facet-name { color: var(--text); }
+      .facet-row.active .facet-name { color: var(--accent); font-weight: 500; }
+      .facet-count { font-family: var(--font-ui); font-size: 0.625rem; font-weight: 700; color: var(--text-muted); opacity: 0.7; }
+      .facet-clear { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--text-muted); padding: 4px 9px; text-align: left; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); transition: color 0.15s; }
+      .facet-clear:hover { color: var(--text); }
+      .facet-clear[hidden] { display: none; }
+      .book-card[hidden] { display: none; }
+      .empty-note { font-family: var(--font-body); font-style: italic; color: var(--text-muted); padding: 20px 2px; }
+      .empty-note[hidden] { display: none; }
+      .filter-note { font-family: var(--font-ui); font-style: italic; color: var(--accent); }
+
       /* Right panel — shelf */
       .lib-right { flex: 1; min-width: 0; overflow-y: auto; padding: 24px 36px 80px; }
 
@@ -267,6 +289,58 @@
       .book-author { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--text-muted); }
       .book-stars { font-size: 0.625rem; color: var(--accent); letter-spacing: 1px; margin-top: 1px; }
       .dnf-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.7); font-family: var(--font-ui); font-size: 0.4375rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 4px; border-radius: 3px; }
+      /* A catalog result that's already on a shelf */
+      .shelf-flag { position: absolute; top: 6px; left: 6px; background: var(--accent); color: var(--bg); font-family: var(--font-ui); font-size: 0.4375rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 5px; border-radius: 4px; z-index: 1; }
+
+      /* ── Topbar search: dropdown preview + Enter → full search ──── */
+      .tb-search-wrap { position: relative; flex: 1; max-width: 360px; margin: 0 16px; }
+      .tb-search-wrap .tb-search { width: 100%; max-width: none; margin: 0; }
+      .tb-dropdown {
+        position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+        background: var(--bg-elevated); border: 1px solid var(--border);
+        border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+        padding: 6px; z-index: 200; display: none;
+      }
+      .tb-search-wrap.open .tb-dropdown { display: block; }
+      .tb-dd-label { font-family: var(--font-ui); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.625rem; color: var(--text-muted); padding: 8px 10px 5px; }
+      .tb-dd-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background 0.12s; }
+      .tb-dd-row:hover { background: var(--accent-soft); }
+      .tb-dd-cover { width: 26px; height: 39px; border-radius: 2px 3px 3px 2px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+      .tb-dd-body { flex: 1; min-width: 0; }
+      .tb-dd-title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 0.9375rem; line-height: 1.15; letter-spacing: -0.01em; }
+      .tb-dd-sub { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--text-muted); }
+      .tb-dd-flag { font-family: var(--font-ui); font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); background: var(--accent-soft); padding: 2px 7px; border-radius: 999px; flex-shrink: 0; }
+      .tb-dd-enter { display: flex; align-items: center; gap: 8px; padding: 9px 10px; margin-top: 4px; border-top: 1px solid var(--border-soft); font-family: var(--font-ui); font-size: 0.75rem; color: var(--text-muted); cursor: pointer; border-radius: 0 0 8px 8px; transition: color 0.12s; }
+      .tb-dd-enter:hover { color: var(--accent); }
+      .tb-dd-enter kbd { font-family: var(--font-mono); font-size: 0.625rem; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; color: var(--text); background: var(--bg); }
+      .tb-dd-enter b { font-family: var(--font-display); font-style: italic; font-weight: 500; color: var(--text); }
+
+      /* ════════════════════════════════════════════════════════════
+         SCREEN — SEARCH  (faceted; the simple topbar field + dropdown
+         escalate here on Enter. The old author page is just this screen
+         pre-scoped to Author.)
+         ════════════════════════════════════════════════════════════ */
+      #screen-search .body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+      /* Left rail reuses the Library facet panel wholesale (.lib-left) */
+      .sf-left { width: 256px; flex-shrink: 0; border-right: 1px solid var(--border-soft); overflow-y: auto; padding: 24px 18px 40px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-elevated); }
+      .sf-left .lib-left-header:first-child { margin-top: 0; }
+      .facet-row.radio .facet-tick { border-radius: 50%; }
+
+      .sf-right { flex: 1; min-width: 0; overflow-y: auto; }
+      .sf-querybar { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border-soft); padding: 18px 36px; }
+      .sf-field { display: flex; align-items: center; gap: 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 11px; padding: 11px 16px; }
+      .sf-field:focus-within { border-color: var(--accent); }
+      .sf-field svg { width: 18px; height: 18px; stroke: var(--text-muted); stroke-width: 1.5; flex-shrink: 0; }
+      .sf-field input { flex: 1; border: none; background: none; outline: none; font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.25rem; letter-spacing: -0.01em; color: var(--text); }
+
+      .sf-results { padding: 24px 36px 80px; }
+      .sf-toolbar { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+      .sf-head-line { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); }
+      .sf-head-line b { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.0625rem; color: var(--text); }
+      .sf-active { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; min-height: 1px; }
+      .sf-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); font-family: var(--font-ui); font-size: 0.75rem; color: var(--accent); }
+      .sf-chip .x { opacity: 0.7; cursor: pointer; }
 
       /* ════════════════════════════════════════════════════════════
          SCREEN 2 — BOOK DETAIL
@@ -316,9 +390,10 @@
 
       /* Pills */
       .pills-row { display: flex; flex-wrap: wrap; gap: 6px; }
-      .pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); background: var(--bg-elevated); transition: all 0.15s; }
-      .pill:hover { border-color: var(--text-muted); color: var(--text); }
+      .pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); background: var(--bg-elevated); transition: all 0.15s; cursor: pointer; }
+      .pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
       .pill.dashed { border-style: dashed; }
+      .pill.dashed:hover { border-color: var(--text-muted); color: var(--text); background: var(--bg-elevated); }
 
       /* Meta grid */
       .bd-meta { display: grid; grid-template-columns: max-content 1fr; gap: 6px 28px; }
@@ -589,7 +664,7 @@
           </svg>
         </button>
 
-        <button class="sb-item">
+        <button class="sb-item" data-screen="search">
           <div class="sb-tip">Search</div>
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor">
             <circle cx="9" cy="9" r="5.5"/>
@@ -615,7 +690,30 @@
         <div class="screen active" id="screen-library">
           <div class="topbar">
             <span class="tb-wordmark">livre</span>
-            <input class="tb-search" placeholder="Search by title or author…" />
+            <div class="tb-search-wrap" id="tbSearchWrap">
+              <input class="tb-search" id="tbSearch" placeholder="Search by title or author…" autocomplete="off" />
+              <div class="tb-dropdown">
+                <div class="tb-dd-label">In your library</div>
+                <div class="tb-dd-row" onclick="goToBook()">
+                  <div class="tb-dd-cover" style="background:#6b3410;"></div>
+                  <div class="tb-dd-body"><div class="tb-dd-title">Dune</div><div class="tb-dd-sub">Frank Herbert · 1965</div></div>
+                  <span class="tb-dd-flag">Read</span>
+                </div>
+                <div class="tb-dd-label">From the catalogue</div>
+                <div class="tb-dd-row" onclick="goToBook()">
+                  <div class="tb-dd-cover" style="background:#3a2f5c;"></div>
+                  <div class="tb-dd-body"><div class="tb-dd-title">Dune Messiah</div><div class="tb-dd-sub">Frank Herbert · 1969</div></div>
+                </div>
+                <div class="tb-dd-row" onclick="goToBook()">
+                  <div class="tb-dd-cover" style="background:#1f4a3d;"></div>
+                  <div class="tb-dd-body"><div class="tb-dd-title">Children of Dune</div><div class="tb-dd-sub">Frank Herbert · 1976</div></div>
+                </div>
+                <!-- Enter escalates the quick preview into the full faceted Search screen -->
+                <div class="tb-dd-enter" onclick="runFullSearch()">
+                  <kbd>⏎</kbd><span>Search everything for “<b>dune</b>”</span>
+                </div>
+              </div>
+            </div>
             <div class="tb-spacer"></div>
             <div class="tb-avatar">G</div>
           </div>
@@ -646,6 +744,21 @@
                   <button class="crc-btn" title="Add quote">❝</button>
                 </div>
               </div>
+
+              <div class="lib-left-header" style="margin-top:20px;">
+                <span class="t-label t-accent">Tags</span>
+                <hr />
+              </div>
+              <div class="lib-tags" id="lib-tags">
+                <div class="facet-row" data-tag="favorites"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">favorites</span><span class="facet-count"></span></div>
+                <div class="facet-row" data-tag="americana"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">americana</span><span class="facet-count"></span></div>
+                <div class="facet-row" data-tag="book-club"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">book-club</span><span class="facet-count"></span></div>
+                <div class="facet-row" data-tag="reread"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">reread</span><span class="facet-count"></span></div>
+                <div class="facet-row" data-tag="comfort-reads"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">comfort-reads</span><span class="facet-count"></span></div>
+                <div class="facet-row" data-tag="philosophy"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">philosophy</span><span class="facet-count"></span></div>
+                <div class="facet-row" data-tag="post-apocalyptic"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">post-apocalyptic</span><span class="facet-count"></span></div>
+                <button class="facet-clear" id="facet-clear" hidden onclick="clearTags()">Clear tags</button>
+              </div>
             </div>
 
             <!-- Right: shelf browser -->
@@ -669,7 +782,7 @@
                   <button class="shelf-sort">Sort: Date Read ▾</button>
                 </div>
                 <div class="book-grid">
-                  <div class="book-card" onclick="goToBook('bm')">
+                  <div class="book-card" data-tags="americana favorites reread" onclick="goToBook('bm')">
                     <div class="book-cover" style="background:#2a1810;">
                       <span class="face-title">Blood Meridian</span>
                       <span class="face-author">Cormac McCarthy</span>
@@ -680,7 +793,7 @@
                       <div class="book-stars">★★★★★</div>
                     </div>
                   </div>
-                  <div class="book-card" onclick="goToBook()">
+                  <div class="book-card" data-tags="philosophy reread" onclick="goToBook()">
                     <div class="book-cover" style="background:#1a2f4b;">
                       <span class="face-title">Meditations</span>
                       <span class="face-author">Marcus Aurelius</span>
@@ -691,7 +804,7 @@
                       <div class="book-stars">★★★★★</div>
                     </div>
                   </div>
-                  <div class="book-card" onclick="goToBook()">
+                  <div class="book-card" data-tags="favorites" onclick="goToBook()">
                     <div class="book-cover" style="background:#1a2d1e;">
                       <span class="face-title">Piranesi</span>
                       <span class="face-author">Susanna Clarke</span>
@@ -702,7 +815,7 @@
                       <div class="book-stars">★★★★★</div>
                     </div>
                   </div>
-                  <div class="book-card" onclick="goToBook()">
+                  <div class="book-card" data-tags="book-club" onclick="goToBook()">
                     <div class="book-cover" style="background:#1a1e2e;">
                       <span class="face-title">The Remains of the Day</span>
                       <span class="face-author">Kazuo Ishiguro</span>
@@ -713,7 +826,7 @@
                       <div class="book-stars">★★★★★</div>
                     </div>
                   </div>
-                  <div class="book-card" onclick="goToBook()">
+                  <div class="book-card" data-tags="comfort-reads book-club" onclick="goToBook()">
                     <div class="book-cover" style="background:#2a1e38;">
                       <span class="face-title">A Gentleman in Moscow</span>
                       <span class="face-author">Amor Towles</span>
@@ -724,7 +837,7 @@
                       <div class="book-stars">★★★★★</div>
                     </div>
                   </div>
-                  <div class="book-card" onclick="goToBook()">
+                  <div class="book-card" data-tags="americana post-apocalyptic favorites" onclick="goToBook()">
                     <div class="book-cover" style="background:#1e2d1c;">
                       <span class="face-title">The Road</span>
                       <span class="face-author">Cormac McCarthy</span>
@@ -745,15 +858,15 @@
                   <button class="shelf-sort">Sort: Date Added ▾</button>
                 </div>
                 <div class="book-grid">
-                  <div class="book-card">
+                  <div class="book-card" data-tags="">
                     <div class="book-cover" style="background:#2b2015;"><span class="face-title">The Power Broker</span><span class="face-author">Robert Caro</span></div>
                     <div class="book-meta"><div class="book-title">The Power Broker</div><div class="book-author">Robert Caro</div></div>
                   </div>
-                  <div class="book-card">
+                  <div class="book-card" data-tags="book-club">
                     <div class="book-cover" style="background:#1c2a2a;"><span class="face-title">Middlemarch</span><span class="face-author">George Eliot</span></div>
                     <div class="book-meta"><div class="book-title">Middlemarch</div><div class="book-author">George Eliot</div></div>
                   </div>
-                  <div class="book-card">
+                  <div class="book-card" data-tags="americana">
                     <div class="book-cover" style="background:#2a1a1a;"><span class="face-title">Moby-Dick</span><span class="face-author">Herman Melville</span></div>
                     <div class="book-meta"><div class="book-title">Moby-Dick</div><div class="book-author">Herman Melville</div></div>
                   </div>
@@ -766,7 +879,7 @@
                   <div><span class="shelf-name">Did Not Finish</span><span class="shelf-count"> · 5 books</span></div>
                 </div>
                 <div class="book-grid">
-                  <div class="book-card" onclick="goToBook()">
+                  <div class="book-card" data-tags="" onclick="goToBook()">
                     <div class="book-cover" style="background:#1d3040; position:relative;">
                       <span class="face-title">The Buried Giant</span>
                       <span class="face-author">Kazuo Ishiguro</span>
@@ -776,6 +889,8 @@
                   </div>
                 </div>
               </div>
+
+              <p class="empty-note" id="lib-empty" hidden>No books on this shelf carry those tags.</p>
             </div>
           </div>
         </div>
@@ -819,10 +934,9 @@
                 </div>
 
                 <div class="pills-row">
-                  <span class="pill">Fiction</span>
-                  <span class="pill">Western</span>
-                  <span class="pill">Historical</span>
-                  <span class="pill">American Literature</span>
+                  <button class="pill" onclick="goToTag('americana')">americana →</button>
+                  <button class="pill" onclick="goToTag('favorites')">favorites →</button>
+                  <button class="pill" onclick="goToTag('reread')">reread →</button>
                   <span class="pill dashed">+ Add tag</span>
                 </div>
 
@@ -937,6 +1051,95 @@
           </div>
         </div>
 
+        <!-- ─── Screen: Search (faceted) ────────────────────── -->
+        <div class="screen" id="screen-search">
+          <div class="topbar">
+            <span class="tb-title">Search</span>
+            <div class="tb-spacer"></div>
+            <div class="tb-avatar">G</div>
+          </div>
+          <div class="body">
+            <!-- Left: refinement facets (same pattern as the Library rail) -->
+            <aside class="sf-left">
+              <div class="lib-left-header"><span class="t-label t-accent">Match in</span><hr /></div>
+              <div class="facet-row radio active" data-scope="Anything" onclick="pickScope(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Anything</span><span class="facet-count">128</span></div>
+              <div class="facet-row radio" data-scope="Title" onclick="pickScope(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Title</span><span class="facet-count">31</span></div>
+              <div class="facet-row radio" data-scope="Author" onclick="pickScope(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Author</span><span class="facet-count">22</span></div>
+              <div class="facet-row radio" data-scope="Subject" onclick="pickScope(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Subject</span><span class="facet-count">60</span></div>
+              <div class="facet-row radio" data-scope="ISBN" onclick="pickScope(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">ISBN</span></div>
+
+              <div class="lib-left-header" style="margin-top:14px;"><span class="t-label t-accent">Shelf</span><hr /></div>
+              <div class="facet-row" onclick="toggleFacet(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">In my library</span><span class="facet-count">3</span></div>
+              <div class="facet-row" onclick="toggleFacet(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Not yet added</span><span class="facet-count">125</span></div>
+
+              <div class="lib-left-header" style="margin-top:14px;"><span class="t-label t-accent">Published</span><hr /></div>
+              <div class="facet-row" onclick="toggleFacet(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Since 2000</span><span class="facet-count">71</span></div>
+              <div class="facet-row" onclick="toggleFacet(this)"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Before 2000</span><span class="facet-count">57</span></div>
+            </aside>
+
+            <!-- Right: query bar + results -->
+            <div class="sf-right">
+              <div class="sf-querybar">
+                <div class="sf-field">
+                  <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5L17 17"/></svg>
+                  <input id="sfQuery" value="dune" />
+                </div>
+              </div>
+              <div class="sf-results">
+                <div class="sf-toolbar">
+                  <span class="sf-head-line">Showing <b>128</b>&nbsp; results for “<span id="sfTerm">dune</span>”</span>
+                  <button class="shelf-sort">Sort: Relevance ▾</button>
+                </div>
+                <div class="sf-active" id="sfActive">
+                  <span class="sf-chip">Match: Anything <span class="x" onclick="resetScope()">×</span></span>
+                </div>
+                <div class="book-grid">
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#6b3410;"><span class="shelf-flag">Read</span><span class="face-title">Dune</span><span class="face-author">Frank Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">Dune</div><div class="book-author">Frank Herbert · 1965</div><div class="book-stars">★★★★★</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#3a2f5c;"><span class="face-title">Dune Messiah</span><span class="face-author">Frank Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">Dune Messiah</div><div class="book-author">Frank Herbert · 1969</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#1f4a3d;"><span class="face-title">Children of Dune</span><span class="face-author">Frank Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">Children of Dune</div><div class="book-author">Frank Herbert · 1976</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#5c1f1f;"><span class="face-title">God Emperor of Dune</span><span class="face-author">Frank Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">God Emperor of Dune</div><div class="book-author">Frank Herbert · 1981</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#2d3a1f;"><span class="face-title">Heretics of Dune</span><span class="face-author">Frank Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">Heretics of Dune</div><div class="book-author">Frank Herbert · 1984</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#2b2015;"><span class="face-title">Dune: The Graphic Novel</span><span class="face-author">Brian Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">Dune: The Graphic Novel</div><div class="book-author">Brian Herbert · 2020</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#3d3320;"><span class="face-title">House Atreides</span><span class="face-author">B. Herbert &amp; K. J. Anderson</span></div>
+                    <div class="book-meta"><div class="book-title">House Atreides</div><div class="book-author">Herbert &amp; Anderson · 1999</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#28303d;"><span class="face-title">The Science of Dune</span><span class="face-author">Kevin R. Grazier</span></div>
+                    <div class="book-meta"><div class="book-title">The Science of Dune</div><div class="book-author">Kevin R. Grazier · 2008</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#4a2c1a;"><span class="face-title">Sandworms of Dune</span><span class="face-author">Brian Herbert</span></div>
+                    <div class="book-meta"><div class="book-title">Sandworms of Dune</div><div class="book-author">Brian Herbert · 2007</div></div>
+                  </div>
+                  <div class="book-card" onclick="goToBook()">
+                    <div class="book-cover" style="background:#1a2d3a;"><span class="face-title">The Dune Encyclopedia</span><span class="face-author">Willis E. McNelly</span></div>
+                    <div class="book-meta"><div class="book-title">The Dune Encyclopedia</div><div class="book-author">Willis E. McNelly · 1984</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div><!-- /screens -->
     </div><!-- /app -->
 
@@ -977,18 +1180,129 @@
         btn.addEventListener('click', () => showScreen(btn.dataset.screen));
       });
 
-      function goToBook(which) { showScreen('bookdetail'); }
+      function goToBook(which) { closeTbDropdown(); showScreen('bookdetail'); }
       function goBack() { showScreen('library'); }
 
-      /* ── Library shelf tabs ───────────────────────────────────── */
+      /* ── Topbar search: dropdown preview, Enter escalates to Search ─
+         The simple field stays for quick jumps; pressing Enter (or the
+         footer row) loads the full faceted Search screen with the query
+         and term carried over. */
+      const tbWrap   = document.getElementById('tbSearchWrap');
+      const tbSearch = document.getElementById('tbSearch');
+      function closeTbDropdown() { tbWrap.classList.remove('open'); }
+      tbSearch.addEventListener('focus', () => { if (tbSearch.value.trim()) tbWrap.classList.add('open'); });
+      tbSearch.addEventListener('input', () => tbWrap.classList.toggle('open', !!tbSearch.value.trim()));
+      tbSearch.addEventListener('keydown', e => { if (e.key === 'Enter') runFullSearch(); });
+      document.addEventListener('click', e => { if (!tbWrap.contains(e.target)) closeTbDropdown(); });
+
+      function runFullSearch() {
+        const term = (tbSearch.value || 'dune').trim();
+        document.getElementById('sfQuery').value = term;
+        document.getElementById('sfTerm').textContent = term;
+        resetScope();
+        closeTbDropdown();
+        showScreen('search');
+      }
+
+      /* ── Search facets ────────────────────────────────────────── */
+      function pickScope(row) {
+        row.parentNode.querySelectorAll('.facet-row.radio').forEach(r => r.classList.remove('active'));
+        row.classList.add('active');
+        document.getElementById('sfActive').innerHTML =
+          '<span class="sf-chip">Match: ' + row.dataset.scope + ' <span class="x" onclick="resetScope()">×</span></span>';
+      }
+      function resetScope() {
+        const rows = document.querySelectorAll('#screen-search .facet-row.radio');
+        rows.forEach(r => r.classList.remove('active'));
+        if (rows[0]) rows[0].classList.add('active');
+        document.getElementById('sfActive').innerHTML =
+          '<span class="sf-chip">Match: Anything <span class="x" onclick="resetScope()">×</span></span>';
+      }
+      function toggleFacet(row) { row.classList.toggle('active'); }
+
+      /* ── Library: shelf tabs + tag facet ──────────────────────────
+         Tags scope to the active shelf and persist across tab switches.
+         Multiple selected tags combine with OR (broaden). Per-tag counts
+         recompute to the active shelf; tags absent from it dim out. */
+      let activeShelf = 'read';
+      const selectedTags = new Set();
+
+      function activeCards() {
+        return [...document.querySelectorAll('#shelf-' + activeShelf + ' .book-card')];
+      }
+
+      function applyFilter() {
+        const cards = activeCards();
+        let shown = 0;
+        cards.forEach(card => {
+          const tags = card.dataset.tags ? card.dataset.tags.split(' ') : [];
+          const match = selectedTags.size === 0 || [...selectedTags].some(t => tags.includes(t));
+          card.hidden = !match;
+          if (match) shown++;
+        });
+
+        // Per-tag counts for the active shelf + dim empties
+        document.querySelectorAll('#lib-tags .facet-row').forEach(row => {
+          const tag = row.dataset.tag;
+          const n = cards.filter(c => (c.dataset.tags || '').split(' ').includes(tag)).length;
+          row.querySelector('.facet-count').textContent = n;
+          row.classList.toggle('disabled', n === 0 && !selectedTags.has(tag));
+          row.classList.toggle('active', selectedTags.has(tag));
+        });
+
+        document.getElementById('facet-clear').hidden = selectedTags.size === 0;
+
+        // Shelf heading count reflects the filter
+        const heading = document.querySelector('#shelf-' + activeShelf + ' .shelf-count');
+        if (heading) {
+          if (selectedTags.size === 0) {
+            heading.textContent = heading.dataset.base;
+          } else {
+            heading.innerHTML = ' · <span class="filter-note">' + shown +
+              (shown === 1 ? ' book' : ' books') + ' · ' + [...selectedTags].join(', ') + '</span>';
+          }
+        }
+        document.getElementById('lib-empty').hidden = shown > 0;
+      }
+
       function setTab(btn, shelf) {
         document.querySelectorAll('.shelf-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
+        activeShelf = shelf;
         ['read','want','dnf'].forEach(s => {
           const el = document.getElementById('shelf-' + s);
           if (el) el.style.display = s === shelf ? '' : 'none';
         });
+        applyFilter();
       }
+
+      function clearTags() { selectedTags.clear(); applyFilter(); }
+
+      function goToTag(tag) {
+        showScreen('library');
+        const readTab = document.querySelector('.shelf-tab');
+        document.querySelectorAll('.shelf-tab').forEach(t => t.classList.remove('active'));
+        readTab.classList.add('active');
+        activeShelf = 'read';
+        ['read','want','dnf'].forEach(s => {
+          document.getElementById('shelf-' + s).style.display = s === 'read' ? '' : 'none';
+        });
+        selectedTags.clear();
+        selectedTags.add(tag);
+        applyFilter();
+      }
+
+      document.querySelectorAll('#lib-tags .facet-row').forEach(row =>
+        row.addEventListener('click', () => {
+          const t = row.dataset.tag;
+          selectedTags.has(t) ? selectedTags.delete(t) : selectedTags.add(t);
+          applyFilter();
+        })
+      );
+
+      // Capture each shelf heading's original count text, then prime the facet.
+      document.querySelectorAll('.shelf-count').forEach(el => { el.dataset.base = el.textContent; });
+      applyFilter();
 
       /* ── Composer placeholder ─────────────────────────────────── */
       const composerInput = document.querySelector('.sc-composer-input');

@@ -1,0 +1,125 @@
+/* ──────────────────────────────────────────────────────────────
+   Shared shell for the Search prototypes.
+   Tokens, reset, sidebar, topbar, and the book grid are lifted
+   verbatim from master.html so these stay visually identical to
+   the rest of the app. Per-prototype CSS lives in each file's
+   <style> block.
+   ────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg:           #f4efe3;
+  --bg-elevated:  #faf5e9;
+  --bg-sunken:    #ecdbb7;
+  --text:         #1a1815;
+  --text-muted:   #6b6860;
+  --border:       #d9d2c2;
+  --border-soft:  #e6dfce;
+  --accent:       #c99c3c;
+  --accent-soft:  rgba(201,156,60,0.12);
+
+  --font-display: 'Cormorant Garamond','Iowan Old Style',Georgia,serif;
+  --font-body:    'Lora','Iowan Old Style',Georgia,serif;
+  --font-ui:      'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:    'JetBrains Mono','SF Mono',Menlo,monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
+body { font-family: var(--font-body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+input { font-family: inherit; }
+
+/* ── App shell ─────────────────────────────────────────────── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ───────────────────────────────────────────────── */
+.sidebar {
+  width: 56px; flex-shrink: 0;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-soft);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 18px 0; gap: 4px; z-index: 50;
+}
+.sb-wordmark {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 1rem; font-weight: 500; letter-spacing: -0.01em;
+  opacity: 0.4; margin-bottom: 20px;
+  writing-mode: vertical-lr; transform: rotate(180deg);
+}
+.sb-item {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); cursor: pointer; transition: all 0.15s; position: relative;
+}
+.sb-item:hover { background: var(--bg-sunken); color: var(--text); }
+.sb-item.active { background: var(--accent-soft); color: var(--accent); }
+.sb-item svg { width: 18px; height: 18px; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.sb-spacer { flex: 1; }
+.sb-tip {
+  position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+  background: var(--text); color: var(--bg);
+  font-family: var(--font-ui); font-size: 0.6875rem;
+  padding: 4px 8px; border-radius: 5px; white-space: nowrap;
+  pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 200;
+}
+.sb-item:hover .sb-tip { opacity: 1; }
+
+/* ── Screen + topbar ───────────────────────────────────────── */
+.screen { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  display: flex; align-items: center;
+  padding: 0 28px; height: 52px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg); flex-shrink: 0; gap: 12px; z-index: 10;
+}
+.tb-wordmark {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 1.375rem; font-weight: 500; letter-spacing: -0.01em; flex-shrink: 0;
+}
+.tb-search {
+  flex: 1; max-width: 360px; margin: 0 16px;
+  font-family: var(--font-ui); font-size: 0.875rem;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 7px 16px; color: var(--text);
+}
+.tb-search::placeholder { color: var(--text-muted); }
+.tb-search:focus { outline: none; border-color: var(--accent); }
+.tb-spacer { flex: 1; }
+.tb-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-ui); font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;
+}
+
+/* ── Type helpers ──────────────────────────────────────────── */
+.t-label { font-family: var(--font-ui); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.6875rem; }
+.t-accent { color: var(--accent); }
+.t-muted  { color: var(--text-muted); }
+
+/* ── Book grid (verbatim from master) ──────────────────────── */
+.book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 24px 16px; }
+.book-card { display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.15s; position: relative; }
+.book-card:hover { transform: translateY(-3px); }
+.book-cover {
+  width: 100%; aspect-ratio: 2/3; border-radius: 3px 6px 6px 3px;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.28);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 8px; position: relative;
+}
+.book-cover .face-title { font-family: var(--font-body); font-size: 0.5625rem; color: rgba(255,255,255,0.78); line-height: 1.3; margin-bottom: 3px; }
+.book-cover .face-author { font-family: var(--font-ui); font-size: 0.4375rem; color: rgba(255,255,255,0.45); }
+.book-meta { display: flex; flex-direction: column; gap: 2px; }
+.book-title { font-family: var(--font-display); font-style: italic; font-size: 0.875rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
+.book-author { font-family: var(--font-ui); font-size: 0.6875rem; color: var(--text-muted); }
+.book-stars { font-size: 0.625rem; color: var(--accent); letter-spacing: 1px; margin-top: 1px; }
+
+/* Shelf badge — a book already in your library, shown on a catalog result */
+.shelf-flag {
+  position: absolute; top: 6px; left: 6px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-ui); font-size: 0.4375rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 2px 5px; border-radius: 4px; z-index: 1;
+}
