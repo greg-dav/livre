@@ -13,7 +13,7 @@ export type { PillProps, PillVariant } from './Pill/Pill';
 export { Form } from './Form/Form';
 export { DropdownMenu } from './DropdownMenu/DropdownMenu';
 export { Tabs } from './Tabs/Tabs';
-export { Dialog } from './Dialog/Dialog';
+export { Dialog, BareDialog } from './Dialog/Dialog';
 export { Tooltip, TooltipProvider } from './Tooltip/Tooltip';
 export { StarRating } from './StarRating/StarRating';
 export { RatingInput } from './RatingInput/RatingInput';

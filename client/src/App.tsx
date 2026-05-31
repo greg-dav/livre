@@ -12,6 +12,7 @@ import {
   LibraryBookDetail,
   Author,
   ComingSoon,
+  Timeline,
 } from './screens';
 
 const queryClient = new QueryClient({
@@ -56,7 +57,7 @@ const AppRoutes = () => {
       <Route element={<AuthGuard />}>
         <Route path="/library" element={<Library />} />
         <Route path="/library/:libraryBookId" element={<LibraryBookDetail />} />
-        <Route path="/log" element={<ComingSoon title="Log" />} />
+        <Route path="/log" element={<Timeline />} />
         <Route path="/search" element={<ComingSoon title="Search" />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/search/book/:bookRef" element={<SearchBookDetail />} />

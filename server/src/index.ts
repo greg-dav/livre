@@ -21,6 +21,7 @@ import { AuthService } from './services/AuthService';
 import { AccountService } from './services/AccountService';
 import { UsersService } from './services/UsersService';
 import { BooksService } from './services/BooksService';
+import { LogService } from './services/LogService';
 import { createAuthRouter } from './routes/auth';
 import { createAccountRouter } from './routes/account';
 import { createUsersRouter } from './routes/users';
@@ -46,6 +47,7 @@ const booksService = new BooksService(
   libraryBooksRepository,
   readingLogRepository
 );
+const logService = new LogService(libraryBooksRepository, readingLogRepository);
 const { requireAuth, requireAdmin } = createAuthMiddleware(usersRepository);
 
 // Sweep expired book_cache entries on boot and every 24h thereafter.
@@ -73,7 +75,7 @@ app.use('/api/account', authLimiter, createAccountRouter(accountService, require
 app.use('/api/users', createUsersRouter(usersService, requireAdmin));
 app.use('/api/books', createBooksRouter(booksService, requireAuth));
 app.use('/api/shelves', createShelvesRouter(booksService, requireAuth));
-app.use('/api/log', createLogRouter(requireAuth));
+app.use('/api/log', createLogRouter(logService, requireAuth));
 app.use('/api/config', createConfigRouter(configRepository, googleBooksProvider, requireAdmin));
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

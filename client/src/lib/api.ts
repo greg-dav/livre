@@ -9,6 +9,7 @@ import {
   createLogEventResponseSchema,
   libraryBookDetailSchema,
   shelfResponseSchema,
+  timelineResponseSchema,
   libraryResponseSchema,
   updateTagsResponseSchema,
   updateDescriptionResponseSchema,
@@ -192,6 +193,15 @@ export const api = {
   shelves: {
     getByStatus: (status: ShelfStatus) =>
       request(`/shelves/${encodeURIComponent(status)}`, shelfResponseSchema),
+  },
+  log: {
+    timeline: (range?: { start: string; end: string }) =>
+      request(
+        range
+          ? `/log?start=${encodeURIComponent(range.start)}&end=${encodeURIComponent(range.end)}`
+          : '/log',
+        timelineResponseSchema
+      ),
   },
   config: {
     updateGoogleBooksKey: (apiKey: string) =>

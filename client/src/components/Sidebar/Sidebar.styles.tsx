@@ -43,7 +43,7 @@ export const Item = styled('button')<{ $active?: boolean }>(({ theme, $active })
   justifyContent: 'center',
   transition: 'background 0.15s, color 0.15s',
   '&:hover': {
-    background: $active ? theme.accentSoft : theme.bgSunken,
+    background: theme.accentSoft,
     color: $active ? theme.accent : theme.text,
   },
   '&:hover > [data-tip]': {

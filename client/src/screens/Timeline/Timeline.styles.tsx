@@ -1,0 +1,432 @@
+import styled from 'styled-components';
+import { SIDEBAR_PANEL_WIDTH } from '../../lib/layout';
+
+type CycleStatus = 'reading' | 'read' | 'dnf';
+
+/* ── Screen ───────────────────────────────────────────────── */
+// Height-managing flex column that fills the shell's fullWidth Body (itself a flex row). `flex: 1`
+// + `minWidth: 0` make it claim the full remaining width and height so the controls span edge-to-edge
+// and the gantt can measure the true available width and scroll internally.
+export const Screen = styled('div')({
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+});
+
+/* ── Controls row ─────────────────────────────────────────── */
+export const Controls = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(4),
+  padding: `0 ${theme.spacing(6)}`,
+  height: theme.spacing(13),
+  borderBottom: `1px solid ${theme.borderSoft}`,
+  background: theme.bg,
+  flexShrink: 0,
+}));
+
+export const ControlsSpacer = styled('div')({ flex: 1 });
+
+export const SegGroup = styled('div')({
+  display: 'flex',
+  gap: '2px',
+});
+
+export const SegButton = styled('button')<{ $active?: boolean }>(({ theme, $active }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: theme.spacing(1.5),
+  padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
+  minHeight: theme.spacing(6.5),
+  borderRadius: theme.radius.sm,
+  border: 'none',
+  cursor: 'pointer',
+  transition: 'all 0.15s',
+  color: $active ? theme.accent : theme.textMuted,
+  background: $active ? theme.accentSoft : 'transparent',
+  '&:hover': { color: $active ? theme.accent : theme.text, background: theme.accentSoft },
+}));
+
+export const StatChips = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(4),
+}));
+
+export const StatChip = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-end',
+});
+
+export const StatDivider = styled('div')(({ theme }) => ({
+  width: '1px',
+  height: theme.spacing(6),
+  background: theme.borderSoft,
+}));
+
+/* ── Gantt shell ──────────────────────────────────────────────
+ * One scroll container, not two. A CSS grid with a fixed book column and a timeline column; the
+ * header is `sticky top`, the book column `sticky left`, the corner both. Native scrolling keeps
+ * every region in lockstep with zero JS sync — eliminating the drift two synced scrollers produce.
+ */
+export const GanttScroll = styled('div')(({ theme }) => ({
+  flex: 1,
+  minHeight: 0,
+  overflow: 'auto',
+  background: theme.bg,
+}));
+
+export const GanttGrid = styled('div')<{ $timelineWidth: number }>(({ $timelineWidth }) => ({
+  display: 'grid',
+  gridTemplateColumns: `${SIDEBAR_PANEL_WIDTH}px ${$timelineWidth}px`,
+  gridTemplateRows: 'auto 1fr',
+  minHeight: '100%',
+}));
+
+// Top-left BOOK header — pinned on both axes so it covers the corner during any scroll.
+export const Corner = styled('div')(({ theme }) => ({
+  position: 'sticky',
+  top: 0,
+  left: 0,
+  zIndex: 6,
+  height: theme.spacing(7),
+  display: 'flex',
+  alignItems: 'center',
+  padding: `0 ${theme.spacing(4)}`,
+  background: theme.bg,
+  borderRight: `1px solid ${theme.borderSoft}`,
+  borderBottom: `1px solid ${theme.borderSoft}`,
+}));
+
+export const BookListCol = styled('div')(({ theme }) => ({
+  position: 'sticky',
+  left: 0,
+  zIndex: 4,
+  borderRight: `1px solid ${theme.borderSoft}`,
+  background: theme.bg,
+  display: 'flex',
+  flexDirection: 'column',
+}));
+
+export const BookRowLabel = styled('div')<{ $activeReading?: boolean }>(
+  ({ theme, $activeReading }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(2.5),
+    padding: `0 ${theme.spacing(3.5)}`,
+    height: theme.spacing(15),
+    borderBottom: `1px solid ${theme.borderSoft}`,
+    cursor: 'pointer',
+    transition: 'background 0.15s',
+    flexShrink: 0,
+    background: $activeReading ? theme.accentSoft : 'transparent',
+    '&:hover': { background: theme.accentSoft },
+  })
+);
+
+export const BrlCover = styled('div')<{ $color?: string }>(({ theme, $color }) => ({
+  width: theme.spacing(7.5),
+  height: theme.spacing(11.25),
+  borderRadius: '2px 4px 4px 2px',
+  flexShrink: 0,
+  boxShadow: '1px 1px 4px rgba(0,0,0,0.22)',
+  backgroundColor: $color ?? theme.bgSunken,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}));
+
+export const BrlInfo = styled('div')({ flex: 1, minWidth: 0 });
+
+// Truncation lives on the inner Text element (via `& > *`), not this wrapper, so the ellipsis glyph
+// renders in the text's own font/size/color instead of the wrapper's browser default.
+export const BrlText = styled('div')({
+  minWidth: 0,
+  '& > *': {
+    display: 'block',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+});
+
+export const BrlStatus = styled('div')<{ $status: CycleStatus }>(({ theme, $status }) => ({
+  width: '6px',
+  height: '6px',
+  borderRadius: '50%',
+  flexShrink: 0,
+  ...($status === 'reading'
+    ? { background: theme.accent, boxShadow: `0 0 0 3px ${theme.accentSoft}` }
+    : $status === 'read'
+      ? { background: theme.success }
+      : { background: theme.textMuted, opacity: 0.5 }),
+}));
+
+/* ── Timeline column ──────────────────────────────────────── */
+// Header row of the grid — pinned to the top, scrolls horizontally with the timeline body.
+export const TimelineHeader = styled('div')(({ theme }) => ({
+  position: 'sticky',
+  top: 0,
+  zIndex: 3,
+  height: theme.spacing(7),
+  background: theme.bg,
+  borderBottom: `1px solid ${theme.borderSoft}`,
+}));
+
+export const MonthRow = styled('div')({
+  position: 'relative',
+  height: '100%',
+});
+
+// Absolutely positioned at its month line so the label hugs the boundary by a fixed 6px regardless
+// of column width — flex cells with proportional padding made labels float mid-column on dense
+// (1 yr) horizons.
+export const MonthCell = styled('div')<{ $left: number; $width: number }>(({ $left, $width }) => ({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: `${$left}px`,
+  width: `${$width}px`,
+  display: 'flex',
+  alignItems: 'center',
+  paddingLeft: '6px',
+  userSelect: 'none',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+}));
+
+// Header month divider, positioned from the same scale as the body grid lines so the two never
+// drift (per-cell borders accumulate 1px of box-model error per month and visibly desync).
+export const HeaderGridLine = styled('div')<{ $left: number }>(({ theme, $left }) => ({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: `${$left}px`,
+  width: '1px',
+  background: theme.borderSoft,
+  pointerEvents: 'none',
+}));
+
+export const GanttRows = styled('div')({
+  position: 'relative',
+  minHeight: '100%',
+});
+
+export const GanttRow = styled('div')(({ theme }) => ({
+  height: theme.spacing(15),
+  borderBottom: `1px solid ${theme.borderSoft}`,
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  '&:nth-child(even)': { background: 'rgba(0,0,0,0.012)' },
+}));
+
+export const GridLine = styled('div')<{ $left: number; $variant: 'month' | 'week' | 'today' }>(
+  ({ theme, $left, $variant }) => ({
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+    left: `${$left}px`,
+    width: $variant === 'today' ? '2px' : '1px',
+    background: $variant === 'today' ? theme.accent : theme.borderSoft,
+    opacity: $variant === 'today' ? 0.7 : $variant === 'week' ? 0.45 : 1,
+  })
+);
+
+// Spans the full header height with flex centering — identical mechanism to MonthCell — so the
+// label sits on exactly the same baseline as the month labels (top:50%/translate centered against a
+// different box and landed a hair low). The full-height bg also masks the today line behind it.
+export const TodayLabel = styled('div')<{ $left: number }>(({ theme, $left }) => ({
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: `${$left}px`,
+  transform: 'translateX(-50%)',
+  display: 'flex',
+  alignItems: 'center',
+  background: theme.bg,
+  padding: `0 ${theme.spacing(1)}`,
+  pointerEvents: 'none',
+  zIndex: 1,
+}));
+
+/* ── Bars ─────────────────────────────────────────────────── */
+export const GanttBar = styled('button')<{ $left: number; $width: number; $status: CycleStatus }>(
+  ({ theme, $left, $width, $status }) => ({
+    position: 'absolute',
+    height: theme.spacing(7),
+    left: `${$left}px`,
+    width: `${$width}px`,
+    borderRadius: theme.radius.sm,
+    display: 'flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    padding: 0,
+    transition: 'filter 0.15s, box-shadow 0.15s',
+    overflow: 'visible',
+    ...($status === 'read'
+      ? {
+          background: `color-mix(in srgb, ${theme.success} 18%, transparent)`,
+          border: `1.5px solid color-mix(in srgb, ${theme.success} 55%, transparent)`,
+        }
+      : $status === 'reading'
+        ? {
+            background: theme.accentSoft,
+            border: `1.5px solid ${theme.accent}`,
+            borderRight: 'none',
+          }
+        : {
+            background: `color-mix(in srgb, ${theme.textMuted} 12%, transparent)`,
+            border: `1.5px solid color-mix(in srgb, ${theme.textMuted} 35%, transparent)`,
+          }),
+    '&:hover': {
+      filter: 'brightness(1.05)',
+      boxShadow: '0 3px 12px rgba(0,0,0,0.18)',
+      zIndex: 10,
+    },
+  })
+);
+
+// Truncation lives on the inner Text element (via `& > *`), not this wrapper, so the ellipsis glyph
+// renders in the text's own font/size/color instead of the wrapper's browser default.
+export const BarInnerLabel = styled('div')({
+  paddingLeft: '8px',
+  minWidth: 0,
+  maxWidth: 'calc(100% - 16px)',
+  pointerEvents: 'none',
+  userSelect: 'none',
+  opacity: 0.7,
+  '& > *': {
+    display: 'block',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+});
+
+export const BarOpenEnd = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  right: '-10px',
+  top: '-1px',
+  height: 'calc(100% + 2px)',
+  width: '10px',
+  borderTop: `1.5px dashed ${theme.accent}`,
+  borderBottom: `1.5px dashed ${theme.accent}`,
+  borderRight: `1.5px dashed ${theme.accent}`,
+  borderRadius: '0 5px 5px 0',
+  background: 'transparent',
+  pointerEvents: 'none',
+}));
+
+export const BarPulse = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  right: '-18px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  width: '8px',
+  height: '8px',
+  borderRadius: '50%',
+  background: theme.accent,
+  pointerEvents: 'none',
+}));
+
+export const BarEventDot = styled('div')<{ $left: number; $variant: 'note' | 'quote' }>(
+  ({ theme, $left, $variant }) => ({
+    position: 'absolute',
+    top: '50%',
+    left: `${$left}px`,
+    transform: 'translate(-50%, -50%)',
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%',
+    zIndex: 2,
+    transition: 'transform 0.1s',
+    ...($variant === 'quote'
+      ? { background: theme.accent, border: `1.5px solid ${theme.bgElevated}` }
+      : { background: theme.bgElevated, border: `1.5px solid ${theme.textMuted}` }),
+    '&:hover': { transform: 'translate(-50%, -50%) scale(1.6)' },
+  })
+);
+
+// Single cursor-following hover card, fixed-positioned and pointer-driven from Gantt state — one
+// element for the whole grid instead of a tooltip per bar/dot, so there's no per-element flicker
+// and it escapes the scroll container's clipping. Sits just above the pointer.
+export const HoverCard = styled('div')<{ $x: number; $y: number }>(({ theme, $x, $y }) => ({
+  position: 'fixed',
+  left: `${$x}px`,
+  top: `${$y}px`,
+  transform: 'translate(-50%, -100%)',
+  marginTop: theme.spacing(-2),
+  background: theme.bgElevated,
+  border: `1px solid ${theme.border}`,
+  padding: `${theme.spacing(1.5)} ${theme.spacing(2.5)}`,
+  borderRadius: theme.radius.md,
+  whiteSpace: 'nowrap',
+  pointerEvents: 'none',
+  zIndex: 200,
+  boxShadow: '0 4px 16px rgba(0,0,0,0.22)',
+}));
+
+export const CenterState = styled('div')(({ theme }) => ({
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(10),
+}));
+
+/* ── Expanded log dialog ──────────────────────────────────────
+ * Header is one top-aligned row: cover, a meta column (title · author · rating), then the "View book"
+ * action (a standard secondary Button) on the right. Top-aligning keeps the title, the cover's top
+ * edge, and the button on a single line whether or not a rating is present — so the rating grows the
+ * column downward without shoving the title off the cover. A divider separates it from the log, which
+ * scrolls within the dialog's capped height while the header stays put.
+ */
+export const DialogHead = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: theme.spacing(4),
+  paddingBottom: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+  borderBottom: `1px solid ${theme.borderSoft}`,
+  flexShrink: 0,
+}));
+
+export const DialogCover = styled('div')<{ $color?: string }>(({ theme, $color }) => ({
+  width: theme.spacing(12),
+  height: theme.spacing(18),
+  borderRadius: '2px 5px 5px 2px',
+  flexShrink: 0,
+  boxShadow: '2px 3px 10px rgba(0,0,0,0.24)',
+  backgroundColor: $color ?? theme.bgSunken,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}));
+
+export const DialogHeadMeta = styled('div')(({ theme }) => ({
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1),
+}));
+
+export const DialogRating = styled('div')(({ theme }) => ({
+  marginTop: theme.spacing(1.5),
+}));
+
+// Fills the remaining dialog height and scrolls; the header above stays fixed. `overflow-y: auto`
+// forces overflow-x to clip, so a little left padding keeps the journal pins (drawn at left:-1px)
+// from being cut, and right padding keeps the scrollbar off the content.
+export const DialogBody = styled('div')(({ theme }) => ({
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  paddingLeft: theme.spacing(1),
+  paddingRight: theme.spacing(2),
+}));

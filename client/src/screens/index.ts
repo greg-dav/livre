@@ -6,3 +6,4 @@ export { SearchBookDetail } from './BookDetail/SearchBookDetail';
 export { LibraryBookDetail } from './BookDetail/LibraryBookDetail';
 export { Author } from './Author/Author';
 export { ComingSoon } from './ComingSoon/ComingSoon';
+export { Timeline } from './Timeline/Timeline';

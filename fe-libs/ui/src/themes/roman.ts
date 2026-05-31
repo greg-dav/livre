@@ -32,6 +32,7 @@ export const romanLight: DefaultTheme = {
   textOnDarkMuted: 'rgba(255, 255, 255, 0.48)',
   border: '#D9D2C2',
   borderSoft: '#E6DFCE',
+  success: '#4A8C5C',
   accent: '#C99C3C',
   accentSoft: 'rgba(201, 156, 60, 0.12)',
 };
@@ -49,6 +50,7 @@ export const romanDark: DefaultTheme = {
   textOnDarkMuted: 'rgba(255, 255, 255, 0.48)',
   border: '#2E2C27',
   borderSoft: '#232220',
+  success: '#5BA06E',
   accent: '#D4A547',
   accentSoft: 'rgba(212, 165, 71, 0.18)',
 };

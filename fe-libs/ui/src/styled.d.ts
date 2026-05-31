@@ -15,6 +15,7 @@ declare module 'styled-components' {
     accentSoft: string;
     border: string;
     borderSoft: string;
+    success: string;
     fontDisplay: string;
     fontBody: string;
     fontUi: string;

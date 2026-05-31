@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { SIDEBAR_PANEL_WIDTH } from '../../lib/layout';
 
 export const Split = styled('div')({
   flex: 1,
@@ -8,7 +9,7 @@ export const Split = styled('div')({
 });
 
 export const LeftPanel = styled('div')(({ theme }) => ({
-  width: '272px',
+  width: `${SIDEBAR_PANEL_WIDTH}px`,
   flexShrink: 0,
   background: theme.bg,
   borderRight: `1px solid ${theme.borderSoft}`,

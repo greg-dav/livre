@@ -1,12 +1,22 @@
 import { type ReactNode } from 'react';
 import styled from 'styled-components';
 import * as Radix from '@radix-ui/react-dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Text } from '../Text/Text';
 
 interface DialogProps {
   trigger?: ReactNode;
   title: string;
   description?: string;
+  children: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+interface BareDialogProps {
+  trigger?: ReactNode;
+  /** Accessible name only — never rendered visibly. Provide your own header inside children. */
+  title: string;
   children: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -26,6 +36,11 @@ const Content = styled(Radix.Content)(({ theme }) => ({
   transform: 'translate(-50%, -50%)',
   width: '90vw',
   maxWidth: theme.spacing(120),
+  // Never exceed the viewport; children that overflow (e.g. a long log body) scroll internally.
+  maxHeight: '85vh',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0,
   background: theme.bg,
   border: `1px solid ${theme.border}`,
   borderRadius: theme.radius.lg,
@@ -73,3 +88,25 @@ const DialogComponent = ({
 );
 
 export const Dialog = Object.assign(DialogComponent, { Close: Radix.Close });
+
+/**
+ * Same modal chrome as Dialog, but with no visible title row — the `title` is exposed only to the
+ * accessibility tree (Radix requires a Title). Use this when the dialog needs a custom header
+ * (cover, actions, bespoke layout) instead of the standard heading. Use BareDialog.Close inside.
+ */
+const BareDialogComponent = ({ trigger, title, children, open, onOpenChange }: BareDialogProps) => (
+  <Radix.Root open={open} onOpenChange={onOpenChange}>
+    {trigger && <Radix.Trigger asChild>{trigger}</Radix.Trigger>}
+    <Radix.Portal>
+      <Overlay />
+      <Content>
+        <Radix.Title asChild>
+          <VisuallyHidden>{title}</VisuallyHidden>
+        </Radix.Title>
+        {children}
+      </Content>
+    </Radix.Portal>
+  </Radix.Root>
+);
+
+export const BareDialog = Object.assign(BareDialogComponent, { Close: Radix.Close });
