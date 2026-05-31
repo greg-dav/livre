@@ -6,6 +6,7 @@ import { type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
 import { bookPath } from '../../lib/bookPath';
 import { Layout } from '../../components';
+import { Results } from './Author.styles';
 
 const STATUS_LABELS: Record<ShelfStatus, string> = {
   want: 'Want to Read',
@@ -49,34 +50,36 @@ export const Author = () => {
 
   return (
     <Layout title={name}>
-      {isFetching ? (
-        <Loader />
-      ) : books.length === 0 ? (
-        <Text variant="ui-sm" color="muted">
-          No books found for this author.
-        </Text>
-      ) : (
-        <BookGrid>
-          {books.map((book) => {
-            const shelfStatus = libraryStatusMap.get(book.bookRef);
-            return (
-              <BookCard
-                key={book.bookRef}
-                title={book.title}
-                author={book.authors[0] ?? ''}
-                coverUrl={book.largeThumbnail ?? book.thumbnail}
-                inLibrary={!!shelfStatus}
-                spineLabel={shelfStatus ? STATUS_LABELS[shelfStatus] : undefined}
-                onClick={() =>
-                  navigate(bookPath(book.bookRef, libraryData), {
-                    state: { backLabel: name },
-                  })
-                }
-              />
-            );
-          })}
-        </BookGrid>
-      )}
+      <Results>
+        {isFetching ? (
+          <Loader />
+        ) : books.length === 0 ? (
+          <Text variant="ui-sm" color="muted">
+            No books found for this author.
+          </Text>
+        ) : (
+          <BookGrid>
+            {books.map((book) => {
+              const shelfStatus = libraryStatusMap.get(book.bookRef);
+              return (
+                <BookCard
+                  key={book.bookRef}
+                  title={book.title}
+                  author={book.authors[0] ?? ''}
+                  coverUrl={book.largeThumbnail ?? book.thumbnail}
+                  inLibrary={!!shelfStatus}
+                  spineLabel={shelfStatus ? STATUS_LABELS[shelfStatus] : undefined}
+                  onClick={() =>
+                    navigate(bookPath(book.bookRef, libraryData), {
+                      state: { backLabel: name },
+                    })
+                  }
+                />
+              );
+            })}
+          </BookGrid>
+        )}
+      </Results>
     </Layout>
   );
 };

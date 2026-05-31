@@ -6,9 +6,8 @@ export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boo
     border: `1px solid ${theme.border}`,
     borderRadius: theme.radius.lg,
     padding: theme.spacing(6),
-    // spacing(13) = global header height; spacing(8) = body content padding-top.
-    // 48px        = 24px breathing room top + 24px bottom.
-    maxHeight: `calc(100dvh - ${theme.spacing(13)} - ${theme.spacing(8)} - 48px)`,
+    marginTop: theme.spacing(6),
+    maxHeight: `calc(100dvh - ${theme.spacing(13)} - ${theme.spacing(8)} - ${theme.spacing(6)} - 48px)`,
     overflowY: 'auto',
     scrollbarWidth: 'none',
     '&::-webkit-scrollbar': { display: 'none' },
@@ -22,6 +21,7 @@ export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boo
       border: 'none',
       borderRadius: 0,
       padding: 0,
+      marginTop: 0,
     }),
   })
 );

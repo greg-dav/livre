@@ -30,6 +30,7 @@ export const FocusStrip = styled('div')(({ theme }) => ({
   gridTemplateColumns: '56px 1fr auto',
   gap: '20px',
   alignItems: 'center',
+  marginTop: theme.spacing(6),
   paddingBottom: '20px',
   marginBottom: '32px',
   borderBottom: `1px solid ${theme.borderSoft}`,
@@ -82,6 +83,7 @@ export const Hero = styled('div')(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(10),
   alignItems: 'flex-start',
+  marginTop: theme.spacing(6),
 }));
 
 // Resting drop shadow that gives the cover physical presence — book on a shelf rather than image
