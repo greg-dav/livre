@@ -4,70 +4,106 @@ import { SIDEBAR_PANEL_WIDTH } from '../../lib/layout';
 type CycleStatus = 'reading' | 'read' | 'dnf';
 
 /* ── Screen ───────────────────────────────────────────────── */
-// Height-managing flex column that fills the shell's fullWidth Body (itself a flex row). `flex: 1`
-// + `minWidth: 0` make it claim the full remaining width and height so the controls span edge-to-edge
-// and the gantt can measure the true available width and scroll internally.
+// Fills the shell's fullWidth Body; the gantt area takes the whole width and the filter dock floats
+// over it. `relative` so the dock can anchor to the bottom-right corner.
 export const Screen = styled('div')({
   flex: 1,
   minWidth: 0,
   minHeight: 0,
   display: 'flex',
-  flexDirection: 'column',
   height: '100%',
+  position: 'relative',
 });
 
-/* ── Controls row ─────────────────────────────────────────── */
-export const Controls = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(4),
-  padding: `0 ${theme.spacing(6)}`,
-  height: theme.spacing(13),
-  borderBottom: `1px solid ${theme.borderSoft}`,
-  background: theme.bg,
-  flexShrink: 0,
+/* ── Filter dock ──────────────────────────────────────────────
+ * A chip pinned to the bottom-right showing the active period; clicking it opens a Popover (handled
+ * by @livre/primitives) with the period picker. The dock just anchors the chip to the corner — all
+ * positioning, portal, and dismiss are the Popover's job.
+ */
+export const FilterDock = styled('div')(({ theme }) => ({
+  position: 'absolute',
+  bottom: theme.spacing(6),
+  right: theme.spacing(6),
+  zIndex: 20,
 }));
 
-export const ControlsSpacer = styled('div')({ flex: 1 });
-
-export const SegGroup = styled('div')({
+export const ChipHead = styled('button')(({ theme }) => ({
   display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: `${theme.spacing(2)} ${theme.spacing(3.5)}`,
+  borderRadius: theme.radius.full,
+  border: `1px solid ${theme.border}`,
+  background: theme.bgElevated,
+  cursor: 'pointer',
+  boxShadow: '0 2px 12px rgba(0,0,0,0.14)',
+  transition: 'border-color 0.13s',
+  '& svg': { color: theme.textMuted, transition: 'color 0.13s' },
+  // `data-state="open"` is set by the Popover trigger while the panel is up.
+  '&:hover, &[data-state="open"]': { borderColor: theme.accent },
+  '&:hover svg, &[data-state="open"] svg': { color: theme.accent },
+}));
+
+// Period picker list — the body of the Popover. Fixed width so the floating panel sizes cleanly.
+export const PanelGroup = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
   gap: '2px',
+  width: '180px',
 });
 
-export const SegButton = styled('button')<{ $active?: boolean }>(({ theme, $active }) => ({
+// Single-select horizon row — the radio cousin of the library's checkbox facet row (circular tick).
+export const HorizonRow = styled('button')<{ $active: boolean }>(({ theme, $active }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2.5),
+  padding: `7px ${theme.spacing(2.25)}`,
+  borderRadius: theme.radius.md,
+  border: 'none',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'background 0.13s',
+  background: $active ? theme.accentSoft : 'transparent',
+  '&:hover': { background: theme.accentSoft },
+  '& .horizon-name': {
+    color: $active ? theme.accent : theme.textMuted,
+    transition: 'color 0.13s',
+  },
+  '&:hover .horizon-name': { color: $active ? theme.accent : theme.text },
+}));
+
+export const HorizonTick = styled('span')<{ $active: boolean }>(({ theme, $active }) => ({
+  width: '14px',
+  height: '14px',
+  borderRadius: '50%',
+  border: `1.5px solid ${$active ? theme.accent : theme.border}`,
+  background: $active ? theme.accent : 'transparent',
+  color: theme.textOnColor,
+  flexShrink: 0,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: theme.spacing(1.5),
-  padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
-  minHeight: theme.spacing(6.5),
-  borderRadius: theme.radius.sm,
-  border: 'none',
-  cursor: 'pointer',
-  transition: 'all 0.15s',
-  color: $active ? theme.accent : theme.textMuted,
-  background: $active ? theme.accentSoft : 'transparent',
-  '&:hover': { color: $active ? theme.accent : theme.text, background: theme.accentSoft },
+  transition: 'all 0.13s',
 }));
 
-export const StatChips = styled('div')(({ theme }) => ({
+// Flex container (not a bare span) so the wrapper's inherited strut can't anchor the smaller text
+// low in the line box — the child text's own box governs and centers cleanly in the row.
+export const HorizonName = styled('span')({
+  flex: 1,
   display: 'flex',
   alignItems: 'center',
-  gap: theme.spacing(4),
-}));
-
-export const StatChip = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-end',
 });
 
-export const StatDivider = styled('div')(({ theme }) => ({
-  width: '1px',
-  height: theme.spacing(6),
-  background: theme.borderSoft,
-}));
+/* ── Gantt area ───────────────────────────────────────────── */
+// Fills the full screen width; holds the gantt (or a centered loading/empty state). The gantt's own
+// book column is SIDEBAR_PANEL_WIDTH wide, subtracted from this width for the scale.
+export const Main = styled('div')({
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+});
 
 /* ── Gantt shell ──────────────────────────────────────────────
  * One scroll container, not two. A CSS grid with a fixed book column and a timeline column; the

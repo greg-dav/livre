@@ -15,6 +15,7 @@ export { DropdownMenu } from './DropdownMenu/DropdownMenu';
 export { Tabs } from './Tabs/Tabs';
 export { Dialog, BareDialog } from './Dialog/Dialog';
 export { Tooltip, TooltipProvider } from './Tooltip/Tooltip';
+export { Popover } from './Popover/Popover';
 export { StarRating } from './StarRating/StarRating';
 export { RatingInput } from './RatingInput/RatingInput';
 export { ProgressBar } from './ProgressBar/ProgressBar';

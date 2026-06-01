@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Loader, Text } from '@livre/primitives';
+import { Icon, Loader, Popover, Text } from '@livre/primitives';
 import { type TimelineBook } from '@livre/types';
 import { Layout } from '../../components';
 import { SIDEBAR_PANEL_WIDTH } from '../../lib/layout';
@@ -17,23 +17,23 @@ import {
 } from './timelineScale';
 import {
   Screen,
-  Controls,
-  ControlsSpacer,
-  SegGroup,
-  SegButton,
-  StatChips,
-  StatChip,
-  StatDivider,
+  FilterDock,
+  ChipHead,
+  PanelGroup,
+  HorizonRow,
+  HorizonTick,
+  HorizonName,
+  Main,
   CenterState,
 } from './Timeline.styles';
 
 const HORIZONS: { value: Horizon; label: string }[] = [
-  { value: '1m', label: '1 mo' },
-  { value: '3m', label: '3 mo' },
-  { value: '6m', label: '6 mo' },
-  { value: 'ytd', label: 'YTD' },
-  { value: '1y', label: '1 yr' },
-  { value: 'all', label: 'All' },
+  { value: '1m', label: 'Last month' },
+  { value: '3m', label: 'Last 3 months' },
+  { value: '6m', label: 'Last 6 months' },
+  { value: 'ytd', label: 'Year to date' },
+  { value: '1y', label: 'Last year' },
+  { value: 'all', label: 'All time' },
 ];
 
 const HORIZON_STORAGE_KEY = 'livre.timeline.horizon';
@@ -44,21 +44,11 @@ const loadHorizon = (): Horizon => {
   return stored && VALID_HORIZONS.has(stored as Horizon) ? (stored as Horizon) : 'ytd';
 };
 
-const Stat = ({ value, label }: { value: number; label: string }) => (
-  <StatChip>
-    <Text variant="h6" as="span">
-      {value}
-    </Text>
-    <Text variant="label" color="muted">
-      {label}
-    </Text>
-  </StatChip>
-);
-
 /**
- * Reading timeline screen. A horizontal gantt of every book's reading cycles (one bar per read).
- * Horizon tabs and stat chips reflect the books currently in view; clicking any book opens its full
- * log in a dialog. All axis math runs through a shared d3 time scale — see timelineScale.ts.
+ * Reading timeline screen. A horizontal gantt of every book's reading cycles (one bar per read)
+ * fills the screen; a floating chip in the bottom-right corner shows the active period and opens a
+ * Popover period picker on click. Clicking any book opens its full log in a dialog. All axis math
+ * runs through a shared d3 time scale — see timelineScale.ts.
  */
 export const Timeline = () => {
   const [horizon, setHorizonState] = useState<Horizon>(loadHorizon);
@@ -69,6 +59,7 @@ export const Timeline = () => {
   const [selected, setSelected] = useState<{ book: TimelineBook; focusEventId?: number } | null>(
     null
   );
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const today = useMemo(() => startOfToday(), []);
   // The date range is filtered server-side so large libraries don't ship every book. 'All' sends no
@@ -77,10 +68,10 @@ export const Timeline = () => {
   const { data, isLoading } = useTimeline(apiRange);
   const books = useMemo(() => data ?? [], [data]);
 
-  const screenRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
   const [timelineWidth, setTimelineWidth] = useState(0);
   useLayoutEffect(() => {
-    const el = screenRef.current;
+    const el = mainRef.current;
     if (!el) return;
     const measure = () => setTimelineWidth(Math.max(0, el.clientWidth - SIDEBAR_PANEL_WIDTH));
     measure();
@@ -101,61 +92,68 @@ export const Timeline = () => {
     [books, model]
   );
 
-  const stats = useMemo(() => {
-    const reading = visibleBooks.filter((b) => b.cycles.some((c) => c.status === 'reading')).length;
-    const finished = visibleBooks.filter(
-      (b) =>
-        !b.cycles.some((c) => c.status === 'reading') && b.cycles.some((c) => c.status === 'read')
-    ).length;
-    const notes = visibleBooks
-      .flatMap((b) => b.cycles)
-      .flatMap((c) => c.events)
-      .filter((e) => e.event === 'note' || e.event === 'quote').length;
-    return { finished, reading, notes };
-  }, [visibleBooks]);
+  const activeLabel = HORIZONS.find((h) => h.value === horizon)?.label ?? '';
 
   return (
     <Layout fullWidth title="Reading Timeline">
-      <Screen ref={screenRef}>
-        <Controls>
-          <SegGroup>
-            {HORIZONS.map((h) => (
-              <SegButton
-                key={h.value}
-                $active={horizon === h.value}
-                onClick={() => setHorizon(h.value)}
-              >
-                <Text variant="label">{h.label}</Text>
-              </SegButton>
-            ))}
-          </SegGroup>
-          <ControlsSpacer />
-          <StatChips>
-            <Stat value={stats.finished} label="Finished" />
-            <StatDivider />
-            <Stat value={stats.reading} label="Reading" />
-            <StatDivider />
-            <Stat value={stats.notes} label="Notes & quotes" />
-          </StatChips>
-        </Controls>
+      <Screen>
+        <Main ref={mainRef}>
+          {isLoading ? (
+            <CenterState>
+              <Loader />
+            </CenterState>
+          ) : visibleBooks.length === 0 ? (
+            <CenterState>
+              <Text variant="body1" color="muted">
+                No reading activity in this range yet.
+              </Text>
+            </CenterState>
+          ) : (
+            <Gantt
+              books={visibleBooks}
+              model={model}
+              onSelect={(book, focusEventId) => setSelected({ book, focusEventId })}
+            />
+          )}
+        </Main>
 
-        {isLoading ? (
-          <CenterState>
-            <Loader />
-          </CenterState>
-        ) : visibleBooks.length === 0 ? (
-          <CenterState>
-            <Text variant="body1" color="muted">
-              No reading activity in this range yet.
-            </Text>
-          </CenterState>
-        ) : (
-          <Gantt
-            books={visibleBooks}
-            model={model}
-            onSelect={(book, focusEventId) => setSelected({ book, focusEventId })}
-          />
-        )}
+        <FilterDock>
+          <Popover
+            open={filterOpen}
+            onOpenChange={setFilterOpen}
+            trigger={
+              <ChipHead aria-label="Filter by period">
+                <Icon icon="config" size={15} />
+                <Text variant="ui-sm">{activeLabel}</Text>
+              </ChipHead>
+            }
+          >
+            <PanelGroup>
+              {HORIZONS.map((h) => {
+                const active = horizon === h.value;
+                return (
+                  <HorizonRow
+                    key={h.value}
+                    $active={active}
+                    onClick={() => {
+                      setHorizon(h.value);
+                      setFilterOpen(false);
+                    }}
+                  >
+                    <HorizonTick $active={active}>
+                      {active && <Icon icon="check" size={10} />}
+                    </HorizonTick>
+                    <HorizonName>
+                      <Text className="horizon-name" variant="ui-tight">
+                        {h.label}
+                      </Text>
+                    </HorizonName>
+                  </HorizonRow>
+                );
+              })}
+            </PanelGroup>
+          </Popover>
+        </FilterDock>
       </Screen>
       <LogDialog
         book={selected?.book ?? null}
