@@ -59,6 +59,21 @@ export const AddSizer = styled('span')(({ theme }) => ({
   },
 }));
 
+// Ghost completion: sits in the same grid cell as the input, painted underneath. The typed
+// prefix is rendered transparent so it aligns under the real input text; only the suffix shows
+// through (the input's background is transparent). Padding/border must match AddInput exactly.
+export const AddGhost = styled('span')(({ theme }) => ({
+  gridArea: '1 / 1',
+  padding: `${theme.spacing(1)} ${theme.spacing(2.5)}`,
+  border: '1px solid transparent',
+  whiteSpace: 'pre',
+  pointerEvents: 'none',
+  color: theme.textMuted,
+  '& > span': {
+    color: 'transparent',
+  },
+}));
+
 export const AddInput = styled('input')(({ theme }) => ({
   padding: `${theme.spacing(1)} ${theme.spacing(2.5)}`,
   border: `1px dashed ${theme.accent}`,

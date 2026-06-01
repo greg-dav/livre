@@ -36,6 +36,11 @@ export const LibraryBookDetail = () => {
     enabled: !!libraryBookId,
   });
 
+  const { data: tagSuggestions } = useQuery({
+    queryKey: ['library', 'tags'],
+    queryFn: () => api.books.libraryTags(),
+  });
+
   const { mutate: save, isPending: isSaving } = useMutation({
     mutationFn: (event: LogEventType) => api.books.logByLibraryBookId(libraryBookId, event),
     onSuccess: () => {
@@ -52,6 +57,11 @@ export const LibraryBookDetail = () => {
 
   const { mutate: saveTags } = useMutation({
     mutationFn: (tags: string[]) => api.books.updateTags(libraryBookId, tags),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+      queryClient.invalidateQueries({ queryKey: ['library', 'tags'] });
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
   });
 
   const { mutate: saveTitle } = useMutation({
@@ -220,6 +230,7 @@ export const LibraryBookDetail = () => {
       currentFormat={currentFormat}
       onFormatChange={saveFormat}
       onTagsChange={saveTags}
+      tagSuggestions={tagSuggestions}
       onTitleChange={saveTitle}
       onDescriptionChange={saveDescription}
       onCoverChange={saveCover}

@@ -182,6 +182,21 @@ export class LibraryBooksRepository {
     return r?.id ?? null;
   }
 
+  /** Distinct tags across the user's library, flattened from each book's JSON array and sorted. */
+  listTags(userId: number): string[] {
+    const rows = db
+      .select({ tags: libraryBooks.tags })
+      .from(libraryBooks)
+      .where(and(eq(libraryBooks.userId, userId), sql`${libraryBooks.tags} IS NOT NULL`))
+      .all();
+    const seen = new Set<string>();
+    for (const row of rows) {
+      if (!row.tags) continue;
+      for (const tag of z.array(z.string()).parse(JSON.parse(row.tags))) seen.add(tag);
+    }
+    return [...seen].sort((a, b) => a.localeCompare(b));
+  }
+
   updateTags(libraryBookId: number, tags: string[]): void {
     db.update(libraryBooks)
       .set({ tags: tags.length > 0 ? JSON.stringify(tags) : null })

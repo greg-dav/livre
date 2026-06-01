@@ -38,6 +38,7 @@ export {
   libraryBookDetailSchema,
   updateTagsBodySchema,
   updateTagsResponseSchema,
+  libraryTagsResponseSchema,
   updateDescriptionBodySchema,
   updateDescriptionResponseSchema,
   updateCoverBodySchema,

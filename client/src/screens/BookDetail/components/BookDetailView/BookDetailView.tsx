@@ -65,6 +65,7 @@ interface BookDetailViewProps {
   actions: ReactNode;
   statusIndicator?: ReactNode;
   onTagsChange?: (tags: string[]) => void;
+  tagSuggestions?: string[];
   onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
   onCoverChange?: (url: string) => void;
@@ -102,6 +103,7 @@ export const BookDetailView = ({
   actions,
   statusIndicator,
   onTagsChange,
+  tagSuggestions,
   onTitleChange,
   onDescriptionChange,
   onCoverChange,
@@ -283,7 +285,12 @@ export const BookDetailView = ({
                 ))
               )}
             </Description>
-            <TagList tags={book.tags} editable={editable} onChange={onTagsChange} />
+            <TagList
+              tags={book.tags}
+              editable={editable}
+              onChange={onTagsChange}
+              suggestions={tagSuggestions}
+            />
           </DescriptionSection>
         </>
       )}

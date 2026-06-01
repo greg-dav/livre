@@ -123,6 +123,10 @@ export class BooksService {
     return this.libraryBooksRepo.findAllByUser(userId);
   }
 
+  getTags(userId: number): string[] {
+    return this.libraryBooksRepo.listTags(userId);
+  }
+
   updateTags(userId: number, libraryBookId: number, tags: string[]): boolean {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
     this.libraryBooksRepo.updateTags(libraryBookId, tags);

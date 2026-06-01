@@ -8,6 +8,7 @@ import {
   createLogEventResponseSchema,
   libraryBookDetailSchema,
   libraryResponseSchema,
+  libraryTagsResponseSchema,
   updateTagsBodySchema,
   updateTagsResponseSchema,
   updateDescriptionBodySchema,
@@ -93,6 +94,13 @@ export function createBooksRouter(service: BooksService, requireAuth: RequestHan
     const user = req.user;
     if (!user) throw createError(401, 'Unauthorized');
     respond(service.getLibrary(user.id));
+  });
+
+  /** Return the distinct tags across the user's library, for autocomplete. */
+  router.get('/library/tags', libraryTagsResponseSchema, async (respond, req) => {
+    const user = req.user;
+    if (!user) throw createError(401, 'Unauthorized');
+    respond(service.getTags(user.id));
   });
 
   /** Return full volume data and shelf metadata for a single library book. */

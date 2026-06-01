@@ -11,6 +11,7 @@ import {
   shelfResponseSchema,
   timelineResponseSchema,
   libraryResponseSchema,
+  libraryTagsResponseSchema,
   updateTagsResponseSchema,
   updateDescriptionResponseSchema,
   updateCoverResponseSchema,
@@ -89,6 +90,7 @@ export const api = {
     getByRef: (bookRef: string) =>
       request(`/books/search/book/${encodeURIComponent(bookRef)}`, bookVolumeSchema),
     library: () => request('/books/library', libraryResponseSchema),
+    libraryTags: () => request('/books/library/tags', libraryTagsResponseSchema),
     libraryBook: (libraryBookId: number) =>
       request(`/books/library/${libraryBookId}`, libraryBookDetailSchema),
     addToLibrary: (bookRef: string, event: LogEventType, date?: string) =>

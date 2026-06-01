@@ -394,6 +394,14 @@
       .pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
       .pill.dashed { border-style: dashed; }
       .pill.dashed:hover { border-color: var(--text-muted); color: var(--text); background: var(--bg-elevated); }
+      /* Inline ghost completion for the add-tag input: a hidden ::after mirrors the value so the
+         grid cell hugs the content; the ghost suffix shares that cell with its typed prefix
+         rendered transparent, so only the unmatched tail shows through the transparent input. */
+      .tag-add { display: inline-grid; font-family: var(--font-ui); font-size: 0.8125rem; }
+      .tag-add::after { content: attr(data-value); visibility: hidden; white-space: pre; padding: 4px 10px; border: 1px solid transparent; grid-area: 1 / 1; }
+      .tag-add input { grid-area: 1 / 1; min-width: 0; padding: 4px 10px; border: 1px dashed var(--accent); border-radius: 999px; background: transparent; outline: none; font: inherit; color: var(--text); }
+      .tag-add .ghost { grid-area: 1 / 1; padding: 4px 10px; border: 1px solid transparent; white-space: pre; pointer-events: none; color: var(--text-muted); }
+      .tag-add .ghost span { color: transparent; }
 
       /* Meta grid */
       .bd-meta { display: grid; grid-template-columns: max-content 1fr; gap: 6px 28px; }
@@ -934,7 +942,7 @@
                   <button class="pill" onclick="goToTag('americana')">americana →</button>
                   <button class="pill" onclick="goToTag('favorites')">favorites →</button>
                   <button class="pill" onclick="goToTag('reread')">reread →</button>
-                  <span class="pill dashed">+ Add tag</span>
+                  <span class="pill dashed" id="add-tag-pill" onclick="startAddTag()">+ Add tag</span>
                 </div>
 
                 <hr class="bd-divider" />
@@ -1296,6 +1304,59 @@
         selectedTags.clear();
         selectedTags.add(tag);
         applyFilter();
+      }
+
+      // Inline ghost completion on the book-detail "+ Add tag" control. Typing matches against
+      // the user's existing tags by prefix; Tab accepts the ghosted suffix, Enter commits the raw
+      // text, Esc cancels. Mirrors the TagList component's interaction.
+      const ALL_TAGS = ['americana','book-club','classics','comfort-reads','favorites','philosophy','post-apocalyptic','reread','science-fiction'];
+      function startAddTag() {
+        const pill = document.getElementById('add-tag-pill');
+        const applied = [...pill.parentElement.querySelectorAll('.pill:not(.dashed)')]
+          .map(p => p.textContent.replace(/\s*→$/, '').trim());
+        const sizer = document.createElement('span');
+        sizer.className = 'tag-add';
+        sizer.dataset.value = 'Add tag…';
+        sizer.innerHTML = '<span class="ghost" aria-hidden="true"></span><input size="1" placeholder="Add tag…" />';
+        const input = sizer.querySelector('input');
+        const ghost = sizer.querySelector('.ghost');
+        const matchFor = v => {
+          const l = v.trim().toLowerCase();
+          if (!l) return null;
+          return ALL_TAGS.find(t => t.toLowerCase().startsWith(l) && t.toLowerCase() !== l && !applied.includes(t)) || null;
+        };
+        const render = () => {
+          const m = matchFor(input.value);
+          sizer.dataset.value = m || input.value || 'Add tag…';
+          ghost.innerHTML = m ? '<span></span>' + m.slice(input.value.length) : '';
+          if (m) ghost.firstChild.textContent = input.value;
+        };
+        const commit = (value, keepOpen) => {
+          const t = (value ?? input.value).trim();
+          if (t && !applied.includes(t)) {
+            applied.push(t);
+            const btn = document.createElement('button');
+            btn.className = 'pill';
+            btn.textContent = t + ' →';
+            sizer.parentElement.insertBefore(btn, sizer);
+          }
+          if (keepOpen) { input.value = ''; render(); return; }
+          sizer.remove();
+          pill.style.display = '';
+        };
+        input.addEventListener('input', render);
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(matchFor(input.value) ?? input.value); }
+          if (e.key === 'Tab') {
+            const value = matchFor(input.value) ?? input.value;
+            if (value.trim()) { e.preventDefault(); commit(value, true); }
+          }
+          if (e.key === 'Escape') { sizer.remove(); pill.style.display = ''; }
+        });
+        input.addEventListener('blur', () => commit());
+        pill.style.display = 'none';
+        pill.parentElement.insertBefore(sizer, pill);
+        input.focus();
       }
 
       document.querySelectorAll('#lib-tags .facet-row').forEach(row =>
