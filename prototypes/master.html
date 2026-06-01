@@ -542,25 +542,22 @@
          SCREEN 3 — TIMELINE
          ════════════════════════════════════════════════════════════ */
 
-      #screen-timeline .body { display: grid; grid-template-columns: 220px 1fr; flex: 1; min-height: 0; overflow: hidden; }
+      #screen-timeline .body { display: grid; grid-template-columns: 208px 220px 1fr; flex: 1; min-height: 0; overflow: hidden; }
 
-      /* Horizon tabs */
-      .horizon-tabs { display: flex; gap: 2px; background: var(--bg-sunken); border-radius: 8px; padding: 3px; }
-      .horizon-tab { font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 11px; border-radius: 6px; color: var(--text-muted); cursor: pointer; transition: all 0.15s; border: none; background: none; }
-      .horizon-tab:hover { color: var(--text); }
-      .horizon-tab.active { background: var(--bg-elevated); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      /* Left rail — reuses the facet-panel pattern (.lib-left-header / .facet-row.radio) */
+      .tl-rail { border-right: 1px solid var(--border-soft); background: var(--bg-elevated); overflow-y: auto; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 10px; }
+      .tl-rail-group { display: flex; flex-direction: column; gap: 2px; }
+      .tl-rail-search { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin-bottom: 6px; background: var(--bg-sunken); border: 1px solid var(--border-soft); border-radius: 8px; transition: border-color 0.15s; }
+      .tl-rail-search:focus-within { border-color: var(--accent); }
+      .tl-rail-search svg { width: 15px; height: 15px; color: var(--text-muted); flex-shrink: 0; }
+      .tl-rail-search input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text); }
+      .tl-rail-search input::placeholder { color: var(--text-muted); }
 
-      .view-toggle { display: flex; gap: 2px; background: var(--bg-sunken); border-radius: 8px; padding: 3px; }
-      .view-btn { width: 30px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: all 0.15s; background: none; border: none; }
-      .view-btn:hover { color: var(--text); }
-      .view-btn.active { background: var(--bg-elevated); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-      .view-btn svg { width: 14px; height: 14px; stroke-width: 1.5; stroke-linecap: round; }
-
-      .tl-stats { display: flex; gap: 16px; align-items: center; }
-      .tl-stat { display: flex; flex-direction: column; align-items: flex-end; }
-      .tl-stat-val { font-family: var(--font-display); font-style: italic; font-size: 1.0625rem; font-weight: 500; letter-spacing: -0.01em; line-height: 1; }
-      .tl-stat-lbl { font-family: var(--font-ui); font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-top: 2px; }
-      .tl-stat-div { width: 1px; height: 24px; background: var(--border-soft); }
+      /* Period summary — quiet vertical readout */
+      .tl-stats { display: flex; flex-direction: column; gap: 12px; padding: 2px 9px; }
+      .tl-stat { display: flex; align-items: baseline; gap: 9px; }
+      .tl-stat-val { font-family: var(--font-display); font-style: italic; font-size: 1.5rem; font-weight: 500; letter-spacing: -0.01em; line-height: 1; }
+      .tl-stat-lbl { font-family: var(--font-ui); font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
 
       /* Book list col */
       .tl-book-col { border-right: 1px solid var(--border-soft); overflow-y: auto; overflow-x: hidden; background: var(--bg-elevated); display: flex; flex-direction: column; }
@@ -1018,36 +1015,45 @@
         <div class="screen" id="screen-timeline">
           <div class="topbar">
             <span class="tb-title">Reading Timeline</span>
-            <div style="margin-left:16px;">
-              <div class="horizon-tabs" id="horizonTabs">
-                <button class="horizon-tab active" data-horizon="ytd">YTD</button>
-                <button class="horizon-tab" data-horizon="6m">6 mo</button>
-                <button class="horizon-tab" data-horizon="1y">1 yr</button>
-                <button class="horizon-tab" data-horizon="all">All</button>
-              </div>
-            </div>
-            <div style="margin-left:8px;">
-              <div class="view-toggle">
-                <button class="view-btn active" id="btnGantt" title="Timeline">
-                  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor"><rect x="1" y="2" width="8" height="3" rx="1"/><rect x="4" y="6.5" width="9" height="3" rx="1"/><rect x="2" y="11" width="6" height="3" rx="1"/></svg>
-                </button>
-                <button class="view-btn" id="btnShelf" title="Shelf">
-                  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor"><rect x="1" y="1" width="5" height="7" rx="1"/><rect x="8" y="1" width="5" height="7" rx="1"/><rect x="1" y="10" width="5" height="3" rx="1"/><rect x="8" y="10" width="5" height="3" rx="1"/></svg>
-                </button>
-              </div>
-            </div>
             <div class="tb-spacer"></div>
-            <div class="tl-stats" id="tlStats"></div>
+            <div class="tb-avatar">G</div>
           </div>
 
           <div class="body" style="flex:1;min-height:0;position:relative;">
+            <!-- Left rail — period, view, and the period summary (reuses the facet-panel pattern) -->
+            <aside class="tl-rail">
+              <div class="tl-rail-search">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5L17 17"/></svg>
+                <input type="text" placeholder="Filter books…" autocomplete="off" />
+              </div>
+
+              <div class="lib-left-header"><span class="t-label t-accent">Period</span><hr /></div>
+              <div class="tl-rail-group" id="horizonTabs">
+                <div class="facet-row radio" data-horizon="1mo"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Last month</span></div>
+                <div class="facet-row radio" data-horizon="3mo"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Last 3 months</span></div>
+                <div class="facet-row radio" data-horizon="6m"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Last 6 months</span></div>
+                <div class="facet-row radio active" data-horizon="ytd"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Year to date</span></div>
+                <div class="facet-row radio" data-horizon="1y"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Last year</span></div>
+                <div class="facet-row radio" data-horizon="all"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">All time</span></div>
+              </div>
+
+              <div class="lib-left-header" style="margin-top:10px;"><span class="t-label t-accent">View</span><hr /></div>
+              <div class="tl-rail-group">
+                <div class="facet-row radio active" id="btnGantt"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Timeline</span></div>
+                <div class="facet-row radio" id="btnShelf"><span class="facet-tick"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="facet-name">Shelf</span></div>
+              </div>
+
+              <div class="lib-left-header" style="margin-top:10px;"><span class="t-label t-accent">This period</span><hr /></div>
+              <div class="tl-stats" id="tlStats"><!-- injected by JS --></div>
+            </aside>
+
             <div id="tl-gantt-view" style="display:contents;">
               <div class="tl-book-col" id="tlBookCol">
                 <div class="tl-book-col-hdr"><span class="tl-book-col-hdr-lbl">Book</span></div>
               </div>
               <div class="tl-chart-col" id="tlChartCol"></div>
             </div>
-            <div id="tl-shelf-view" style="grid-column:1/-1;overflow-y:auto;"></div>
+            <div id="tl-shelf-view" style="grid-column:2/-1;overflow-y:auto;"></div>
           </div>
         </div>
 
@@ -1320,6 +1326,8 @@
       function getRange(horizon) {
         const end = new Date(TODAY);
         switch (horizon) {
+          case '1mo': { const s=new Date(TODAY); s.setMonth(s.getMonth()-1); return {start:s,end}; }
+          case '3mo': { const s=new Date(TODAY); s.setMonth(s.getMonth()-3); return {start:s,end}; }
           case 'ytd': return { start: new Date(TODAY.getFullYear(),0,1), end };
           case '6m':  { const s=new Date(TODAY); s.setMonth(s.getMonth()-6); return {start:s,end}; }
           case '1y':  { const s=new Date(TODAY); s.setFullYear(s.getFullYear()-1); return {start:s,end}; }
@@ -1458,19 +1466,17 @@
         const notes    = visible.flatMap(b=>b.events).filter(e=>e.type==='note'||e.type==='quote').length;
         document.getElementById('tlStats').innerHTML = `
           <div class="tl-stat"><span class="tl-stat-val">${finished}</span><span class="tl-stat-lbl">Finished</span></div>
-          <div class="tl-stat-div"></div>
           <div class="tl-stat"><span class="tl-stat-val">${reading}</span><span class="tl-stat-lbl">Reading</span></div>
-          <div class="tl-stat-div"></div>
           <div class="tl-stat"><span class="tl-stat-val">${notes}</span><span class="tl-stat-lbl">Notes & quotes</span></div>
         `;
       }
 
       /* ── Horizon tabs ─────────────────────────────────────────── */
       document.getElementById('horizonTabs').addEventListener('click', e => {
-        const btn = e.target.closest('.horizon-tab'); if (!btn) return;
-        document.querySelectorAll('.horizon-tab').forEach(t=>t.classList.remove('active'));
-        btn.classList.add('active');
-        buildGantt(btn.dataset.horizon);
+        const row = e.target.closest('.facet-row'); if (!row) return;
+        document.querySelectorAll('#horizonTabs .facet-row').forEach(r=>r.classList.remove('active'));
+        row.classList.add('active');
+        buildGantt(row.dataset.horizon);
       });
 
       /* ── View toggle (gantt / shelf) ──────────────────────────── */
@@ -1497,15 +1503,12 @@
         document.getElementById('btnShelf').classList.remove('active');
         document.getElementById('tl-gantt-view').classList.remove('hidden');
         document.getElementById('tl-shelf-view').classList.remove('active');
-        document.getElementById('horizonTabs').style.display='';
-        document.getElementById('tlStats').style.display='';
       });
       document.getElementById('btnShelf').addEventListener('click', () => {
         document.getElementById('btnShelf').classList.add('active');
-        document.getElementById('btnGantt').classList.add('hidden');
+        document.getElementById('btnGantt').classList.remove('active');
+        document.getElementById('tl-gantt-view').classList.add('hidden');
         document.getElementById('tl-shelf-view').classList.add('active');
-        document.getElementById('horizonTabs').style.display='none';
-        document.getElementById('tlStats').style.display='none';
         buildShelf();
       });
     </script>
