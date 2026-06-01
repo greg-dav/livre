@@ -44,11 +44,17 @@ export const FacetTick = styled('span')<{ $active: boolean }>(({ theme, $active 
   transition: 'all 0.13s',
 }));
 
+// Flex containers (not bare inline spans) so the wrapper's inherited 16px strut can't anchor the
+// 13px text low in the line box — the child text's own box governs and centers cleanly in the row.
 export const FacetName = styled('span')({
   flex: 1,
+  display: 'flex',
+  alignItems: 'center',
 });
 
 export const FacetCount = styled('span')({
+  display: 'flex',
+  alignItems: 'center',
   opacity: 0.7,
 });
 
