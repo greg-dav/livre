@@ -19,6 +19,7 @@ const defaultElement: Record<TextVariant, ElementType> = {
   'ui-xs': 'span',
   tiny: 'span',
   label: 'span',
+  meta: 'span',
   mono: 'span',
   quote: 'span',
 };

@@ -27,13 +27,17 @@ export const Timeline = styled('div')<{ $single?: boolean; $flush?: boolean }>(
 export const TimelineEntry = styled('div')<{
   $landmark?: boolean;
   $open?: boolean;
+  $tone?: 'finished' | 'dnf';
   $clickable?: boolean;
   $focused?: boolean;
-}>(({ theme, $landmark, $open, $clickable, $focused }) => {
+}>(({ theme, $landmark, $open, $tone, $clickable, $focused }) => {
   // Pin geometry matches the book-detail prototype verbatim. boxSizing: content-box opts the
   // pseudo-element out of the global border-box reset so width/height measure the content area
-  // (border adds on top), exactly as the prototype CSS intends. The log stays monochrome: finished
-  // landmarks use the same accent pin as any other — no green here (green lives in the gantt only).
+  // (border adds on top), exactly as the prototype CSS intends. Terminal landmarks echo the gantt's
+  // bar colors so the two views read consistently: finished → success green, dnf → muted gray. Every
+  // other landmark (started/restarted/shelved and the open reading head) stays accent.
+  const landmarkColor =
+    $tone === 'finished' ? theme.success : $tone === 'dnf' ? theme.textMuted : theme.accent;
   const node = $landmark
     ? $open
       ? {
@@ -49,8 +53,8 @@ export const TimelineEntry = styled('div')<{
           top: '11px',
           width: '9px',
           height: '9px',
-          background: theme.accent,
-          border: `1px solid ${theme.accent}`,
+          background: landmarkColor,
+          border: `1px solid ${landmarkColor}`,
         }
     : {
         left: '-18px',

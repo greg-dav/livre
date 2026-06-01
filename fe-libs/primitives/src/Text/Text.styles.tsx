@@ -17,6 +17,7 @@ export type TextVariant =
   | 'ui-xs'
   | 'tiny'
   | 'label'
+  | 'meta'
   | 'mono'
   | 'quote';
 
@@ -24,6 +25,7 @@ export type TextColor =
   | 'default'
   | 'muted'
   | 'accent'
+  | 'success'
   | 'onColor'
   | 'onColorMuted'
   | 'onDark'
@@ -77,6 +79,15 @@ const variantStyles = (variant: TextVariant, theme: DefaultTheme) => {
         textTransform: 'uppercase' as const,
         lineHeight: 1.4,
       };
+    case 'meta':
+      return {
+        ...ui,
+        fontSize: '0.6875rem',
+        fontWeight: 400,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase' as const,
+        lineHeight: 1.4,
+      };
     case 'mono':
       return {
         fontFamily: theme.fontMono,
@@ -94,6 +105,7 @@ const colorValue = (color: TextColor, theme: DefaultTheme): string =>
     default: theme.text,
     muted: theme.textMuted,
     accent: theme.accent,
+    success: theme.success,
     onColor: theme.textOnColor,
     onColorMuted: theme.textOnColorMuted,
     onDark: theme.textOnDark,

@@ -506,8 +506,9 @@
         background: var(--accent);
         border: 1px solid var(--accent);
       }
-      /* Finished: green pin */
+      /* Finished: green pin · DNF: muted gray pin — mirrors the gantt's bar colors */
       .tl-entry.landmark.finished::before { background: #4a8c5c; border-color: #4a8c5c; }
+      .tl-entry.landmark.dnf::before { background: var(--text-muted); border-color: var(--text-muted); }
       .tl-entry .meta {
         font-family: var(--font-ui);
         font-size: 0.6875rem;

@@ -88,10 +88,11 @@ const Title = styled('p')(({ theme }) => ({ fontFamily: theme.fontDisplay, fontS
 | `body1`, `body2`                               | Lora                             | 1.0625rem, 0.9375rem |
 | `ui-lg`, `ui-md`, `ui-sm`, `ui-tight`, `ui-xs` | Outfit                           | 1rem → 0.6875rem     |
 | `label`                                        | Outfit, bold, uppercase, tracked | 0.6875rem            |
+| `meta`                                         | Outfit, uppercase, tracked       | 0.6875rem            |
 
 ### Text colors
 
-`default` · `muted` · `accent` · `onColor` · `onColorMuted`
+`default` · `muted` · `accent` · `success` · `onColor` · `onColorMuted`
 
 Use `as` to override the rendered element without changing styles:
 

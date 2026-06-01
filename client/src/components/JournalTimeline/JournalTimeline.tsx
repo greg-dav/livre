@@ -88,17 +88,22 @@ export const JournalTimeline = ({
     ? log.findIndex((e) => e.event === 'started' || e.event === 'restarted')
     : -1;
   const headEvent = headStartIndex >= 0 ? log[headStartIndex] : null;
-  const restEntries = log.filter((_, i) => i !== headStartIndex);
-  const totalEntries = (headEvent ? 1 : 0) + restEntries.length;
+  // The open cycle's start also renders as its own "Started" pin at the cycle's base — the "Reading
+  // since" head is a status banner on top of it, not a replacement, so every cycle bookends the same
+  // way (started → terminal landmark) whether it's open or finished.
+  const restEntries = log;
+  const totalEntries = log.length;
 
-  // First landmark (descending) after the active head — marks where the previous cycle begins.
+  // First landmark (descending) after the active head — marks where the previous cycle begins. Skip
+  // the head's own start event, which still renders inline as this cycle's "Started" pin.
   const cycleBreakIndex = headEvent
     ? restEntries.findIndex(
         (e) =>
-          e.event === 'started' ||
-          e.event === 'restarted' ||
-          e.event === 'finished' ||
-          e.event === 'dnf'
+          e.id !== headEvent.id &&
+          (e.event === 'started' ||
+            e.event === 'restarted' ||
+            e.event === 'finished' ||
+            e.event === 'dnf')
       )
     : -1;
 
@@ -126,8 +131,7 @@ export const JournalTimeline = ({
     };
   };
 
-  const isSingle =
-    (headEvent ? 1 : 0) + restEntries.filter((e) => e.event !== 'format').length === 1;
+  const isSingle = !headEvent && restEntries.filter((e) => e.event !== 'format').length === 1;
 
   return (
     <Timeline ref={containerRef} $single={isSingle} $flush={flush}>
@@ -137,7 +141,9 @@ export const JournalTimeline = ({
             <Text variant="label" color="accent">
               Reading
             </Text>
-            <Text variant="ui-tight">since {formatLogDate(headEvent.date)}</Text>
+            <Text variant="ui-tight" color="muted">
+              since {formatLogDate(headEvent.date)}
+            </Text>
           </LandmarkHead>
           {headFormat && renderCycleMethod(headFormat)}
         </TimelineEntry>
@@ -158,7 +164,7 @@ export const JournalTimeline = ({
               {divider}
               <TimelineEntry {...clickProps(entry)}>
                 <NoteMeta>
-                  <Text variant="ui-xs" color="muted">
+                  <Text variant="meta" color="muted">
                     Note · {formatLogDate(entry.date)}
                   </Text>
                 </NoteMeta>
@@ -173,7 +179,7 @@ export const JournalTimeline = ({
               {divider}
               <TimelineEntry {...clickProps(entry)}>
                 <NoteMeta>
-                  <Text variant="ui-xs" color="muted">
+                  <Text variant="meta" color="muted">
                     Quote · {formatLogDate(entry.date)}
                   </Text>
                 </NoteMeta>
@@ -190,12 +196,29 @@ export const JournalTimeline = ({
         return (
           <Fragment key={entry.id}>
             {divider}
-            <TimelineEntry $landmark {...clickProps(entry)}>
+            <TimelineEntry
+              $landmark
+              $tone={
+                entry.event === 'finished' ? 'finished' : entry.event === 'dnf' ? 'dnf' : undefined
+              }
+              {...clickProps(entry)}
+            >
               <LandmarkHead>
-                <Text variant="label" color="accent">
+                <Text
+                  variant="label"
+                  color={
+                    entry.event === 'finished'
+                      ? 'success'
+                      : entry.event === 'dnf'
+                        ? 'muted'
+                        : 'accent'
+                  }
+                >
                   {STATUS_VERBS[entry.event] ?? entry.event}
                 </Text>
-                <Text variant="ui-tight">{formatLogDate(entry.date)}</Text>
+                <Text variant="ui-tight" color="muted">
+                  {formatLogDate(entry.date)}
+                </Text>
               </LandmarkHead>
               {landmarkFormat && renderCycleMethod(landmarkFormat)}
             </TimelineEntry>
