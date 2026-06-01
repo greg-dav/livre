@@ -95,6 +95,7 @@ export interface ScaleModel {
   monthLines: number[];
   weekLines: number[];
   todayX: number | null;
+  dayPx: number;
 }
 
 /**
@@ -122,10 +123,22 @@ export const buildScaleModel = (viewStart: Date, viewEnd: Date, minWidth = 0): S
   const monthLines = timeMonth.range(viewStart, viewEndExclusive).map((d) => x(d));
   const weekLines = timeMonday.range(viewStart, viewEndExclusive).map((d) => x(d));
 
+  // The today line sits at the trailing edge of today's day-column (x of tomorrow), so a read
+  // finished today — which fills today's column — ends exactly on the line rather than a day past it.
   const today = startOfToday();
-  const todayX = today >= viewStart && today <= viewEnd ? x(today) : null;
+  const todayX = today >= viewStart && today <= viewEnd ? x(timeDay.offset(today, 1)) : null;
 
-  return { viewStart, viewEnd, totalWidth, x, monthCells, monthLines, weekLines, todayX };
+  return {
+    viewStart,
+    viewEnd,
+    totalWidth,
+    x,
+    monthCells,
+    monthLines,
+    weekLines,
+    todayX,
+    dayPx: totalWidth / totalDays,
+  };
 };
 
 /** A bar's geometry within the current scale, or null if the cycle falls outside the view. */
@@ -142,9 +155,10 @@ export const cycleBarGeometry = (
   const clampedEnd = be > model.viewEnd ? model.viewEnd : be;
   const isOpen = cycleEnd === null;
   let left = model.x(clampedStart);
-  // Open (currently-reading) cycles end exactly at the today line — never past it — so they skip the
-  // inclusive +1 day a finished read gets, and any min-width padding grows leftward, never rightward.
-  const right = isOpen ? model.x(clampedEnd) : model.x(timeDay.offset(clampedEnd, 1));
+  // Every cycle gets the inclusive +1 day so its final day fills a full column. An open cycle ends
+  // on today, landing flush on the today line; its min-width padding grows leftward, never rightward,
+  // so it never pokes past today.
+  const right = model.x(timeDay.offset(clampedEnd, 1));
   let width = right - left;
   if (width < MIN_BAR_PX) {
     if (isOpen) left = right - MIN_BAR_PX;

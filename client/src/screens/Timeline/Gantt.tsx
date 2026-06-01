@@ -95,9 +95,10 @@ export const Gantt = ({ books, model, onSelect }: GanttProps) => {
           <MonthRow>
             {model.monthCells.map((cell, i) => {
               // Suppress a month label that would collide with the Today pin — happens when a month
-              // boundary lands on/near today (e.g. viewing on the 1st), stacking "Jun" behind "Today".
+              // boundary lands within today's column (e.g. viewing on the 1st), stacking "Jun" behind
+              // "Today". The pin sits at the column's trailing edge, so allow a day-column of slack.
               const collidesWithToday =
-                model.todayX !== null && Math.abs(cell.left - model.todayX) < 30;
+                model.todayX !== null && cell.left > model.todayX - model.dayPx - 30;
               return (
                 <MonthCell key={i} $left={cell.left} $width={cell.width}>
                   {cell.width >= 34 && !collidesWithToday && (
