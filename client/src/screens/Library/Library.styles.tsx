@@ -20,11 +20,12 @@ export const LeftPanel = styled('div')(({ theme }) => ({
   gap: theme.spacing(3),
 }));
 
-export const LeftPanelHeader = styled('div')(({ theme }) => ({
+export const LeftPanelHeader = styled('div')<{ $spaced?: boolean }>(({ theme, $spaced }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2.5),
   marginBottom: theme.spacing(1),
+  ...($spaced && { marginTop: theme.spacing(5) }),
 }));
 
 export const LeftPanelDivider = styled('hr')(({ theme }) => ({
@@ -52,4 +53,9 @@ export const ShelfHeadingLeft = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'baseline',
   gap: theme.spacing(3),
+}));
+
+export const EmptyNote = styled('div')(({ theme }) => ({
+  padding: `${theme.spacing(5)} 2px`,
+  fontStyle: 'italic',
 }));

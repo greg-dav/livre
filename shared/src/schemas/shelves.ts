@@ -30,6 +30,7 @@ export const shelfEntrySchema = z.object({
   title: z.string(),
   authors: z.array(z.string()),
   coverUrl: z.string().nullable(),
+  tags: z.array(z.string()),
 });
 export type ShelfEntry = z.infer<typeof shelfEntrySchema>;
 

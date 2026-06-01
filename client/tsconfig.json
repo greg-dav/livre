@@ -17,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@livre/primitives": ["../fe-libs/primitives/src"],
-      "@livre/ui": ["../fe-libs/ui/src"]
+      "@livre/ui": ["../fe-libs/ui/src"],
+      "@livre/types": ["../shared/src"]
     }
   },
   "include": ["src", "../fe-libs/ui/src/styled.d.ts"],

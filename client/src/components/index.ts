@@ -4,3 +4,5 @@ export { Sidebar } from './Sidebar/Sidebar';
 export { CurrentlyReadingCard } from './CurrentlyReadingCard/CurrentlyReadingCard';
 export { ShelfTabs } from './ShelfTabs/ShelfTabs';
 export type { ShelfStatus } from './ShelfTabs/ShelfTabs';
+export { TagFacet } from './TagFacet/TagFacet';
+export type { TagFacetOption } from './TagFacet/TagFacet';

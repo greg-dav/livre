@@ -104,6 +104,7 @@ const toShelfEntry = (r: FullRow): ShelfEntry =>
     title: r.title,
     authors: r.authors ? r.authors.split('|') : [],
     coverUrl: r.largeThumbnail ?? r.thumbnail,
+    tags: r.tags ? z.array(z.string()).parse(JSON.parse(r.tags)) : [],
   });
 
 const toBookVolume = (r: FullRow) =>
