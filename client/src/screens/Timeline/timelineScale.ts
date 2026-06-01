@@ -9,8 +9,9 @@ export const DAY_PX = 5.2;
 // Minimum rendered bar length. Reads still scale per-horizon (a long read is wider at 1 mo than at
 // 1 yr), but no bar drops below this so short reads stay legible and clickable at every zoom.
 export const MIN_BAR_PX = 28;
-// Trailing room past the last day so an active read's open-end cap + pulse dot (which extend ~26px
-// beyond the bar at the today line) are always visible without horizontal scroll.
+// Trailing room past the today line so the centered "Today" label and the active-read pulse dot
+// (both straddling the line) are fully visible without horizontal scroll. Bars themselves stop at
+// the today line and never enter this gutter.
 export const RIGHT_GUTTER = 32;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -139,7 +140,15 @@ export const cycleBarGeometry = (
 
   const clampedStart = bs < model.viewStart ? model.viewStart : bs;
   const clampedEnd = be > model.viewEnd ? model.viewEnd : be;
-  const left = model.x(clampedStart);
-  const right = model.x(timeDay.offset(clampedEnd, 1));
-  return { left, width: Math.max(right - left, MIN_BAR_PX) };
+  const isOpen = cycleEnd === null;
+  let left = model.x(clampedStart);
+  // Open (currently-reading) cycles end exactly at the today line — never past it — so they skip the
+  // inclusive +1 day a finished read gets, and any min-width padding grows leftward, never rightward.
+  const right = isOpen ? model.x(clampedEnd) : model.x(timeDay.offset(clampedEnd, 1));
+  let width = right - left;
+  if (width < MIN_BAR_PX) {
+    if (isOpen) left = right - MIN_BAR_PX;
+    width = MIN_BAR_PX;
+  }
+  return { left, width };
 };

@@ -35,7 +35,7 @@ export const Sidebar = () => {
     <Item key={to} $active={isActive(to)} onClick={() => navigate(to)} aria-label={label}>
       <Icon icon={icon} />
       <Tip data-tip>
-        <Text variant="ui-xs" color="onColor">
+        <Text variant="ui-xs" color="default">
           {label}
         </Text>
       </Tip>
@@ -53,7 +53,7 @@ export const Sidebar = () => {
       <Item onClick={logout} aria-label="Sign out">
         <Icon icon="logout" />
         <Tip data-tip>
-          <Text variant="ui-xs" color="onColor">
+          <Text variant="ui-xs" color="default">
             Sign out
           </Text>
         </Tip>

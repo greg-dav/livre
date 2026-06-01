@@ -278,7 +278,9 @@ export const GanttBar = styled('button')<{ $left: number; $width: number; $statu
         ? {
             background: theme.accentSoft,
             border: `1.5px solid ${theme.accent}`,
-            borderRight: 'none',
+            // Dashed right edge marks the read as unfinished — it sits flush on the today line so the
+            // bar never extends past today.
+            borderRight: `1.5px dashed ${theme.accent}`,
           }
         : {
             background: `color-mix(in srgb, ${theme.textMuted} 12%, transparent)`,
@@ -308,32 +310,6 @@ export const BarInnerLabel = styled('div')({
     textOverflow: 'ellipsis',
   },
 });
-
-export const BarOpenEnd = styled('div')(({ theme }) => ({
-  position: 'absolute',
-  right: '-10px',
-  top: '-1px',
-  height: 'calc(100% + 2px)',
-  width: '10px',
-  borderTop: `1.5px dashed ${theme.accent}`,
-  borderBottom: `1.5px dashed ${theme.accent}`,
-  borderRight: `1.5px dashed ${theme.accent}`,
-  borderRadius: '0 5px 5px 0',
-  background: 'transparent',
-  pointerEvents: 'none',
-}));
-
-export const BarPulse = styled('div')(({ theme }) => ({
-  position: 'absolute',
-  right: '-18px',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  width: '8px',
-  height: '8px',
-  borderRadius: '50%',
-  background: theme.accent,
-  pointerEvents: 'none',
-}));
 
 export const BarEventDot = styled('div')<{ $left: number; $variant: 'note' | 'quote' }>(
   ({ theme, $left, $variant }) => ({
@@ -381,15 +357,16 @@ export const CenterState = styled('div')(({ theme }) => ({
 }));
 
 /* ── Expanded log dialog ──────────────────────────────────────
- * Header is one top-aligned row: cover, a meta column (title · author · rating), then the "View book"
- * action (a standard secondary Button) on the right. Top-aligning keeps the title, the cover's top
- * edge, and the button on a single line whether or not a rating is present — so the rating grows the
- * column downward without shoving the title off the cover. A divider separates it from the log, which
+ * Header is one row whose height is set by the cover: cover, a meta column (title · author · rating),
+ * then the "View book" action (a standard secondary Button) on the right. Everything is centered on
+ * the cross axis so the meta block and the button both sit vertically centered against the cover —
+ * the rating reads as the closing line of a balanced stack rather than dangling below it, and the
+ * button is centered whether or not a rating is present. A divider separates it from the log, which
  * scrolls within the dialog's capped height while the header stays put.
  */
 export const DialogHead = styled('div')(({ theme }) => ({
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   gap: theme.spacing(4),
   paddingBottom: theme.spacing(4),
   marginBottom: theme.spacing(4),
@@ -417,7 +394,7 @@ export const DialogHeadMeta = styled('div')(({ theme }) => ({
 }));
 
 export const DialogRating = styled('div')(({ theme }) => ({
-  marginTop: theme.spacing(1.5),
+  marginTop: theme.spacing(0.5),
 }));
 
 // Fills the remaining dialog height and scrolls; the header above stays fixed. `overflow-y: auto`
