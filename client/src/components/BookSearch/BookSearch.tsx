@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Text } from '@livre/primitives';
+import { Text, Icon } from '@livre/primitives';
 import { type BookSearchResult, type ShelfEntry, type ShelfStatus } from '@livre/types';
 import { api } from '../../lib/api';
 import { getRecentBooks, type RecentBook } from '../../lib/recentBooks';
@@ -12,6 +12,7 @@ import {
   Container,
   SearchInput,
   Dropdown,
+  ResultsList,
   ResultItem,
   Thumbnail,
   ThumbnailPlaceholder,
@@ -20,6 +21,7 @@ import {
   SectionLabel,
   SectionDivider,
   ShelfBadge,
+  HintFooter,
 } from './BookSearch.styles';
 
 const SHELF_LABELS: Record<ShelfStatus, string> = {
@@ -90,10 +92,16 @@ export const BookSearch = () => {
 
   const showRecents = open && query.length <= 1 && recentBooks.length > 0;
   const showDropdown = open && (query.length > 1 || recentBooks.length > 0);
+  // True while the debounce timer is still settling — the query has changed but the fetch
+  // hasn't been issued yet. Without this the dropdown renders empty during that window.
+  const debouncePending = query !== debouncedQuery;
+  const showSearching =
+    localMatches.length === 0 && query.length > 1 && (isFetching || debouncePending);
   const nothingToShow =
     localMatches.length === 0 &&
     googleResults.length === 0 &&
     !isFetching &&
+    !debouncePending &&
     debouncedQuery.length > 1;
 
   const closeAndNavigate = (path: string) => {
@@ -195,44 +203,54 @@ export const BookSearch = () => {
       />
       {showDropdown && (
         <Dropdown>
-          {showRecents ? (
-            <>
-              <SectionLabel>
-                <Text variant="label" color="muted">
-                  Recently viewed
-                </Text>
-              </SectionLabel>
-              {recentBooks.map(renderRecentBook)}
-            </>
-          ) : (
-            <>
-              {localMatches.length > 0 && (
-                <>
-                  <SectionLabel>
-                    <Text variant="label" color="muted">
-                      From your library
+          <ResultsList>
+            {showRecents ? (
+              <>
+                <SectionLabel>
+                  <Text variant="label" color="muted">
+                    Recently viewed
+                  </Text>
+                </SectionLabel>
+                {recentBooks.map(renderRecentBook)}
+              </>
+            ) : (
+              <>
+                {localMatches.length > 0 && (
+                  <>
+                    <SectionLabel>
+                      <Text variant="label" color="muted">
+                        From your library
+                      </Text>
+                    </SectionLabel>
+                    {localMatches.map(renderLibraryResult)}
+                    {googleResults.length > 0 && <SectionDivider />}
+                  </>
+                )}
+                {showSearching && (
+                  <StatusRow>
+                    <Text variant="ui-sm" color="muted">
+                      Searching…
                     </Text>
-                  </SectionLabel>
-                  {localMatches.map(renderLibraryResult)}
-                  {googleResults.length > 0 && <SectionDivider />}
-                </>
-              )}
-              {isFetching && localMatches.length === 0 && (
-                <StatusRow>
-                  <Text variant="ui-sm" color="muted">
-                    Searching…
-                  </Text>
-                </StatusRow>
-              )}
-              {nothingToShow && (
-                <StatusRow>
-                  <Text variant="ui-sm" color="muted">
-                    No results for "{debouncedQuery}"
-                  </Text>
-                </StatusRow>
-              )}
-              {googleResults.map(renderGoogleResult)}
-            </>
+                  </StatusRow>
+                )}
+                {nothingToShow && (
+                  <StatusRow>
+                    <Text variant="ui-sm" color="muted">
+                      No results for "{debouncedQuery}"
+                    </Text>
+                  </StatusRow>
+                )}
+                {googleResults.map(renderGoogleResult)}
+              </>
+            )}
+          </ResultsList>
+          {!showRecents && query.length > 1 && (
+            <HintFooter>
+              <Icon icon="enter" size={14} />
+              <Text variant="ui-xs" color="muted">
+                Press Enter to see all results
+              </Text>
+            </HintFooter>
           )}
         </Dropdown>
       )}

@@ -27,7 +27,7 @@ export const SearchInput = styled(Input)(({ theme }) => ({
   },
 }));
 
-export const Dropdown = styled('ul')(({ theme }) => ({
+export const Dropdown = styled('div')(({ theme }) => ({
   position: 'absolute',
   top: `calc(100% + ${theme.spacing(2)})`,
   left: 0,
@@ -36,12 +36,19 @@ export const Dropdown = styled('ul')(({ theme }) => ({
   background: theme.bgElevated,
   border: `1px solid ${theme.border}`,
   borderRadius: theme.radius.md,
-  padding: `${theme.spacing(1)} 0`,
-  margin: 0,
-  listStyle: 'none',
   boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
   maxHeight: '480px',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+}));
+
+export const ResultsList = styled('ul')(({ theme }) => ({
+  margin: 0,
+  padding: `${theme.spacing(1)} 0`,
+  listStyle: 'none',
   overflowY: 'auto',
+  overscrollBehavior: 'contain',
 }));
 
 export const ResultItem = styled('li')(({ theme }) => ({
@@ -93,6 +100,21 @@ export const SectionDivider = styled('li')(({ theme }) => ({
   height: '1px',
   background: theme.border,
   margin: `${theme.spacing(1)} 0`,
+}));
+
+/*
+ * Persistent hint that Enter escalates to the full faceted Search screen. A static footer outside
+ * the scrollable results list so results never bleed through beneath it, like a command-palette footer.
+ */
+export const HintFooter = styled('div')(({ theme }) => ({
+  flexShrink: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: `${theme.spacing(2)} ${theme.spacing(3)}`,
+  borderTop: `1px solid ${theme.border}`,
+  background: theme.bgElevated,
+  color: theme.textMuted,
 }));
 
 export const ShelfBadge = styled('span')(({ theme }) => ({
