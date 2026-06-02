@@ -42,6 +42,7 @@ import {
   deleteLogEntryResponseSchema,
   resetReadingLogResponseSchema,
   removeFromLibraryResponseSchema,
+  deleteLibraryResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { SchemaRouter } from '../lib/SchemaRouter';
@@ -127,6 +128,20 @@ export function createBooksRouter(service: BooksService, requireAuth: RequestHan
     const user = req.user;
     if (!user) throw createError(401, 'Unauthorized');
     respond(service.getTags(user.id));
+  });
+
+  /**
+   * Export the whole library as a Goodreads-shaped CSV download. Registered on the raw router (not
+   * via SchemaRouter) because the body is text/csv, not the JSON envelope SchemaRouter enforces.
+   * Must precede the `/library/:libraryBookId` matcher so "export" isn't captured as an id.
+   */
+  router.router.get('/library/export', (req, res) => {
+    const user = req.user;
+    if (!user) throw createError(401, 'Unauthorized');
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="livre-library-${date}.csv"`);
+    res.send(service.exportLibraryCsv(user.id));
   });
 
   /** Return full volume data and shelf metadata for a single library book. */
@@ -381,6 +396,13 @@ export function createBooksRouter(service: BooksService, requireAuth: RequestHan
       respond({ ok: true });
     }
   );
+
+  /** Wipe the user's entire library — every book, rating, review, and reading-log event. */
+  router.delete('/library', deleteLibraryResponseSchema, async (respond, req) => {
+    const user = req.user;
+    if (!user) throw createError(401, 'Unauthorized');
+    respond({ ok: true, deleted: service.deleteLibrary(user.id) });
+  });
 
   /** Permanently remove a book from the user's library. */
   router.delete(

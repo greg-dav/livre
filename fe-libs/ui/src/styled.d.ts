@@ -16,6 +16,7 @@ declare module 'styled-components' {
     border: string;
     borderSoft: string;
     success: string;
+    destructive: string;
     fontDisplay: string;
     fontBody: string;
     fontUi: string;

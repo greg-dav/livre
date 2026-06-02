@@ -14,6 +14,7 @@ import {
   type ShelfStatus,
 } from '@livre/types';
 import { encodeBookRef } from '../lib/bookRef';
+import { type ExportBook } from '../lib/goodreadsCsv';
 
 const LATEST_STATUS_EVENT_ID = sql<number>`(
   SELECT id FROM reading_log
@@ -30,6 +31,22 @@ const STARTED_DATE_EXPR = sql<string | null>`(
     AND event IN ('started', 'restarted')
   ORDER BY date DESC, id DESC
   LIMIT 1
+)`;
+
+const DATE_READ_EXPR = sql<string | null>`(
+  SELECT date
+  FROM reading_log
+  WHERE library_book_id = ${libraryBooks.id}
+    AND event = 'finished'
+  ORDER BY date DESC, id DESC
+  LIMIT 1
+)`;
+
+const READ_COUNT_EXPR = sql<number>`(
+  SELECT COUNT(*)
+  FROM reading_log
+  WHERE library_book_id = ${libraryBooks.id}
+    AND event = 'finished'
 )`;
 
 const EVENT_TO_STATUS: Record<string, ShelfStatus> = {
@@ -159,6 +176,51 @@ export class LibraryBooksRepository {
         status: EVENT_TO_STATUS[r.latestEvent],
         book: toBookVolume(r),
       }));
+  }
+
+  /**
+   * Every owned book flattened for CSV export, with reading-log facts (latest finished date, total
+   * finish count) aggregated in-query. Status derives from the same latest-status-event join used by
+   * the shelf views, so the exported Exclusive Shelf matches what the user sees in their library.
+   */
+  findExportRowsByUser(userId: number): ExportBook[] {
+    const rows = db
+      .select({
+        id: libraryBooks.id,
+        title: libraryBooks.title,
+        authors: libraryBooks.authors,
+        isbn: libraryBooks.isbn,
+        rating: libraryBooks.rating,
+        publisher: libraryBooks.publisher,
+        pageCount: libraryBooks.pageCount,
+        publishedDate: libraryBooks.publishedDate,
+        addedDate: libraryBooks.addedDate,
+        tags: libraryBooks.tags,
+        review: libraryBooks.review,
+        latestEvent: readingLog.event,
+        dateRead: DATE_READ_EXPR,
+        readCount: READ_COUNT_EXPR,
+      })
+      .from(libraryBooks)
+      .innerJoin(readingLog, eq(readingLog.id, LATEST_STATUS_EVENT_ID))
+      .where(eq(libraryBooks.userId, userId))
+      .all();
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      authors: r.authors ? r.authors.split('|') : [],
+      isbn: r.isbn,
+      rating: r.rating,
+      publisher: r.publisher,
+      pageCount: r.pageCount,
+      publishedDate: r.publishedDate,
+      addedDate: r.addedDate,
+      tags: r.tags ? z.array(z.string()).parse(JSON.parse(r.tags)) : [],
+      review: r.review,
+      status: EVENT_TO_STATUS[r.latestEvent],
+      dateRead: r.dateRead,
+      readCount: r.readCount,
+    }));
   }
 
   /**
@@ -299,6 +361,11 @@ export class LibraryBooksRepository {
 
   delete(libraryBookId: number): void {
     db.delete(libraryBooks).where(eq(libraryBooks.id, libraryBookId)).run();
+  }
+
+  /** Remove every book owned by the user. Returns how many rows were deleted. */
+  deleteAllByUser(userId: number): number {
+    return db.delete(libraryBooks).where(eq(libraryBooks.userId, userId)).run().changes;
   }
 
   refreshMetadata(libraryBookId: number, fields: import('@livre/types').RefreshMetadataBody): void {

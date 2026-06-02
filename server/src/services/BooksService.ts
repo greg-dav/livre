@@ -23,6 +23,7 @@ import { type BookCacheProvider } from '../providers/BookCacheProvider';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
 import { toBookVolume, type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
+import { toGoodreadsCsv } from '../lib/goodreadsCsv';
 
 /**
  * Services work internally in server-side (source, externalId) tuples — the opaque client-side
@@ -317,6 +318,23 @@ export class BooksService {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
     this.libraryBooksRepo.delete(libraryBookId);
     return true;
+  }
+
+  /**
+   * Wipe the user's entire library — every book, rating, review, and reading-log event. Reading-log
+   * rows are dropped first within a transaction rather than leaning on the FK cascade, which isn't
+   * reliably enabled. Returns the number of books removed.
+   */
+  deleteLibrary(userId: number): number {
+    return db.transaction(() => {
+      this.readingLogRepo.deleteAllForUser(userId);
+      return this.libraryBooksRepo.deleteAllByUser(userId);
+    });
+  }
+
+  /** Serialise the user's whole library to a Goodreads-shaped CSV string. */
+  exportLibraryCsv(userId: number): string {
+    return toGoodreadsCsv(this.libraryBooksRepo.findExportRowsByUser(userId));
   }
 
   /** Cache-aware lookup that falls through to the source on miss and writes back on the way out. */

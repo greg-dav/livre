@@ -3,6 +3,8 @@ import {
   Check,
   ChevronDown,
   CornerDownLeft,
+  Database,
+  Download,
   Headphones,
   Library,
   LogOut,
@@ -42,6 +44,8 @@ const ICONS = {
   add: Plus,
   edit: Pencil,
   delete: Trash2,
+  download: Download,
+  data: Database,
   check: Check,
   'chevron-down': ChevronDown,
 } satisfies Record<string, LucideIcon>;

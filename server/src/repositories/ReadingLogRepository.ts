@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
-import { readingLog } from '../db/schema';
+import { libraryBooks, readingLog } from '../db/schema';
 import { logEntrySchema, type BookFormat, type LogEntry, type LogEventType } from '@livre/types';
 
 export class ReadingLogRepository {
@@ -93,5 +93,22 @@ export class ReadingLogRepository {
 
   deleteAllForBook(libraryBookId: number): void {
     db.delete(readingLog).where(eq(readingLog.libraryBookId, libraryBookId)).run();
+  }
+
+  // Drop every log row belonging to the user's books. Scoped via subquery since reading_log has no
+  // user_id of its own; done explicitly rather than relying on the FK cascade, which is only enabled
+  // on connections that ran the reading_log migration.
+  deleteAllForUser(userId: number): void {
+    db.delete(readingLog)
+      .where(
+        inArray(
+          readingLog.libraryBookId,
+          db
+            .select({ id: libraryBooks.id })
+            .from(libraryBooks)
+            .where(eq(libraryBooks.userId, userId))
+        )
+      )
+      .run();
   }
 }

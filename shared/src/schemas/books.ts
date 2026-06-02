@@ -234,3 +234,9 @@ export const deleteLogEntryResponseSchema = okResponse;
 
 export const resetReadingLogResponseSchema = okResponse;
 export const removeFromLibraryResponseSchema = okResponse;
+
+export const deleteLibraryResponseSchema = z.object({
+  ok: z.literal(true),
+  deleted: z.number().int().nonnegative(),
+});
+export type DeleteLibraryResponse = z.infer<typeof deleteLibraryResponseSchema>;

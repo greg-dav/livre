@@ -26,6 +26,7 @@ export type TextColor =
   | 'muted'
   | 'accent'
   | 'success'
+  | 'destructive'
   | 'onColor'
   | 'onColorMuted'
   | 'onDark'
@@ -106,6 +107,7 @@ const colorValue = (color: TextColor, theme: DefaultTheme): string =>
     muted: theme.textMuted,
     accent: theme.accent,
     success: theme.success,
+    destructive: theme.destructive,
     onColor: theme.textOnColor,
     onColorMuted: theme.textOnColorMuted,
     onDark: theme.textOnDark,

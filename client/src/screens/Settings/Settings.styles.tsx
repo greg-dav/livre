@@ -79,6 +79,14 @@ export const Block = styled('div')(({ theme }) => ({
   gap: theme.spacing(5),
 }));
 
+// A block's label + supporting copy, kept tight so the description reads as part of the heading
+// rather than a separate row in the block's looser gap.
+export const BlockHead = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+}));
+
 export const Field = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -97,4 +105,11 @@ export const Feedback = styled('div')(({ theme }) => ({
   minHeight: theme.spacing(4),
   display: 'flex',
   alignItems: 'center',
+}));
+
+export const DialogActions = styled('div')(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: theme.spacing(3),
+  marginTop: theme.spacing(2),
 }));

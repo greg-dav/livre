@@ -3,6 +3,7 @@ import { Icon, type IconName, Text } from '@livre/primitives';
 import { Layout } from '../../components';
 import { useAuth } from '../../context/AuthContext';
 import { AccountSection } from './AccountSection';
+import { DataSection } from './DataSection';
 import { UsersSection } from './UsersSection';
 import { AppearanceSection } from './AppearanceSection';
 import { ConfigurationSection } from './ConfigurationSection';
@@ -16,7 +17,7 @@ import {
   ContentInner,
 } from './Settings.styles';
 
-type SectionId = 'account' | 'users' | 'appearance' | 'config';
+type SectionId = 'account' | 'data' | 'users' | 'appearance' | 'config';
 
 interface SectionDef {
   id: SectionId;
@@ -28,6 +29,7 @@ interface SectionDef {
 
 const SECTIONS: SectionDef[] = [
   { id: 'account', label: 'Account', icon: 'account', render: () => <AccountSection /> },
+  { id: 'data', label: 'Data', icon: 'data', render: () => <DataSection /> },
   { id: 'users', label: 'Users', icon: 'users', adminOnly: true, render: () => <UsersSection /> },
   {
     id: 'appearance',

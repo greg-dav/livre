@@ -33,6 +33,7 @@ export const romanLight: DefaultTheme = {
   border: '#D9D2C2',
   borderSoft: '#E6DFCE',
   success: '#4A8C5C',
+  destructive: '#B23A2E',
   accent: '#C99C3C',
   accentSoft: 'rgba(201, 156, 60, 0.12)',
 };
@@ -51,6 +52,7 @@ export const romanDark: DefaultTheme = {
   border: '#2E2C27',
   borderSoft: '#232220',
   success: '#5BA06E',
+  destructive: '#CE5B49',
   accent: '#D4A547',
   accentSoft: 'rgba(212, 165, 71, 0.18)',
 };

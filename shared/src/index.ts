@@ -71,6 +71,7 @@ export {
   deleteLogEntryResponseSchema,
   resetReadingLogResponseSchema,
   removeFromLibraryResponseSchema,
+  deleteLibraryResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -98,6 +99,7 @@ export type {
   UpdateRatingBody,
   UpdateReviewBody,
   UpdateLogEntryBody,
+  DeleteLibraryResponse,
 } from './schemas/books';
 export { updateApiKeyBodySchema } from './schemas/config';
 export type { UpdateApiKeyBody } from './schemas/config';

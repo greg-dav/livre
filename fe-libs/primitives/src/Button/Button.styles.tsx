@@ -32,6 +32,10 @@ export const StyledButton = styled('button')<{ $variant: ButtonVariant; $size: B
       background: 'transparent',
       color: theme.text,
     }),
+    ...($variant === 'destructive' && {
+      background: theme.destructive,
+      color: theme.textOnDark,
+    }),
 
     '&:hover:not(:disabled)': {
       opacity: 0.88,

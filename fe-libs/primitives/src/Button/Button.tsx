@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { StyledButton } from './Button.styles';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 export type ButtonSize = 'sm' | 'md';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,7 +12,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 /**
  * General-purpose button primitive. Callers are responsible for text content — wrap children in
- * <Text variant="label"> with the appropriate color (onColor for primary, default for others).
+ * <Text variant="label"> with the appropriate color (onColor for primary, onDark for destructive,
+ * default for others).
  * Designed to slot into Radix Form.Submit and other Radix asChild contexts via ref forwarding.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

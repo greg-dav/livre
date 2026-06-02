@@ -29,6 +29,7 @@ import {
   deleteLogEntryResponseSchema,
   resetReadingLogResponseSchema,
   removeFromLibraryResponseSchema,
+  deleteLibraryResponseSchema,
   okResponseSchema,
   usersListResponseSchema,
   managedUserSchema,
@@ -230,6 +231,24 @@ export const api = {
       request(`/books/library/${libraryBookId}`, removeFromLibraryResponseSchema, {
         method: 'DELETE',
       }),
+    deleteLibrary: () =>
+      request('/books/library', deleteLibraryResponseSchema, { method: 'DELETE' }),
+    // CSV download bypasses the JSON request() helper: the response is a text/csv attachment, so we
+    // hand back the raw blob and server-supplied filename for the caller to save.
+    exportLibraryCsv: async (): Promise<{ filename: string; blob: Blob }> => {
+      const token = localStorage.getItem('livre_token');
+      const res = await fetch(`${BASE}/books/library/export`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('livre_token');
+        window.location.replace('/login');
+        throw new Error('Unauthorized');
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const match = (res.headers.get('Content-Disposition') ?? '').match(/filename="?([^"]+)"?/);
+      return { filename: match?.[1] ?? 'livre-library.csv', blob: await res.blob() };
+    },
   },
   shelves: {
     getByStatus: (status: ShelfStatus) =>
