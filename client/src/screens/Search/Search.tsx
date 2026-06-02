@@ -6,8 +6,19 @@ import { type SearchResult } from '@livre/types';
 import { api } from '../../lib/api';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useSearchSession } from '../../context/SearchContext';
-import { searchScopeSchema, shelfFilterSchema, type ShelfFilter } from '@livre/types';
-import { dedupeByRef, SCOPE_LABELS, SHELF_LABELS, STATUS_LABELS } from '../../lib/search';
+import {
+  searchScopeSchema,
+  searchSortSchema,
+  shelfFilterSchema,
+  type ShelfFilter,
+} from '@livre/types';
+import {
+  dedupeByRef,
+  SCOPE_LABELS,
+  SHELF_LABELS,
+  SORT_LABELS,
+  STATUS_LABELS,
+} from '../../lib/search';
 import { Layout, SortMenu, LoadMore } from '../../components';
 import {
   Split,
@@ -177,7 +188,14 @@ export const Search = () => {
                   </Text>
                 )}
               </HeadLine>
-              {hasQuery && <SortMenu value={sort} onChange={setSort} />}
+              {hasQuery && (
+                <SortMenu
+                  value={sort}
+                  onChange={setSort}
+                  options={searchSortSchema.options}
+                  labels={SORT_LABELS}
+                />
+              )}
             </Toolbar>
 
             <ActiveChips>

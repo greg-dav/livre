@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Text, BookCard, BookGrid, Loader } from '@livre/primitives';
-import { type SearchSort } from '@livre/types';
+import { searchSortSchema, type SearchSort } from '@livre/types';
 import { api } from '../../lib/api';
-import { dedupeByRef, STATUS_LABELS } from '../../lib/search';
+import { dedupeByRef, SORT_LABELS, STATUS_LABELS } from '../../lib/search';
 import { Layout, SortMenu, LoadMore } from '../../components';
 import { Toolbar, HeadLine, Results } from './Author.styles';
 
@@ -39,7 +39,14 @@ export const Author = () => {
             {count} {count === 1 ? 'book' : 'books'}
           </Text>
         </HeadLine>
-        {count > 0 && <SortMenu value={sort} onChange={setSort} />}
+        {count > 0 && (
+          <SortMenu
+            value={sort}
+            onChange={setSort}
+            options={searchSortSchema.options}
+            labels={SORT_LABELS}
+          />
+        )}
       </Toolbar>
 
       {isLoading ? (

@@ -44,7 +44,7 @@ export const RightPanel = styled('div')(({ theme }) => ({
 
 export const ShelfHeading = styled('div')(({ theme }) => ({
   display: 'flex',
-  alignItems: 'baseline',
+  alignItems: 'center',
   justifyContent: 'space-between',
   marginBottom: theme.spacing(7),
 }));

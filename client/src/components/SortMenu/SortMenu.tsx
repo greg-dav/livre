@@ -1,33 +1,38 @@
-import { searchSortSchema, type SearchSort } from '@livre/types';
 import { DropdownMenu, Text } from '@livre/primitives';
-import { SORT_LABELS } from '../../lib/search';
 import { SortButton } from './SortMenu.styles';
 
-interface SortMenuProps {
-  value: SearchSort;
-  onChange: (sort: SearchSort) => void;
+interface SortMenuProps<T extends string> {
+  value: T;
+  onChange: (sort: T) => void;
+  options: readonly T[];
+  labels: Record<T, string>;
 }
 
 /**
- * The "Sort: … ▾" control shared by the Search and Author result grids. Purely presentational — it
- * reads the sort vocabulary and reports selections up, so both screens order results the same way
- * without duplicating the menu.
+ * The "Sort: … ▾" control shared by every result grid. Purely presentational and generic over the
+ * sort vocabulary, so the Search, Author, and Library screens order their grids the same way without
+ * duplicating the menu — each supplies its own option keys and labels.
  */
-export const SortMenu = ({ value, onChange }: SortMenuProps) => (
+export const SortMenu = <T extends string>({
+  value,
+  onChange,
+  options,
+  labels,
+}: SortMenuProps<T>) => (
   <DropdownMenu
     align="end"
     trigger={
       <SortButton>
         <Text className="sort-label" variant="ui-sm">
-          Sort: {SORT_LABELS[value]} ▾
+          Sort: {labels[value]} ▾
         </Text>
       </SortButton>
     }
   >
-    {searchSortSchema.options.map((key) => (
+    {options.map((key) => (
       <DropdownMenu.Item key={key} onSelect={() => onChange(key)}>
         <Text variant="ui-sm" color={key === value ? 'accent' : 'default'}>
-          {SORT_LABELS[key]}
+          {labels[key]}
         </Text>
       </DropdownMenu.Item>
     ))}

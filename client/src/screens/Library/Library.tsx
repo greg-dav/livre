@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { BookCard, BookGrid, Loader, Text } from '@livre/primitives';
 import {
   Layout,
+  SortMenu,
   CurrentlyReadingCard,
   ShelfTabs,
   TagFacet,
@@ -32,6 +33,13 @@ const SHELF_LABELS: Record<ShelfStatus, string> = {
   dnf: 'Did Not Finish',
 };
 
+type LibrarySort = 'newest' | 'oldest';
+const LIBRARY_SORT_OPTIONS = ['newest', 'oldest'] as const;
+const LIBRARY_SORT_LABELS: Record<LibrarySort, string> = {
+  newest: 'Newest',
+  oldest: 'Oldest',
+};
+
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -46,6 +54,7 @@ export const Library = () => {
   const queryClient = useQueryClient();
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [sort, setSort] = useState<LibrarySort>('newest');
 
   const { data: readingData } = useQuery({
     queryKey: ['shelves', 'reading'],
@@ -90,10 +99,14 @@ export const Library = () => {
     );
   }, [shelfEntries, selectedTags]);
 
-  const visibleEntries =
-    selectedTags.size === 0
-      ? shelfEntries
-      : shelfEntries.filter((entry) => entry.tags.some((tag) => selectedTags.has(tag)));
+  const visibleEntries = useMemo(() => {
+    const matched =
+      selectedTags.size === 0
+        ? shelfEntries
+        : shelfEntries.filter((entry) => entry.tags.some((tag) => selectedTags.has(tag)));
+    const byAdded = sortBy(matched, 'addedDate');
+    return sort === 'newest' ? byAdded.reverse() : byAdded;
+  }, [shelfEntries, selectedTags, sort]);
 
   const toggleTag = (tag: string) =>
     setSelectedTags((prev) => {
@@ -163,6 +176,14 @@ export const Library = () => {
                 </Text>
               )}
             </ShelfHeadingLeft>
+            {shelfEntries.length > 0 && (
+              <SortMenu
+                value={sort}
+                onChange={setSort}
+                options={LIBRARY_SORT_OPTIONS}
+                labels={LIBRARY_SORT_LABELS}
+              />
+            )}
           </ShelfHeading>
           {!data ? (
             <Loader />
