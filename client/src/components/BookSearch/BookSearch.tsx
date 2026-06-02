@@ -6,7 +6,8 @@ import { type BookSearchResult, type ShelfEntry, type ShelfStatus } from '@livre
 import { api } from '../../lib/api';
 import { getRecentBooks, type RecentBook } from '../../lib/recentBooks';
 import { bookPath } from '../../lib/bookPath';
-import { useDebounce } from './useDebounce';
+import { useDebounce } from '../../hooks/useDebounce';
+import { useSearchSession } from '../../context/SearchContext';
 import {
   Container,
   SearchInput,
@@ -41,10 +42,11 @@ export const BookSearch = () => {
   const [recentBooks] = useState<RecentBook[]>(() => getRecentBooks());
   const debouncedQuery = useDebounce(query, 300);
   const navigate = useNavigate();
+  const search = useSearchSession();
 
   const { data: searchData, isFetching } = useQuery({
-    queryKey: ['books', 'search', debouncedQuery],
-    queryFn: () => api.books.search(debouncedQuery),
+    queryKey: ['books', 'quick-search', debouncedQuery],
+    queryFn: () => api.books.searchQuick(debouncedQuery),
     enabled: debouncedQuery.length > 1,
     staleTime: 60_000,
   });
@@ -103,6 +105,16 @@ export const BookSearch = () => {
   const handleRefNavigate = (bookRef: string) => closeAndNavigate(bookPath(bookRef, libraryData));
   const handleLibraryNavigate = (libraryBookId: number) =>
     closeAndNavigate(`/library/${libraryBookId}`);
+
+  // Enter escalates the quick preview into the full faceted Search screen, seeding the session with
+  // the term so the screen picks up where the dropdown left off.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    const term = query.trim();
+    if (term.length === 0) return;
+    search.setTerm(term);
+    closeAndNavigate('/search');
+  };
 
   const renderRecentBook = (book: RecentBook) => {
     const libraryStatus = libraryStatusMap.get(book.bookRef);
@@ -177,6 +189,7 @@ export const BookSearch = () => {
         placeholder="Search by title or author…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
       />

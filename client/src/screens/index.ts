@@ -5,5 +5,6 @@ export { Settings } from './Settings/Settings';
 export { SearchBookDetail } from './BookDetail/SearchBookDetail';
 export { LibraryBookDetail } from './BookDetail/LibraryBookDetail';
 export { Author } from './Author/Author';
+export { Search } from './Search/Search';
 export { ComingSoon } from './ComingSoon/ComingSoon';
 export { Timeline } from './Timeline/Timeline';

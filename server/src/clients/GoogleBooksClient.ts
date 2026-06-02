@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { z } from 'zod';
 import createError from 'http-errors';
-import { type BookGenre } from '@livre/types';
+import { type BookGenre, type SearchScope, type SearchSort } from '@livre/types';
 import { type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
 
 const googleVolumeSchema = z.object({
@@ -150,6 +150,24 @@ function upgradeCoverUrl(url: string): string {
   return url.replace(/([?&])zoom=\d+/, '$1zoom=0').replace(/&edge=curl/g, '');
 }
 
+// Translate a provider-agnostic search scope into the Google Books field qualifiers. This is the
+// only place that knows the wire syntax, so the client stays the sole owner of Google specifics.
+function scopedQuery(query: string, scope: SearchScope): string {
+  const q = query.trim();
+  switch (scope) {
+    case 'title':
+      return `intitle:${q}`;
+    case 'author':
+      return `inauthor:${q}`;
+    case 'subject':
+      return `subject:${q}`;
+    case 'isbn':
+      return `isbn:${q.replace(/[^0-9Xx]/g, '')}`;
+    default:
+      return q;
+  }
+}
+
 function mapVolume(v: GoogleVolume): SourcedBook {
   const isbn =
     v.volumeInfo.industryIdentifiers?.find((i) => i.type === 'ISBN_13')?.identifier ??
@@ -201,8 +219,18 @@ export class GoogleBooksClient {
 
   constructor(private readonly apiKey: string) {}
 
-  async search(query: string): Promise<SourcedBookSearchResponse> {
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&key=${this.apiKey}`;
+  // `newest` maps onto Google's own ordering so paging stays globally sorted; `relevance` is the
+  // default. There is no native "oldest", which is why the sort enum omits it.
+  async search(
+    query: string,
+    scope: SearchScope = 'anything',
+    opts: { startIndex?: number; sort?: SearchSort; maxResults?: number } = {}
+  ): Promise<SourcedBookSearchResponse> {
+    const orderBy = opts.sort === 'newest' ? 'newest' : 'relevance';
+    const startIndex = opts.startIndex ?? 0;
+    // 40 is the Google Books ceiling for a single page.
+    const maxResults = Math.min(opts.maxResults ?? 40, 40);
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(scopedQuery(query, scope))}&startIndex=${startIndex}&maxResults=${maxResults}&orderBy=${orderBy}&key=${this.apiKey}`;
     const res = await fetch(url);
     if (!res.ok) throw createError(502, 'Google Books API error');
 
@@ -210,8 +238,11 @@ export class GoogleBooksClient {
     return { results: items.map(mapVolume), total: totalItems };
   }
 
-  async searchByAuthor(name: string): Promise<SourcedBookSearchResponse> {
-    return this.search(`inauthor:"${name}"`);
+  async searchByAuthor(
+    name: string,
+    opts: { startIndex?: number; sort?: SearchSort } = {}
+  ): Promise<SourcedBookSearchResponse> {
+    return this.search(`inauthor:"${name}"`, 'anything', opts);
   }
 
   async getById(id: string): Promise<SourcedBook> {

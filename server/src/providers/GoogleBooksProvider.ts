@@ -1,18 +1,21 @@
 import createError from 'http-errors';
+import { type SearchScope, type SearchSort } from '@livre/types';
 import { GoogleBooksClient } from '../clients/GoogleBooksClient';
 import { ConfigRepository } from '../repositories/ConfigRepository';
+
+type SearchOptions = { startIndex?: number; sort?: SearchSort; maxResults?: number };
 
 export class GoogleBooksProvider {
   private cachedClient: GoogleBooksClient | null = null;
 
   constructor(private readonly config: ConfigRepository) {}
 
-  async search(query: string) {
-    return this.client().search(query);
+  async search(query: string, scope: SearchScope = 'anything', opts: SearchOptions = {}) {
+    return this.client().search(query, scope, opts);
   }
 
-  async searchByAuthor(name: string) {
-    return this.client().searchByAuthor(name);
+  async searchByAuthor(name: string, opts: SearchOptions = {}) {
+    return this.client().searchByAuthor(name, opts);
   }
 
   async getById(id: string) {

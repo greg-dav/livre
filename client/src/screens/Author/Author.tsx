@@ -1,85 +1,78 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Text, BookCard, BookGrid, Loader } from '@livre/primitives';
-import { type ShelfStatus } from '@livre/types';
+import { type SearchSort } from '@livre/types';
 import { api } from '../../lib/api';
-import { bookPath } from '../../lib/bookPath';
-import { Layout } from '../../components';
-import { Results } from './Author.styles';
-
-const STATUS_LABELS: Record<ShelfStatus, string> = {
-  want: 'Want to Read',
-  reading: 'Currently Reading',
-  read: 'Read',
-  dnf: 'Did Not Finish',
-};
+import { dedupeByRef, STATUS_LABELS } from '../../lib/search';
+import { Layout, SortMenu, LoadMore } from '../../components';
+import { Toolbar, HeadLine, Results } from './Author.styles';
 
 /**
- * All books by a single author, fetched via a Google Books author search. Navigated to by
- * clicking an author name on the BookDetail screen. Each book card navigates to its detail
- * page, which fetches the full volume data independently.
+ * All books by a single author — the same faceted, paginated, library-annotated result set as the
+ * Search screen, pre-scoped to one author and reached from a book's detail page. Sort is local to
+ * this exploration (not part of the global search session); each card routes to the owned copy when
+ * the user already has it, otherwise to the discovery view.
  */
 export const Author = () => {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
+  const [sort, setSort] = useState<SearchSort>('relevance');
 
-  const { data, isFetching } = useQuery({
-    queryKey: ['books', 'author', name],
-    queryFn: () => api.books.byAuthor(name!),
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
+    queryKey: ['books', 'author', name, sort],
+    queryFn: ({ pageParam }) => api.books.byAuthor(name ?? '', { sort, startIndex: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextStartIndex ?? undefined,
     enabled: !!name,
+    staleTime: 60_000,
   });
 
-  const { data: libraryData } = useQuery({
-    queryKey: ['library'],
-    queryFn: () => api.books.library(),
-    staleTime: Infinity,
-  });
-
-  const libraryStatusMap = useMemo(
-    () =>
-      new Map(
-        (libraryData ?? [])
-          .filter((e): e is typeof e & { bookRef: string } => e.bookRef !== null)
-          .map((e) => [e.bookRef, e.status])
-      ),
-    [libraryData]
-  );
-
-  const books = data?.results ?? [];
+  const books = dedupeByRef(data?.pages.flatMap((page) => page.results) ?? []);
+  const count = books.length;
 
   return (
     <Layout title={name}>
-      <Results>
-        {isFetching ? (
-          <Loader />
-        ) : books.length === 0 ? (
+      <Toolbar>
+        <HeadLine>
           <Text variant="ui-sm" color="muted">
-            No books found for this author.
+            {count} {count === 1 ? 'book' : 'books'}
           </Text>
-        ) : (
+        </HeadLine>
+        {count > 0 && <SortMenu value={sort} onChange={setSort} />}
+      </Toolbar>
+
+      {isLoading ? (
+        <Loader />
+      ) : count === 0 ? (
+        <Text variant="ui-sm" color="muted">
+          No books found for this author.
+        </Text>
+      ) : (
+        <Results>
           <BookGrid>
-            {books.map((book) => {
-              const shelfStatus = libraryStatusMap.get(book.bookRef);
-              return (
-                <BookCard
-                  key={book.bookRef}
-                  title={book.title}
-                  author={book.authors[0] ?? ''}
-                  coverUrl={book.largeThumbnail ?? book.thumbnail}
-                  inLibrary={!!shelfStatus}
-                  spineLabel={shelfStatus ? STATUS_LABELS[shelfStatus] : undefined}
-                  onClick={() =>
-                    navigate(bookPath(book.bookRef, libraryData), {
-                      state: { backLabel: name },
-                    })
-                  }
-                />
-              );
-            })}
+            {books.map((book) => (
+              <BookCard
+                key={book.bookRef}
+                title={book.title}
+                author={book.authors[0] ?? ''}
+                coverUrl={book.largeThumbnail ?? book.thumbnail}
+                inLibrary={book.libraryStatus !== null}
+                spineLabel={book.libraryStatus ? STATUS_LABELS[book.libraryStatus] : undefined}
+                onClick={() =>
+                  navigate(
+                    book.libraryBookId !== null
+                      ? `/library/${book.libraryBookId}`
+                      : `/search/book/${encodeURIComponent(book.bookRef)}`,
+                    { state: { backLabel: name } }
+                  )
+                }
+              />
+            ))}
           </BookGrid>
-        )}
-      </Results>
+          {hasNextPage && <LoadMore onClick={() => fetchNextPage()} loading={isFetchingNextPage} />}
+        </Results>
+      )}
     </Layout>
   );
 };

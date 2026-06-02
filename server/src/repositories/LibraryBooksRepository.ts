@@ -8,6 +8,7 @@ import {
   bookGenreSchema,
   type BookMetadata,
   type BookSource,
+  type BookVolume,
   type LibraryBookDetail,
   type ShelfEntry,
   type ShelfStatus,
@@ -134,6 +135,30 @@ export class LibraryBooksRepository {
       .where(eq(libraryBooks.userId, userId))
       .all();
     return rows.map(toShelfEntry);
+  }
+
+  /**
+   * Every owned book as its full saved metadata snapshot, for joining against search results so
+   * the user's edited copy (title, cover, dates, …) is what gets displayed. Same rows as
+   * findAllByUser, mapped to BookVolume instead of the lighter ShelfEntry; manual entries with no
+   * source/externalId are skipped since they can't match a source result.
+   */
+  findSnapshotsByUser(
+    userId: number
+  ): { libraryBookId: number; status: ShelfStatus; book: BookVolume }[] {
+    const rows = db
+      .select(fullSelect)
+      .from(libraryBooks)
+      .innerJoin(readingLog, eq(readingLog.id, LATEST_STATUS_EVENT_ID))
+      .where(eq(libraryBooks.userId, userId))
+      .all();
+    return rows
+      .filter((r) => r.source && r.externalId)
+      .map((r) => ({
+        libraryBookId: r.id,
+        status: EVENT_TO_STATUS[r.latestEvent],
+        book: toBookVolume(r),
+      }));
   }
 
   /**

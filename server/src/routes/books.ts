@@ -4,6 +4,10 @@ import {
   bookRefSchema,
   bookVolumeSchema,
   bookSearchResponseSchema,
+  searchScopeSchema,
+  searchSortSchema,
+  shelfFilterSchema,
+  searchResponseSchema,
   createLogEventBodySchema,
   createLogEventResponseSchema,
   libraryBookDetailSchema,
@@ -57,17 +61,37 @@ const parseBookRef = (
 export function createBooksRouter(service: BooksService, requireAuth: RequestHandler): Router {
   const router = new SchemaRouter().use(requireAuth);
 
-  /** Search by query string. */
-  router.get('/search', bookSearchResponseSchema, async (respond, req) => {
+  const startIndexOf = (raw: unknown): number =>
+    z.coerce.number().int().min(0).safeParse(raw).data ?? 0;
+
+  /** Faceted search: scope the query to a field, filter by shelf membership, sort, and paginate. */
+  router.get('/search', searchResponseSchema, async (respond, req) => {
+    const user = req.user;
+    if (!user) throw createError(401, 'Unauthorized');
     const q = z.string().min(1, 'Query is required').safeParse(req.query.q);
     if (!q.success) throw createError(400, q.error.issues[0]?.message ?? 'Invalid query');
-    respond(await service.search(q.data));
+    const scope = searchScopeSchema.safeParse(req.query.scope).data ?? 'anything';
+    const shelf = shelfFilterSchema.safeParse(req.query.shelf).data;
+    const sort = searchSortSchema.safeParse(req.query.sort).data ?? 'relevance';
+    respond(
+      await service.search(user.id, q.data, scope, shelf, sort, startIndexOf(req.query.startIndex))
+    );
   });
 
-  /** Return books by a given author. */
-  router.get('/search/author/:name', bookSearchResponseSchema, async (respond, req) => {
+  /** Lightweight top-bar preview: a short page of raw results, no library join or faceting. */
+  router.get('/search/quick', bookSearchResponseSchema, async (respond, req) => {
+    const q = z.string().min(1, 'Query is required').safeParse(req.query.q);
+    if (!q.success) throw createError(400, q.error.issues[0]?.message ?? 'Invalid query');
+    respond(await service.quickSearch(q.data));
+  });
+
+  /** Books by a given author — the same faceted/paginated shape as search, pre-scoped to author. */
+  router.get('/search/author/:name', searchResponseSchema, async (respond, req) => {
+    const user = req.user;
+    if (!user) throw createError(401, 'Unauthorized');
     const name = z.string().min(1).parse(req.params.name);
-    respond(await service.getAuthorBooks(name));
+    const sort = searchSortSchema.safeParse(req.query.sort).data ?? 'relevance';
+    respond(await service.getAuthorBooks(user.id, name, sort, startIndexOf(req.query.startIndex)));
   });
 
   /** Fetch full volume data for a single book by its opaque ref. */

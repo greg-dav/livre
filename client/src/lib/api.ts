@@ -6,6 +6,7 @@ import {
   apiErrorSchema,
   bookVolumeSchema,
   bookSearchResponseSchema,
+  searchResponseSchema,
   createLogEventResponseSchema,
   libraryBookDetailSchema,
   shelfResponseSchema,
@@ -32,6 +33,9 @@ import {
   type RefreshMetadataBody,
   type LogEventType,
   type BookFormat,
+  type SearchScope,
+  type SearchSort,
+  type ShelfFilter,
   type ShelfStatus,
   type ThemeName,
   type CreateUserBody,
@@ -83,10 +87,34 @@ export const api = {
     me: () => request('/auth/me', userSchema),
   },
   books: {
-    search: (q: string) =>
-      request(`/books/search?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
-    byAuthor: (name: string) =>
-      request(`/books/search/author/${encodeURIComponent(name)}`, bookSearchResponseSchema),
+    search: (
+      q: string,
+      options?: {
+        scope?: SearchScope;
+        shelf?: ShelfFilter;
+        sort?: SearchSort;
+        startIndex?: number;
+      }
+    ) => {
+      const params = new URLSearchParams({ q });
+      if (options?.scope) params.set('scope', options.scope);
+      if (options?.shelf) params.set('shelf', options.shelf);
+      if (options?.sort) params.set('sort', options.sort);
+      if (options?.startIndex) params.set('startIndex', String(options.startIndex));
+      return request(`/books/search?${params}`, searchResponseSchema);
+    },
+    searchQuick: (q: string) =>
+      request(`/books/search/quick?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
+    byAuthor: (name: string, options?: { sort?: SearchSort; startIndex?: number }) => {
+      const params = new URLSearchParams();
+      if (options?.sort) params.set('sort', options.sort);
+      if (options?.startIndex) params.set('startIndex', String(options.startIndex));
+      const qs = params.toString();
+      return request(
+        `/books/search/author/${encodeURIComponent(name)}${qs ? `?${qs}` : ''}`,
+        searchResponseSchema
+      );
+    },
     getByRef: (bookRef: string) =>
       request(`/books/search/book/${encodeURIComponent(bookRef)}`, bookVolumeSchema),
     library: () => request('/books/library', libraryResponseSchema),
