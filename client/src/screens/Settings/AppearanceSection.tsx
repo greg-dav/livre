@@ -2,7 +2,8 @@ import { Icon, Text } from '@livre/primitives';
 import { themes, type ThemeName } from '@livre/ui';
 import { useTheme } from '../../context/ThemeContext';
 import { ThemePreview } from './ThemePreview';
-import { SectionHead, Block } from './Settings.styles';
+import { Section } from './Section';
+import { Block, BlockHead } from './Settings.styles';
 import { ThemeGrid, ThemeOption, ThemeOptionFooter } from './AppearanceSection.styles';
 
 const THEME_NAMES = Object.keys(themes) as ThemeName[];
@@ -16,19 +17,16 @@ export const AppearanceSection = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <>
-      <SectionHead>
-        <Text variant="h3" as="h2">
-          Appearance
-        </Text>
-        <Text variant="ui-sm" color="muted">
-          Choose the palette Livre wears. Your choice follows your account across devices.
-        </Text>
-      </SectionHead>
+    <Section
+      title="Appearance"
+      description="Choose the palette Livre wears. Your choice follows your account across devices."
+    >
       <Block>
-        <Text variant="label" color="accent">
-          Theme
-        </Text>
+        <BlockHead>
+          <Text variant="label" color="accent">
+            Theme
+          </Text>
+        </BlockHead>
         <ThemeGrid>
           {THEME_NAMES.map((name) => {
             const active = theme === name;
@@ -51,6 +49,6 @@ export const AppearanceSection = () => {
           })}
         </ThemeGrid>
       </Block>
-    </>
+    </Section>
   );
 };

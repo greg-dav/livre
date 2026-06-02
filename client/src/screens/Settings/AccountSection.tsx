@@ -4,7 +4,8 @@ import { Button, Input, Text } from '@livre/primitives';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
-import { SectionHead, Block, Field, Actions, Feedback } from './Settings.styles';
+import { Section } from './Section';
+import { Block, BlockHead, Field, Actions, Feedback } from './Settings.styles';
 
 /**
  * Self-service account settings for the signed-in reader: change username and password. A username
@@ -36,20 +37,16 @@ export const AccountSection = () => {
   const passwordReady = currentPassword.length > 0 && newPassword.length >= 8;
 
   return (
-    <>
-      <SectionHead>
-        <Text variant="h3" as="h2">
-          Account
-        </Text>
-        <Text variant="ui-sm" color="muted">
-          Update the credentials you use to sign in to this Livre instance.
-        </Text>
-      </SectionHead>
-
+    <Section
+      title="Account"
+      description="Update the credentials you use to sign in to this Livre instance."
+    >
       <Block>
-        <Text variant="label" color="accent">
-          Username
-        </Text>
+        <BlockHead>
+          <Text variant="label" color="accent">
+            Username
+          </Text>
+        </BlockHead>
         <Field>
           <Input
             value={username}
@@ -84,9 +81,11 @@ export const AccountSection = () => {
       </Block>
 
       <Block>
-        <Text variant="label" color="accent">
-          Password
-        </Text>
+        <BlockHead>
+          <Text variant="label" color="accent">
+            Password
+          </Text>
+        </BlockHead>
         <Field>
           <Text variant="ui-sm" color="muted">
             Current password
@@ -135,6 +134,6 @@ export const AccountSection = () => {
           )}
         </Feedback>
       </Block>
-    </>
+    </Section>
   );
 };

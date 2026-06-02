@@ -1,12 +1,5 @@
 import styled from 'styled-components';
 
-export const SectionHeadRow = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'flex-start',
-  justifyContent: 'space-between',
-  gap: theme.spacing(4),
-}));
-
 export const UserList = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',

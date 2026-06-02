@@ -60,14 +60,27 @@ export const ContentPanel = styled('div')(({ theme }) => ({
   padding: `${theme.spacing(10)} ${theme.spacing(12)} ${theme.spacing(20)}`,
 }));
 
-export const ContentInner = styled('div')(({ theme }) => ({
+export const ContentInner = styled('div')({
   maxWidth: '600px',
+});
+
+// A settings tab's outer frame: the header followed by content blocks, all on one vertical rhythm.
+export const SectionRoot = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(9),
 }));
 
-export const SectionHead = styled('div')(({ theme }) => ({
+// Header row: stacked title + description on the left, an optional action aligned to the trailing
+// edge. flex-start keeps the action pinned to the title even when the description wraps.
+export const SectionHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: theme.spacing(4),
+}));
+
+export const SectionHeading = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(2),

@@ -5,9 +5,8 @@ import { Button, Dialog, Icon, Input, Loader, Pill, Text } from '@livre/primitiv
 import { useAuth } from '../../context/AuthContext';
 import { api, type ManagedUser } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
-import { SectionHead } from './Settings.styles';
+import { Section } from './Section';
 import {
-  SectionHeadRow,
   UserList,
   UserRow,
   RowLeft,
@@ -201,26 +200,18 @@ export const UsersSection = () => {
   };
 
   return (
-    <>
-      <SectionHead>
-        <SectionHeadRow>
-          <div>
-            <Text variant="h3" as="h2">
-              Users
-            </Text>
-            <Text variant="ui-sm" color="muted">
-              Manage who can sign in to this Livre instance.
-            </Text>
-          </div>
-          <Button variant="secondary" size="sm" onClick={openAdd}>
-            <Icon icon="add" size={16} />
-            <Text variant="label" color="default">
-              Add user
-            </Text>
-          </Button>
-        </SectionHeadRow>
-      </SectionHead>
-
+    <Section
+      title="Users"
+      description="Manage who can sign in to this Livre instance."
+      action={
+        <Button variant="secondary" size="sm" onClick={openAdd}>
+          <Icon icon="add" size={16} />
+          <Text variant="label" color="default">
+            Add user
+          </Text>
+        </Button>
+      }
+    >
       {isLoading || !data ? (
         <Loader />
       ) : (
@@ -317,6 +308,6 @@ export const UsersSection = () => {
           </Text>
         )}
       </Dialog>
-    </>
+    </Section>
   );
 };

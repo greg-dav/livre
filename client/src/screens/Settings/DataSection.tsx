@@ -3,7 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Dialog, Icon, Text } from '@livre/primitives';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
-import { SectionHead, Block, BlockHead, Actions, Feedback, DialogActions } from './Settings.styles';
+import { Section } from './Section';
+import { Block, BlockHead, Actions, Feedback, DialogActions } from './Settings.styles';
 
 /**
  * Library-wide data tools: export everything to a Goodreads-shaped CSV, or wipe the whole library.
@@ -38,16 +39,7 @@ export const DataSection = () => {
   });
 
   return (
-    <>
-      <SectionHead>
-        <Text variant="h3" as="h2">
-          Data
-        </Text>
-        <Text variant="ui-sm" color="muted">
-          Export your library or erase it from this Livre instance.
-        </Text>
-      </SectionHead>
-
+    <Section title="Data" description="Export your library or erase it from this Livre instance.">
       <Block>
         <BlockHead>
           <Text variant="label" color="accent">
@@ -138,6 +130,6 @@ export const DataSection = () => {
           </Text>
         )}
       </Dialog>
-    </>
+    </Section>
   );
 };
