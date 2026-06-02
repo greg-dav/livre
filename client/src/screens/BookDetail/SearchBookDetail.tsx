@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Text, Button, DropdownMenu, Loader } from '@livre/primitives';
+import { Text, Button, Popover, Icon, Loader } from '@livre/primitives';
 import { type LogEventType } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
@@ -71,21 +71,28 @@ export const SearchBookDetail = () => {
     <BookDetailView
       book={book}
       actions={
-        <DropdownMenu
+        <Popover
+          side="bottom"
+          align="start"
           trigger={
             <Button variant="primary" size="sm" disabled={isSaving}>
               <Text variant="label" color="onColor">
-                Add to library ▾
+                Add to library
               </Text>
+              <Icon icon="chevron-down" size={14} />
             </Button>
           }
         >
-          {SELECTABLE_EVENTS.map(({ event, label }) => (
-            <DropdownMenu.Item key={event} onSelect={() => save(event)}>
-              <Text variant="ui-sm">{label}</Text>
-            </DropdownMenu.Item>
-          ))}
-        </DropdownMenu>
+          <Popover.Panel>
+            {SELECTABLE_EVENTS.map(({ event, label }) => (
+              <Popover.Item key={event} onSelect={() => save(event)}>
+                <Text className="menu-label" variant="ui-sm">
+                  {label}
+                </Text>
+              </Popover.Item>
+            ))}
+          </Popover.Panel>
+        </Popover>
       }
     />
   );

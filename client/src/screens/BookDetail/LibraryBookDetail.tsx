@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Text, Button, DropdownMenu, Loader } from '@livre/primitives';
+import { Text, Button, Popover, Dialog, Icon, Loader } from '@livre/primitives';
 import { type LogEventType, type RefreshMetadataBody, type BookFormat } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
@@ -11,7 +11,37 @@ import { STATUS_LABELS, SELECTABLE_EVENTS, formatReadingSince } from './utils/Bo
 import { parseDateLocal } from '../../lib/dateInput';
 import { BookDetailView } from './components/BookDetailView/BookDetailView';
 import { Journal } from './components/Journal/Journal';
+import { DialogActions } from './LibraryBookDetail.styles';
 import { navigationStateSchema } from '../../schemas/navigation';
+
+type ConfirmKey = 'reset' | 'remove';
+
+const CONFIRM_COPY: Record<
+  ConfirmKey,
+  { title: string; description: string; confirmLabel: string }
+> = {
+  reset: {
+    title: 'Reset reading log?',
+    description:
+      "This permanently clears every reading session, note, and quote, along with your rating and review, and returns the book to Want to Read. Your tags and edited details are kept. This can't be undone.",
+    confirmLabel: 'Reset',
+  },
+  remove: {
+    title: 'Remove from library?',
+    description:
+      "This permanently deletes the book and its entire reading history from your library. This can't be undone.",
+    confirmLabel: 'Remove',
+  },
+};
+
+// The selectable status event that corresponds to each saved shelf status — drives the active
+// highlight in the status menu.
+const STATUS_EVENT: Record<string, LogEventType> = {
+  want: 'shelved',
+  reading: 'started',
+  read: 'finished',
+  dnf: 'dnf',
+};
 
 /**
  * Detail view for a book in the user's library. Fetches all data by libraryBookId in a single
@@ -24,10 +54,12 @@ export const LibraryBookDetail = () => {
   const { libraryBookId: libraryBookIdStr } = useParams<{ libraryBookId: string }>();
   const libraryBookId = Number(libraryBookIdStr);
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const justAcquired = navigationStateSchema.safeParse(location.state).data?.justAcquired ?? false;
   const [focusMode, setFocusMode] = useState(false);
+  const [confirming, setConfirming] = useState<ConfirmKey | null>(null);
   const onToggleFocus = () => setFocusMode((f) => !f);
 
   const { data } = useQuery({
@@ -166,6 +198,24 @@ export const LibraryBookDetail = () => {
     },
   });
 
+  const { mutate: resetReadingLog, isPending: isResetting } = useMutation({
+    mutationFn: () => api.books.resetReadingLog(libraryBookId),
+    onSuccess: () => {
+      setConfirming(null);
+      invalidateDetail();
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
+  const { mutate: removeFromLibrary, isPending: isRemoving } = useMutation({
+    mutationFn: () => api.books.removeFromLibrary(libraryBookId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+      queryClient.invalidateQueries({ queryKey: ['library', 'tags'] });
+      navigate('/library');
+    },
+  });
+
   useEffect(() => {
     if (!data || !data.entry.bookRef) return;
     pushRecentBook({
@@ -218,6 +268,14 @@ export const LibraryBookDetail = () => {
             ? `Did not finish ${formatStatusDate(statusEventDate)}`
             : null;
 
+  const confirmHandlers: Record<ConfirmKey, { run: () => void; isPending: boolean }> = {
+    reset: { run: () => resetReadingLog(), isPending: isResetting },
+    remove: { run: () => removeFromLibrary(), isPending: isRemoving },
+  };
+  const activeConfirm = confirming
+    ? { ...CONFIRM_COPY[confirming], ...confirmHandlers[confirming] }
+    : null;
+
   return (
     <BookDetailView
       book={book}
@@ -255,21 +313,81 @@ export const LibraryBookDetail = () => {
         />
       }
       actions={
-        <DropdownMenu
-          trigger={
-            <Button variant="primary" size="sm" disabled={isSaving}>
-              <Text variant="label" color="onColor">
-                {STATUS_LABELS[savedStatus]} ▾
-              </Text>
-            </Button>
-          }
-        >
-          {SELECTABLE_EVENTS.map(({ event, label }) => (
-            <DropdownMenu.Item key={event} onSelect={() => save(event)}>
-              <Text variant="ui-sm">{label}</Text>
-            </DropdownMenu.Item>
-          ))}
-        </DropdownMenu>
+        <>
+          <Popover
+            side="bottom"
+            align="start"
+            trigger={
+              <Button variant="primary" size="sm" disabled={isSaving}>
+                <Text variant="label" color="onColor">
+                  {STATUS_LABELS[savedStatus]}
+                </Text>
+                <Icon icon="chevron-down" size={14} />
+              </Button>
+            }
+          >
+            <Popover.Panel>
+              {SELECTABLE_EVENTS.map(({ event, label }) => (
+                <Popover.Item
+                  key={event}
+                  active={STATUS_EVENT[savedStatus] === event}
+                  onSelect={() => save(event)}
+                >
+                  <Text className="menu-label" variant="ui-sm">
+                    {label}
+                  </Text>
+                </Popover.Item>
+              ))}
+            </Popover.Panel>
+          </Popover>
+          <Popover
+            side="bottom"
+            align="end"
+            trigger={
+              <Button variant="secondary" size="sm" aria-label="More actions">
+                <Text variant="label">⋯</Text>
+              </Button>
+            }
+          >
+            <Popover.Panel>
+              <Popover.Item onSelect={() => setConfirming('reset')}>
+                <Text className="menu-label" variant="ui-sm">
+                  Reset reading log
+                </Text>
+              </Popover.Item>
+              <Popover.Item onSelect={() => setConfirming('remove')}>
+                <Text className="menu-label" variant="ui-sm">
+                  Remove from library
+                </Text>
+              </Popover.Item>
+            </Popover.Panel>
+          </Popover>
+          <Dialog
+            open={confirming !== null}
+            onOpenChange={(open) => !open && setConfirming(null)}
+            title={activeConfirm?.title ?? ''}
+            description={activeConfirm?.description}
+          >
+            <DialogActions>
+              <Dialog.Close asChild>
+                <Button variant="ghost" size="sm" type="button">
+                  <Text variant="label">Cancel</Text>
+                </Button>
+              </Dialog.Close>
+              <Button
+                variant="primary"
+                size="sm"
+                type="button"
+                disabled={activeConfirm?.isPending}
+                onClick={() => activeConfirm?.run()}
+              >
+                <Text variant="label" color="onColor">
+                  {activeConfirm?.confirmLabel}
+                </Text>
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
       }
       statusIndicator={
         savedStatus === 'reading' && readingStartedDate ? (

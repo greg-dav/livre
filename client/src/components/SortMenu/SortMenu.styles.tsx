@@ -11,6 +11,7 @@ export const SortButton = styled('button')(({ theme }) => ({
   cursor: 'pointer',
   transition: 'border-color 0.15s',
   '& .sort-label': { color: theme.textMuted, transition: 'color 0.15s' },
+  '& svg': { color: theme.textMuted, transition: 'color 0.15s' },
   '&:hover': { borderColor: theme.textMuted },
-  '&:hover .sort-label': { color: theme.text },
+  '&:hover .sort-label, &:hover svg': { color: theme.text },
 }));

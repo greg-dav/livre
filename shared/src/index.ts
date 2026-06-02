@@ -69,6 +69,8 @@ export {
   updateLogEntryBodySchema,
   updateLogEntryResponseSchema,
   deleteLogEntryResponseSchema,
+  resetReadingLogResponseSchema,
+  removeFromLibraryResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,

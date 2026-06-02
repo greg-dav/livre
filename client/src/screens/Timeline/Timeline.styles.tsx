@@ -44,34 +44,7 @@ export const ChipHead = styled('button')(({ theme }) => ({
   '&:hover svg, &[data-state="open"] svg': { color: theme.accent },
 }));
 
-// Period picker list — the body of the Popover. Fixed width so the floating panel sizes cleanly.
-export const PanelGroup = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '2px',
-  width: '180px',
-});
-
-// Single-select horizon row — the radio cousin of the library's checkbox facet row (circular tick).
-export const HorizonRow = styled('button')<{ $active: boolean }>(({ theme, $active }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2.5),
-  padding: `7px ${theme.spacing(2.25)}`,
-  borderRadius: theme.radius.md,
-  border: 'none',
-  cursor: 'pointer',
-  textAlign: 'left',
-  transition: 'background 0.13s',
-  background: $active ? theme.accentSoft : 'transparent',
-  '&:hover': { background: theme.accentSoft },
-  '& .horizon-name': {
-    color: $active ? theme.accent : theme.textMuted,
-    transition: 'color 0.13s',
-  },
-  '&:hover .horizon-name': { color: $active ? theme.accent : theme.text },
-}));
-
+// Leading radio tick on the active period row, paired with Popover.Item's accent highlight.
 export const HorizonTick = styled('span')<{ $active: boolean }>(({ theme, $active }) => ({
   width: '14px',
   height: '14px',
@@ -85,14 +58,6 @@ export const HorizonTick = styled('span')<{ $active: boolean }>(({ theme, $activ
   justifyContent: 'center',
   transition: 'all 0.13s',
 }));
-
-// Flex container (not a bare span) so the wrapper's inherited strut can't anchor the smaller text
-// low in the line box — the child text's own box governs and centers cleanly in the row.
-export const HorizonName = styled('span')({
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-});
 
 /* ── Gantt area ───────────────────────────────────────────── */
 // Fills the full screen width; holds the gantt (or a centered loading/empty state). The gantt's own

@@ -53,6 +53,11 @@ const Content = styled(Radix.Content)(({ theme }) => ({
   },
 }));
 
+// Wrapper (not styled(Text)) so the supporting copy clears the title without coupling to Text's CSS.
+const Description = styled('div')(({ theme }) => ({
+  marginTop: theme.spacing(2),
+}));
+
 /**
  * Modal dialog with built-in overlay, portal, and accessible title. Pass a trigger element for
  * uncontrolled usage, or omit it and manage open/onOpenChange yourself for controlled usage.
@@ -76,9 +81,11 @@ const DialogComponent = ({
         </Radix.Title>
         {description && (
           <Radix.Description asChild>
-            <Text variant="ui-sm" color="muted">
-              {description}
-            </Text>
+            <Description>
+              <Text variant="ui-sm" color="muted">
+                {description}
+              </Text>
+            </Description>
           </Radix.Description>
         )}
         {children}

@@ -1,4 +1,4 @@
-import { DropdownMenu, Text } from '@livre/primitives';
+import { Popover, Text, Icon } from '@livre/primitives';
 import { SortButton } from './SortMenu.styles';
 
 interface SortMenuProps<T extends string> {
@@ -9,7 +9,7 @@ interface SortMenuProps<T extends string> {
 }
 
 /**
- * The "Sort: … ▾" control shared by every result grid. Purely presentational and generic over the
+ * The "Sort: …" control shared by every result grid. Purely presentational and generic over the
  * sort vocabulary, so the Search, Author, and Library screens order their grids the same way without
  * duplicating the menu — each supplies its own option keys and labels.
  */
@@ -19,24 +19,28 @@ export const SortMenu = <T extends string>({
   options,
   labels,
 }: SortMenuProps<T>) => (
-  <DropdownMenu
+  <Popover
     align="end"
+    side="bottom"
     trigger={
       <SortButton>
         <Text className="sort-label" variant="ui-sm">
-          Sort: {labels[value]} ▾
+          Sort: {labels[value]}
         </Text>
+        <Icon icon="chevron-down" size={14} />
       </SortButton>
     }
   >
-    {options.map((key) => (
-      <DropdownMenu.Item key={key} onSelect={() => onChange(key)}>
-        <Text variant="ui-sm" color={key === value ? 'accent' : 'default'}>
-          {labels[key]}
-        </Text>
-      </DropdownMenu.Item>
-    ))}
-  </DropdownMenu>
+    <Popover.Panel>
+      {options.map((key) => (
+        <Popover.Item key={key} active={key === value} onSelect={() => onChange(key)}>
+          <Text className="menu-label" variant="ui-sm">
+            {labels[key]}
+          </Text>
+        </Popover.Item>
+      ))}
+    </Popover.Panel>
+  </Popover>
 );
 
 export type { SortMenuProps };

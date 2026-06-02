@@ -11,7 +11,6 @@ export { Card, CardHeader } from './Card/Card';
 export { Pill } from './Pill/Pill';
 export type { PillProps, PillVariant } from './Pill/Pill';
 export { Form } from './Form/Form';
-export { DropdownMenu } from './DropdownMenu/DropdownMenu';
 export { Tabs } from './Tabs/Tabs';
 export { Dialog, BareDialog } from './Dialog/Dialog';
 export { Tooltip, TooltipProvider } from './Tooltip/Tooltip';

@@ -231,3 +231,6 @@ export const updateLogEntryBodySchema = z.object({
 export type UpdateLogEntryBody = z.infer<typeof updateLogEntryBodySchema>;
 export const updateLogEntryResponseSchema = okResponse;
 export const deleteLogEntryResponseSchema = okResponse;
+
+export const resetReadingLogResponseSchema = okResponse;
+export const removeFromLibraryResponseSchema = okResponse;

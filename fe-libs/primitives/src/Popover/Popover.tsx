@@ -21,6 +21,12 @@ interface PopoverProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+interface PopoverItemProps {
+  active?: boolean;
+  onSelect?: () => void;
+  children: ReactNode;
+}
+
 const StyledContent = styled(Radix.Content)(({ theme }) => ({
   background: theme.bgElevated,
   border: `1px solid ${theme.border}`,
@@ -31,13 +37,55 @@ const StyledContent = styled(Radix.Content)(({ theme }) => ({
   '&[data-state="open"]': { animation: 'livre-popover-in 0.16s ease' },
 }));
 
+// Menu body — a column of Items. Min-width keeps the floating panel from collapsing on short labels.
+const Panel = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+  minWidth: theme.spacing(45),
+}));
+
+// One selectable row. `$active` paints the current selection with the accent the way the timeline
+// period picker does; the `.menu-label` child (a <Text>) inherits the muted→text hover transition.
+const ItemRow = styled('button')<{ $active?: boolean }>(({ theme, $active }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2.5),
+  padding: `7px ${theme.spacing(2.25)}`,
+  borderRadius: theme.radius.md,
+  border: 'none',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'background 0.13s',
+  background: $active ? theme.accentSoft : 'transparent',
+  '& .menu-label': {
+    color: $active ? theme.accent : theme.textMuted,
+    transition: 'color 0.13s',
+  },
+  '&:hover': { background: theme.accentSoft },
+  '&:hover .menu-label': { color: $active ? theme.accent : theme.text },
+}));
+
 /**
- * Click-triggered floating panel for interactive content (filters, pickers). Manages its own
- * trigger, portal, positioning, and dismiss (outside-click / Escape) — unlike Tooltip/HoverCard it
- * is keyboard- and touch-operable, so it's the right home for controls rather than mere hints.
- * Pass a trigger element and the panel body as children. Controlled open state is optional.
+ * Selectable menu row. Wrapped in Radix `Close` so picking an option dismisses the popover without
+ * the caller tracking open state. Mark the current value with `active` for the accent highlight.
  */
-export const Popover = ({
+const Item = ({ active, onSelect, children }: PopoverItemProps) => (
+  <Radix.Close asChild>
+    <ItemRow type="button" $active={active} onClick={onSelect}>
+      {children}
+    </ItemRow>
+  </Radix.Close>
+);
+
+/**
+ * Click-triggered floating panel for interactive content (filters, pickers, menus). Manages its own
+ * trigger, portal, positioning, and dismiss (outside-click / Escape) — unlike Tooltip/HoverCard it
+ * is keyboard- and touch-operable, so it's the right home for controls rather than mere hints. Pass
+ * a trigger element and the panel body as children; compose menus with Popover.Panel and
+ * Popover.Item. Controlled open state is optional.
+ */
+const PopoverComponent = ({
   trigger,
   children,
   align = 'end',
@@ -56,3 +104,5 @@ export const Popover = ({
     </Radix.Portal>
   </Radix.Root>
 );
+
+export const Popover = Object.assign(PopoverComponent, { Panel, Item, Close: Radix.Close });

@@ -15,17 +15,7 @@ import {
   RIGHT_GUTTER,
   type Horizon,
 } from './timelineScale';
-import {
-  Screen,
-  FilterDock,
-  ChipHead,
-  PanelGroup,
-  HorizonRow,
-  HorizonTick,
-  HorizonName,
-  Main,
-  CenterState,
-} from './Timeline.styles';
+import { Screen, FilterDock, ChipHead, HorizonTick, Main, CenterState } from './Timeline.styles';
 
 const HORIZONS: { value: Horizon; label: string }[] = [
   { value: '1m', label: 'Last month' },
@@ -128,30 +118,21 @@ export const Timeline = () => {
               </ChipHead>
             }
           >
-            <PanelGroup>
+            <Popover.Panel>
               {HORIZONS.map((h) => {
                 const active = horizon === h.value;
                 return (
-                  <HorizonRow
-                    key={h.value}
-                    $active={active}
-                    onClick={() => {
-                      setHorizon(h.value);
-                      setFilterOpen(false);
-                    }}
-                  >
+                  <Popover.Item key={h.value} active={active} onSelect={() => setHorizon(h.value)}>
                     <HorizonTick $active={active}>
                       {active && <Icon icon="check" size={10} />}
                     </HorizonTick>
-                    <HorizonName>
-                      <Text className="horizon-name" variant="ui-tight">
-                        {h.label}
-                      </Text>
-                    </HorizonName>
-                  </HorizonRow>
+                    <Text className="menu-label" variant="ui-tight">
+                      {h.label}
+                    </Text>
+                  </Popover.Item>
                 );
               })}
-            </PanelGroup>
+            </Popover.Panel>
           </Popover>
         </FilterDock>
       </Screen>

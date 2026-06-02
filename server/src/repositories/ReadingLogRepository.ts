@@ -90,4 +90,8 @@ export class ReadingLogRepository {
   delete(id: number): void {
     db.delete(readingLog).where(eq(readingLog.id, id)).run();
   }
+
+  deleteAllForBook(libraryBookId: number): void {
+    db.delete(readingLog).where(eq(readingLog.libraryBookId, libraryBookId)).run();
+  }
 }

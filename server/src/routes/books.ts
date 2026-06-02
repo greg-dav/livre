@@ -40,6 +40,8 @@ import {
   updateLogEntryBodySchema,
   updateLogEntryResponseSchema,
   deleteLogEntryResponseSchema,
+  resetReadingLogResponseSchema,
+  removeFromLibraryResponseSchema,
 } from '@livre/types';
 import createError from 'http-errors';
 import { SchemaRouter } from '../lib/SchemaRouter';
@@ -361,6 +363,35 @@ export function createBooksRouter(service: BooksService, requireAuth: RequestHan
       const logId = z.coerce.number().int().positive().parse(req.params.logId);
       const ok = service.deleteLogEntry(user.id, libraryBookId, logId);
       if (!ok) throw createError(404, 'Log entry not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Reset a book's reading log, rating, and review back to a freshly shelved state. */
+  router.post(
+    '/library/:libraryBookId/reset',
+    z.object({}).strict(),
+    resetReadingLogResponseSchema,
+    async (_body, respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.resetReadingLog(user.id, libraryBookId);
+      if (!ok) throw createError(404, 'Book not found');
+      respond({ ok: true });
+    }
+  );
+
+  /** Permanently remove a book from the user's library. */
+  router.delete(
+    '/library/:libraryBookId',
+    removeFromLibraryResponseSchema,
+    async (respond, req) => {
+      const user = req.user;
+      if (!user) throw createError(401, 'Unauthorized');
+      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const ok = service.removeFromLibrary(user.id, libraryBookId);
+      if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
   );

@@ -27,6 +27,8 @@ import {
   updateReviewResponseSchema,
   updateLogEntryResponseSchema,
   deleteLogEntryResponseSchema,
+  resetReadingLogResponseSchema,
+  removeFromLibraryResponseSchema,
   okResponseSchema,
   usersListResponseSchema,
   managedUserSchema,
@@ -217,6 +219,15 @@ export const api = {
       }),
     deleteLogEntry: (libraryBookId: number, logId: number) =>
       request(`/books/library/${libraryBookId}/log/${logId}`, deleteLogEntryResponseSchema, {
+        method: 'DELETE',
+      }),
+    resetReadingLog: (libraryBookId: number) =>
+      request(`/books/library/${libraryBookId}/reset`, resetReadingLogResponseSchema, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+    removeFromLibrary: (libraryBookId: number) =>
+      request(`/books/library/${libraryBookId}`, removeFromLibraryResponseSchema, {
         method: 'DELETE',
       }),
   },

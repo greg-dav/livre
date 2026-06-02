@@ -295,6 +295,30 @@ export class BooksService {
     return true;
   }
 
+  /**
+   * Reset a book to a pristine, just-shelved state: wipe its entire reading log and clear the
+   * rating and review. A fresh `shelved` event is re-seeded so the book keeps a derived status
+   * (Want to Read) and stays visible — status is derived from the log via an inner join, so a
+   * book with zero events would vanish from every shelf. Tags and the metadata snapshot are kept.
+   */
+  resetReadingLog(userId: number, libraryBookId: number): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    return db.transaction(() => {
+      this.readingLogRepo.deleteAllForBook(libraryBookId);
+      const today = new Date().toISOString().slice(0, 10);
+      this.readingLogRepo.insert(libraryBookId, 'shelved', today);
+      this.libraryBooksRepo.clearRatingAndReview(libraryBookId);
+      return true;
+    });
+  }
+
+  /** Permanently remove a book from the user's library. The FK cascade drops its reading log. */
+  removeFromLibrary(userId: number, libraryBookId: number): boolean {
+    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
+    this.libraryBooksRepo.delete(libraryBookId);
+    return true;
+  }
+
   /** Cache-aware lookup that falls through to the source on miss and writes back on the way out. */
   private async fetchSourced(source: BookSource, externalId: string): Promise<SourcedBook> {
     const cached = this.bookCache.get(source, externalId);

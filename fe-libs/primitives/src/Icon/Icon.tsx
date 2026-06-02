@@ -1,6 +1,7 @@
 import {
   Book,
   Check,
+  ChevronDown,
   CornerDownLeft,
   Headphones,
   Library,
@@ -42,6 +43,7 @@ const ICONS = {
   edit: Pencil,
   delete: Trash2,
   check: Check,
+  'chevron-down': ChevronDown,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
