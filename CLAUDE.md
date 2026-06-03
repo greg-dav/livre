@@ -234,13 +234,15 @@ routes/       ← thin HTTP layer; validates input/output shapes, delegates to s
 services/     ← business logic; no HTTP concerns, no SQL
 ports/        ← domain-owned interfaces (the contracts consumers depend on)
 adapters/     ← translate a foreign API into our domain types; implement ports
+strategies/   ← per-source implementations of a port, composed from adapters (not a foreign API)
+registries/   ← own a collection keyed by id and resolve it; no lifecycle, no foreign API
 providers/    ← lifecycle management of a collaborator (lazy init, caching, invalidation)
 stores/       ← stateful accumulators persisted via a repository (not lifecycle)
 clients/      ← external HTTP adapters; one class per external API
 repositories/ ← all database access; Zod validation at the DB boundary
 ```
 
-Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`, services never import other services (use ports, providers, stores, or repositories instead).
+Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`, services never import other services (use ports, registries, providers, stores, or repositories instead).
 
 **`clients/`** are pure HTTP adapters. They take config in their constructor, own the wire-format schema (private — never exported), and return types from `@livre/types`. If the external API changes, only the client changes.
 
@@ -248,7 +250,9 @@ Never let concerns bleed across layers — routes don't touch the DB, services d
 
 **`adapters/`** wrap a `client` and translate its foreign API into our domain types (e.g. `GoogleBooksAdapter`, `OpenLibraryAdapter` → `SourcedBook`). An adapter implements one or more **ports**.
 
-**`ports/`** are the domain-owned interfaces consumers depend on (`BookSourceProvider`, `SearchableBookSource`, `ConfigurableSource`, `IsbnEnrichmentSource`). Conformance is enforced on **consumers, not classes**: every consumer types its dep as the **narrowest port** it actually uses (intersect ports when it needs more than one), never a concrete adapter. Segregate ports so every public method of an adapter belongs to some consumed port. The composition root (`index.ts`) is the **only** place that names concrete adapter classes.
+**`ports/`** are the domain-owned interfaces consumers depend on (`BookSourceProvider`, `SearchableBookSource`, `ConfigurableSource`, `BatchIsbnSource`, `ImportLookup`). Conformance is enforced on **consumers, not classes**: every consumer types its dep as the **narrowest port** it actually uses (intersect ports when it needs more than one), never a concrete adapter. Segregate ports so every public method of an adapter belongs to some consumed port. The composition root (`index.ts`) is the **only** place that names concrete adapter classes.
+
+These ports are **orthogonal axes**, not a hierarchy — a source occupies whichever combination fits. Open Library is `SearchableBookSource` **and** `BatchIsbnSource` but **not** `ConfigurableSource` (no API key); Google Books is all three. Don't merge two ports because one class happens to implement both; the keyless searchable source is the standing counterexample.
 
 ```ts
 // correct — consumer depends on a segregated port (or an intersection)
@@ -260,11 +264,17 @@ import { GoogleBooksAdapter } from '../adapters/GoogleBooksAdapter';
 
 Singleton stores and repositories (one impl, not swappable) may be consumed as concrete `type` imports — the ports-only rule is scoped to swappable external **sources/adapters**.
 
-Per-source instance settings live in the `config` table keyed by `(source, key)` (see `ConfigRepository`), so source-specific configuration goes through the same `ConfigurableSource` port rather than forcing a consumer to name a concrete adapter. The config router is driven by a `Map<BookSource, ConfigurableSource>` registry, resolving the client-facing kebab `:source` param against it — adding a configurable source is registration-only.
+Per-source instance settings live in the `config` table keyed by `(source, key)` (see `ConfigRepository`), so source-specific configuration goes through the same `ConfigurableSource` port rather than forcing a consumer to name a concrete adapter. The config router is handed the `Map<BookSource, ConfigurableSource>` produced by `BookSourceRegistry.configurableSources()`, resolving the client-facing kebab `:source` param against it — adding a configurable source is registration-only.
 
-#### Provider vs store vs adapter
+#### Strategies & registries
 
-"Provider" is reserved **strictly for lifecycle** — lazy init from config, caching an instance, invalidating it on config change (e.g. `BookCacheProvider`). A stateful counter/accumulator persisted through a repository is a **store** (e.g. `GoogleBooksUsageStore`), not a provider. A wrapper that only translates a foreign API is an **adapter**, not a provider. Don't file something under `providers/` unless it manages a lifecycle.
+**`strategies/`** hold per-source implementations of a port that are composed from adapters (and stores) rather than from a foreign API — so they are **not** adapters. `OpenLibraryImportLookup` / `GoogleBooksImportLookup` implement the `ImportLookup` port: each owns its source's import mechanism (Open Library batches by ISBN up front; Google Books looks up per-row, is metered, and defers when out of budget) behind one uniform contract, so `LibraryTransferService` never branches on the source.
+
+**`registries/`** own a collection keyed by id and resolve it for consumers; they manage **no lifecycle** (so they're not providers) and translate **no foreign API** (so they're not adapters). `BookSourceRegistry` derives the by-id provider map, the active searchable source (a configured `ConfigurableSource` wins, else the keyless default), the configurable-sources map, and the import-lookup per source. `FormatRegistry` does the same for `LibraryFormat`s. A service that needs "the X for id Y" asks a registry instead of hand-keying a `Map` — if you see `new Map(items.map((i) => [i.id, i]))` inside a service, it wants a registry.
+
+#### Provider vs store vs adapter vs registry
+
+"Provider" is reserved **strictly for lifecycle** — lazy init from config, caching an instance, invalidating it on config change (e.g. `BookCacheProvider`). A stateful counter/accumulator persisted through a repository is a **store** (e.g. `GoogleBooksUsageStore`), not a provider. A wrapper that only translates a foreign API is an **adapter**, not a provider. A collection-owner that resolves entries by id is a **registry**, not a provider — even when it reads config to choose (that's config-_awareness_, not lifecycle). Don't file something under `providers/` unless it manages a lifecycle.
 
 ```ts
 // correct — service calls a port / store, never a client directly

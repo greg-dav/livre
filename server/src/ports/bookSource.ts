@@ -5,9 +5,9 @@ export type BookSearchOptions = { startIndex?: number; sort?: SearchSort; maxRes
 
 /**
  * The contract every book metadata source conforms to. A source owns one {@link BookSource} value
- * and knows how to resolve a single book by its external id within that source. BooksService keeps
- * a registry of these keyed by `source`, so adding a source is a matter of implementing this and
- * registering its adapter in the composition root — no `switch` to extend.
+ * and knows how to resolve a single book by its external id within that source. The
+ * {@link BookSourceRegistry} keeps these keyed by `source`, so adding a source is a matter of
+ * implementing this and registering its adapter in the composition root — no `switch` to extend.
  *
  * This is a domain-owned **port**: concrete adapters (Google Books, Open Library) implement it.
  * Lifecycle and provider concerns (API-key reads, config) stay off this interface; they belong to
@@ -20,9 +20,9 @@ export interface BookSourceProvider {
 
 /**
  * A source that additionally backs the interactive discovery UI (free-text and by-author catalog
- * search). Not every source can search — Open Library is import-only — so search lives
- * on this narrower contract rather than {@link BookSourceProvider}. BooksService is injected with a
- * single searchable source for the search screens while dispatching `getById` through the registry.
+ * search). Search lives on this narrower contract rather than {@link BookSourceProvider} because not
+ * every source need be searchable. The {@link BookSourceRegistry} hands the search screens the
+ * active searchable source while dispatching `getById` through the by-id registry.
  */
 export interface SearchableBookSource extends BookSourceProvider {
   search(

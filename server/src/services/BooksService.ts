@@ -19,7 +19,7 @@ import {
 } from '@livre/types';
 import createError from 'http-errors';
 import { db } from '../db';
-import { type BookSourceProvider, type SearchableBookSource } from '../ports/bookSource';
+import { type BookSourceRegistry } from '../registries/BookSourceRegistry';
 import { type BookCacheProvider } from '../providers/BookCacheProvider';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
@@ -30,22 +30,17 @@ import { toBookVolume, type SourcedBook, type SourcedBookSearchResponse } from '
  * `bookRef` is decoded by the route layer before calling in here. Outbound responses are
  * converted back to the client-facing `BookVolume` (with bookRef) via `toBookVolume`.
  *
- * Metadata sources are reached through the {@link BookSourceProvider} contract: a registry keyed by
- * `BookSource` resolves any book by id, while the discovery screens use the one injected
- * {@link SearchableBookSource}. Adding a source means registering it here — no `switch` to extend.
+ * Metadata sources are reached through the {@link BookSourceRegistry}: it resolves any book by id
+ * against the registered sources and hands the discovery screens the active searchable source.
+ * Adding a source is a registration in the composition root — no `switch` here to extend.
  */
 export class BooksService {
-  private readonly sources: Map<BookSource, BookSourceProvider>;
-
   constructor(
-    private readonly searchSource: SearchableBookSource,
-    sources: BookSourceProvider[],
+    private readonly sources: BookSourceRegistry,
     private readonly bookCache: BookCacheProvider,
     private readonly libraryBooksRepo: LibraryBooksRepository,
     private readonly readingLogRepo: ReadingLogRepository
-  ) {
-    this.sources = new Map(sources.map((s) => [s.source, s]));
-  }
+  ) {}
 
   /**
    * Faceted catalog search. The source orders and pages the results; this layer joins each hit
@@ -60,7 +55,7 @@ export class BooksService {
     sort: SearchSort = 'relevance',
     startIndex = 0
   ): Promise<SearchResponse> {
-    const internal = await this.searchSource.search(query, scope, { startIndex, sort });
+    const internal = await this.sources.searchSource().search(query, scope, { startIndex, sort });
     return this.toFacetedResponse(userId, internal, startIndex, shelf);
   }
 
@@ -70,7 +65,9 @@ export class BooksService {
    * it doesn't need any of that work done server-side.
    */
   async quickSearch(query: string): Promise<BookSearchResponse> {
-    const internal = await this.searchSource.search(query, 'anything', { maxResults: 10 });
+    const internal = await this.sources
+      .searchSource()
+      .search(query, 'anything', { maxResults: 10 });
     return { results: internal.results.map(toBookVolume), total: internal.total };
   }
 
@@ -82,13 +79,14 @@ export class BooksService {
   ): Promise<SearchResponse> {
     // Covers come pre-upgraded from GoogleBooksClient.upgradeCoverUrl, so we no longer need
     // a per-result getById to surface a large thumbnail.
-    const internal = await this.searchSource.searchByAuthor(name, { startIndex, sort });
+    const internal = await this.sources.searchSource().searchByAuthor(name, { startIndex, sort });
     return this.toFacetedResponse(userId, internal, startIndex);
   }
 
   // Annotates a raw source page with the user's library state, counts shelf membership (before any
-  // filter, so the facet shows both buckets), applies the optional shelf filter, and computes the
-  // next page cursor from the *raw* page size so a filtered page still advances through the source.
+  // filter, so the facet shows both buckets), applies the optional shelf filter, and carries the
+  // next page cursor — the source's own when it reports one (it knows its page stride even when it
+  // dropped hits), else derived from the raw page size so a filtered page still advances.
   private toFacetedResponse(
     userId: number,
     internal: SourcedBookSearchResponse,
@@ -124,7 +122,11 @@ export class BooksService {
 
     const rawCount = internal.results.length;
     const nextStartIndex =
-      rawCount > 0 && startIndex + rawCount < internal.total ? startIndex + rawCount : null;
+      internal.nextStartIndex !== undefined
+        ? internal.nextStartIndex
+        : rawCount > 0 && startIndex + rawCount < internal.total
+          ? startIndex + rawCount
+          : null;
 
     return { results, total: internal.total, shelfCounts, nextStartIndex };
   }
@@ -356,7 +358,7 @@ export class BooksService {
    * referencing a source with no registered adapter reads as not found rather than crashing.
    */
   private async fetchFromSource(source: BookSource, externalId: string): Promise<SourcedBook> {
-    const provider = this.sources.get(source);
+    const provider = this.sources.providerFor(source);
     if (!provider) throw createError(404, 'Book not found');
     return provider.getById(externalId);
   }

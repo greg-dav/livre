@@ -24,6 +24,10 @@ export type SourcedBook = BookMetadata & {
 export type SourcedBookSearchResponse = {
   results: SourcedBook[];
   total: number;
+  // Offset for the next page, or null when this was the last. A source that drops unmappable hits
+  // sets this explicitly so the cursor tracks the page stride rather than the (smaller) result count;
+  // when absent, the faceted layer derives it from the result count (valid when nothing is dropped).
+  nextStartIndex?: number | null;
 };
 
 export const encodeBookRef = (source: BookSource, externalId: string): string =>

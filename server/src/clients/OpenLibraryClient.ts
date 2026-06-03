@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import createError from 'http-errors';
-import { type BookGenre } from '@livre/types';
-import { type SourcedBook } from '../lib/bookRef';
+import { type BookGenre, type SearchScope, type SearchSort } from '@livre/types';
+import { type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
 
 const named = z.object({ name: z.string() });
 
@@ -122,18 +122,131 @@ const mapEntry = (entry: OlEntry, olid: string): SourcedBook => {
   };
 };
 
+// Open Library's search API (search.json) returns work-level docs. We persist an *edition* OLID as
+// externalId so a detail click can resolve the full record via the Books API, so a doc is only
+// usable when it carries one: `cover_edition_key` (the edition the cover came from) preferred, else
+// the first `edition_key`. Subjects aren't requested — they bloat the payload and the coarse
+// fiction/genre classification is filled in on the detail fetch. Private to this client.
+const olSearchDocSchema = z.object({
+  title: z.string().optional(),
+  author_name: z.array(z.string()).optional(),
+  first_publish_year: z.number().optional(),
+  cover_i: z.number().optional(),
+  cover_edition_key: z.string().optional(),
+  edition_key: z.array(z.string()).optional(),
+  number_of_pages_median: z.number().optional(),
+});
+const olSearchResponseSchema = z.object({
+  numFound: z.number(),
+  docs: z.array(olSearchDocSchema),
+});
+
+type OlSearchDoc = z.infer<typeof olSearchDocSchema>;
+
+const SEARCH_FIELDS =
+  'title,author_name,first_publish_year,cover_i,cover_edition_key,edition_key,number_of_pages_median';
+
+// Translate the provider-agnostic scope into the matching search.json query parameter. `q` is the
+// general field; the rest are dedicated parameters Open Library exposes.
+const scopeParam = (scope: SearchScope): string => {
+  switch (scope) {
+    case 'title':
+      return 'title';
+    case 'author':
+      return 'author';
+    case 'subject':
+      return 'subject';
+    case 'isbn':
+      return 'isbn';
+    default:
+      return 'q';
+  }
+};
+
+// A search doc maps to a book only when it yields an edition OLID; without one it can't be resolved
+// on a detail click, so it's dropped. Cover comes from the numeric cover id, falling back to the
+// edition OLID. Lean by design — description, publisher, language, and a real genre arrive when the
+// detail view fetches the edition.
+const mapSearchDoc = (doc: OlSearchDoc): SourcedBook | null => {
+  const olid = doc.cover_edition_key ?? doc.edition_key?.[0];
+  if (!doc.title || !olid) return null;
+  // A numeric cover id is the reliable cover source; `cover_edition_key` also implies a real cover.
+  // A bare `edition_key` fallback has no associated cover, so leave the thumbnail unset rather than
+  // point at a guaranteed-404 cover URL.
+  const coverBase =
+    doc.cover_i !== undefined
+      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}`
+      : doc.cover_edition_key
+        ? `https://covers.openlibrary.org/b/olid/${doc.cover_edition_key}`
+        : undefined;
+  return {
+    source: 'OPEN_LIBRARY',
+    externalId: olid,
+    title: doc.title,
+    authors: doc.author_name ?? [],
+    publishedDate: doc.first_publish_year ? String(doc.first_publish_year) : undefined,
+    pageCount: doc.number_of_pages_median,
+    thumbnail: coverBase ? `${coverBase}-M.jpg` : undefined,
+    largeThumbnail: coverBase ? `${coverBase}-L.jpg` : undefined,
+    tags: [],
+    fiction: false,
+    genre: 'unknown',
+  };
+};
+
 /**
- * HTTP adapter for the Open Library Books API. Used only for enrichment during import — never for
- * interactive search — because it needs no API key and imposes no per-day quota, unlike Google
- * Books. Owns its private wire schema and returns `SourcedBook` whose `externalId` is the edition's
- * stable OLID. `getByIsbns` keys its result Map by the *queried ISBN* (the import lookup key), which
- * is distinct from that identity.
+ * HTTP adapter for the Open Library APIs. `getByIsbns` / `getByOlid` use the Books API (rich
+ * per-edition records, no key, no quota) and back import enrichment; `search` / `searchByAuthor` use
+ * the search API (lean work-level docs) and back interactive discovery. Owns its private wire schemas
+ * and returns `SourcedBook` whose `externalId` is always a stable edition OLID. `getByIsbns` keys its
+ * result Map by the *queried ISBN* (the import lookup key), which is distinct from that identity.
  */
 export class OpenLibraryClient {
   // Keep batches well under any practical URL-length limit; a typical import resolves in a handful
   // of requests rather than one per book.
   private static readonly BATCH_SIZE = 100;
+  private static readonly DEFAULT_PAGE_SIZE = 20;
   private static readonly USER_AGENT = 'Livre/0.1 (self-hosted reading tracker)';
+
+  // Open Library has no native "oldest", matching the SearchSort enum; `newest` maps onto its own
+  // ordering so paging stays globally sorted, and `relevance` is the default (no sort param).
+  async search(
+    query: string,
+    scope: SearchScope = 'anything',
+    opts: { startIndex?: number; sort?: SearchSort; maxResults?: number } = {}
+  ): Promise<SourcedBookSearchResponse> {
+    const limit = Math.min(opts.maxResults ?? OpenLibraryClient.DEFAULT_PAGE_SIZE, 100);
+    // search.json pages 1-based; BooksService advances startIndex by whole pages, so it stays aligned.
+    const page = Math.floor((opts.startIndex ?? 0) / limit) + 1;
+    const params = new URLSearchParams({
+      [scopeParam(scope)]: query.trim(),
+      page: String(page),
+      limit: String(limit),
+      fields: SEARCH_FIELDS,
+    });
+    if (opts.sort === 'newest') params.set('sort', 'new');
+
+    const url = `https://openlibrary.org/search.json?${params.toString()}`;
+    const res = await fetch(url, { headers: { 'User-Agent': OpenLibraryClient.USER_AGENT } });
+    if (!res.ok) throw createError(502, 'Open Library API error');
+
+    const { numFound, docs } = olSearchResponseSchema.parse(await res.json());
+    // Cursor tracks the page stride (page * limit), not the post-filter result count — dropping a
+    // doc with no edition OLID must not stall paging into re-fetching the same page.
+    const consumed = page * limit;
+    return {
+      results: docs.map(mapSearchDoc).filter((b): b is SourcedBook => b !== null),
+      total: numFound,
+      nextStartIndex: consumed < numFound ? consumed : null,
+    };
+  }
+
+  async searchByAuthor(
+    name: string,
+    opts: { startIndex?: number; sort?: SearchSort } = {}
+  ): Promise<SourcedBookSearchResponse> {
+    return this.search(name, 'author', opts);
+  }
 
   /** Resolve many ISBNs in batched requests, keyed by the queried ISBN. */
   async getByIsbns(isbns: string[]): Promise<Map<string, SourcedBook>> {

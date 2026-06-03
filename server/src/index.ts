@@ -3,12 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
-import { type BookSource } from '@livre/types';
 import { env } from './env';
 
 import './db';
 
-import { type ConfigurableSource } from './ports/bookSource';
 import { errorHandler } from './lib/route';
 import { createAuthMiddleware } from './middleware/auth';
 import { UsersRepository } from './repositories/UsersRepository';
@@ -21,6 +19,10 @@ import { GoogleBooksAdapter } from './adapters/GoogleBooksAdapter';
 import { GoogleBooksClientProvider } from './providers/GoogleBooksClientProvider';
 import { GoogleBooksUsageStore } from './stores/GoogleBooksUsageStore';
 import { OpenLibraryAdapter } from './adapters/OpenLibraryAdapter';
+import { OpenLibraryImportLookup } from './strategies/OpenLibraryImportLookup';
+import { GoogleBooksImportLookup } from './strategies/GoogleBooksImportLookup';
+import { BookSourceRegistry } from './registries/BookSourceRegistry';
+import { FormatRegistry } from './registries/FormatRegistry';
 import { BookCacheProvider } from './providers/BookCacheProvider';
 import { AuthService } from './services/AuthService';
 import { AccountService } from './services/AccountService';
@@ -47,28 +49,32 @@ const googleBooksUsageStore = new GoogleBooksUsageStore(configRepository);
 const googleBooksClientProvider = new GoogleBooksClientProvider(configRepository);
 const googleBooksAdapter = new GoogleBooksAdapter(googleBooksClientProvider, googleBooksUsageStore);
 const openLibraryAdapter = new OpenLibraryAdapter();
-// Sources that carry per-instance configuration (an API key). Keyed by source for the config router.
-const configurableSources = new Map<BookSource, ConfigurableSource>([
-  ['GOOGLE_BOOKS', googleBooksAdapter],
-]);
+// The one place concrete sources are named. The registry detects each source's capabilities from the
+// ports it implements; Open Library is the keyless default for search, and Google Books takes over
+// when a key is configured. The second list pairs each source with its import-lookup strategy.
+const bookSourceRegistry = new BookSourceRegistry(
+  [openLibraryAdapter, googleBooksAdapter],
+  [
+    new OpenLibraryImportLookup(openLibraryAdapter),
+    new GoogleBooksImportLookup(googleBooksAdapter, googleBooksUsageStore),
+  ]
+);
 const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
 const authService = new AuthService(usersRepository, setupRepository);
 const accountService = new AccountService(usersRepository);
 const usersService = new UsersService(usersRepository);
 const booksService = new BooksService(
-  googleBooksAdapter,
-  [googleBooksAdapter, openLibraryAdapter],
+  bookSourceRegistry,
   bookCacheProvider,
   libraryBooksRepository,
   readingLogRepository
 );
+const formatRegistry = new FormatRegistry([GoodreadsFormat]);
 const libraryTransferService = new LibraryTransferService(
-  [GoodreadsFormat],
+  formatRegistry,
   libraryBooksRepository,
   readingLogRepository,
-  openLibraryAdapter,
-  googleBooksAdapter,
-  googleBooksUsageStore
+  bookSourceRegistry
 );
 const logService = new LogService(libraryBooksRepository, readingLogRepository);
 const { requireAuth, requireAdmin } = createAuthMiddleware(usersRepository);
@@ -99,7 +105,10 @@ app.use('/api/users', createUsersRouter(usersService, requireAdmin));
 app.use('/api/books', createBooksRouter(booksService, libraryTransferService, requireAuth));
 app.use('/api/shelves', createShelvesRouter(booksService, requireAuth));
 app.use('/api/log', createLogRouter(logService, requireAuth));
-app.use('/api/config', createConfigRouter(configRepository, configurableSources, requireAdmin));
+app.use(
+  '/api/config',
+  createConfigRouter(configRepository, bookSourceRegistry.configurableSources(), requireAdmin)
+);
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);

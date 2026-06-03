@@ -13,71 +13,48 @@ import { type SourcedBook } from '../lib/bookRef';
 import { titleAuthorKey } from '../lib/bookSignature';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
-import {
-  type BatchIsbnSource,
-  type ConfigurableSource,
-  type SearchableBookSource,
-} from '../ports/bookSource';
-import { type GoogleBooksUsageStore } from '../stores/GoogleBooksUsageStore';
-import { type ImportRow, type LibraryFormat } from '../formats/LibraryFormat';
+import { type BookSourceRegistry } from '../registries/BookSourceRegistry';
+import { type FormatRegistry } from '../registries/FormatRegistry';
+import { type ImportRow } from '../formats/LibraryFormat';
 
 // Cap how many per-row failures travel back to the client; the count is always exact, the list is
 // just a sample so a pathological file can't return a megabyte of error text.
 const MAX_ERRORS = 50;
 
 /**
- * Moves a user's whole library in and out of Livre through pluggable {@link LibraryFormat} adapters.
- * Holds the format registry (keyed by id) and is the single place that knows how to turn a parsed
- * {@link ImportRow} into a persisted book: enrich by ISBN via Open Library, copy into library_books,
- * and synthesize the reading-log events that give the book its shelf status.
+ * Moves a user's whole library in and out of Livre through pluggable library formats. It's the
+ * single place that knows how to turn a parsed {@link ImportRow} into a persisted book: enrich it
+ * through the chosen source's import-lookup, copy into library_books, and synthesize the reading-log
+ * events that give the book its shelf status.
  *
- * Per the repo's layering rules it composes repositories, source ports, and the usage store directly
- * rather than calling other services — the create-and-seed-log flow overlaps BooksService.addToLibrary
- * but is duplicated here because import seeds multiple events at historical dates rather than one
- * event at "now".
+ * It asks the {@link FormatRegistry} for a format and the {@link BookSourceRegistry} for the
+ * import-lookup strategy of the chosen source, so it never learns whether that source batches by
+ * ISBN, is metered, or defers. Per the repo's layering rules it composes repositories and registries
+ * directly rather than calling other services — the create-and-seed-log flow overlaps
+ * BooksService.addToLibrary but is duplicated here because import seeds multiple events at historical
+ * dates rather than one event at "now".
  */
 export class LibraryTransferService {
-  private readonly formats: Map<string, LibraryFormat>;
-
   constructor(
-    formats: LibraryFormat[],
+    private readonly formats: FormatRegistry,
     private readonly libraryBooksRepo: LibraryBooksRepository,
     private readonly readingLogRepo: ReadingLogRepository,
-    private readonly openLibrary: BatchIsbnSource,
-    private readonly googleBooks: SearchableBookSource & ConfigurableSource,
-    private readonly googleUsage: GoogleBooksUsageStore
-  ) {
-    this.formats = new Map(formats.map((f) => [f.id, f]));
-  }
+    private readonly sources: BookSourceRegistry
+  ) {}
 
   /**
-   * Metadata sources offered to the import view. Open Library is always available (free, no key,
-   * unlimited); Google Books appears only when an API key is configured, and carries today's
-   * per-instance usage so the client can show the meter and warn before a large import.
+   * Metadata sources offered to the import view: those usable right now. Open Library is always
+   * available (free, no key, unlimited); Google Books appears only when an API key is configured,
+   * carrying today's per-instance usage so the client can show the meter and warn before a large
+   * import. The registry owns this list.
    */
   listImportSources(): ImportSource[] {
-    const options: ImportSource[] = [
-      { id: 'OPEN_LIBRARY', label: 'Open Library', metered: false, usage: null },
-    ];
-    if (this.googleBooks.isConfigured()) {
-      options.push({
-        id: 'GOOGLE_BOOKS',
-        label: 'Google Books',
-        metered: true,
-        usage: this.googleUsage.snapshot(),
-      });
-    }
-    return options;
+    return this.sources.importSources();
   }
 
   /** Client-facing list of available formats; drives the import/export modals. */
   listFormats(): LibraryFormatInfo[] {
-    return [...this.formats.values()].map((f) => ({
-      id: f.id,
-      label: f.label,
-      fileExtension: f.fileExtension,
-      capabilities: f.capabilities,
-    }));
+    return this.formats.list();
   }
 
   /** Serialize the user's whole library through a format. Returns the file body and its metadata. */
@@ -85,7 +62,7 @@ export class LibraryTransferService {
     userId: number,
     formatId: string
   ): { content: string; mimeType: string; filename: string } {
-    const format = this.requireFormat(formatId, 'export');
+    const format = this.formats.require(formatId, 'export');
     const content = format.serialize(this.libraryBooksRepo.findExportRowsByUser(userId));
     const date = new Date().toISOString().slice(0, 10);
     return {
@@ -96,12 +73,11 @@ export class LibraryTransferService {
   }
 
   /**
-   * Parse an import file and add its books, enriching metadata from the chosen source. A row is
-   * skipped if it matches a book already in the library (by normalized ISBN, title/author, or the
-   * enriched source id) or an earlier row in the same file. With Google Books, lookups are gated by
-   * the instance's remaining daily budget: once it's spent, the rest are `deferred` (left for a
-   * re-run after the quota resets) rather than imported without enrichment. Existing rows are never
-   * touched.
+   * Parse an import file and add its books, enriching metadata through the chosen source's
+   * import-lookup. A row is skipped if it matches a book already in the library (by normalized ISBN,
+   * title/author, or the enriched source id) or an earlier row in the same file. The lookup may
+   * `defer` a row (a metered source out of budget): deferred rows aren't persisted, so a re-run
+   * resumes where this one stopped. Existing rows are never touched.
    */
   async import(
     userId: number,
@@ -109,9 +85,10 @@ export class LibraryTransferService {
     content: string,
     source: BookSource
   ): Promise<ImportResult> {
-    const format = this.requireFormat(formatId, 'import');
-    if (source === 'GOOGLE_BOOKS' && !this.googleBooks.isConfigured()) {
-      throw createError(400, 'Google Books is not configured on this instance');
+    const format = this.formats.require(formatId, 'import');
+    const lookup = this.sources.lookupFor(source);
+    if (!lookup || !lookup.available()) {
+      throw createError(400, `Source ${source} is not available for import on this instance`);
     }
     const rows = format.parse(content);
 
@@ -136,10 +113,14 @@ export class LibraryTransferService {
     // and a title/author signature for rows that carry no ISBN, so a re-import stays idempotent.
     const existingIsbns = new Set(this.libraryBooksRepo.findIsbnsByUser(userId));
     const existingKeys = new Set(this.libraryBooksRepo.findTitleAuthorKeysByUser(userId));
-    // Open Library resolves the whole file in a few batched requests up front; Google Books is
-    // per-book and quota-gated, so it's looked up inside the loop instead.
-    const olEnrichment =
-      source === 'OPEN_LIBRARY' ? await this.enrichViaOpenLibrary(valid, existingIsbns) : null;
+
+    // Hand the lookup only the rows it could enrich — those not already in the library — so a batch
+    // source never re-fetches owned editions. The strategy decides how to resolve them; the service
+    // stays blind to whether that's an up-front batch or per-row metered calls.
+    const owned = ({ row }: { row: ImportRow }) =>
+      (row.isbn != null && existingIsbns.has(row.isbn)) ||
+      existingKeys.has(titleAuthorKey(row.title, row.authors));
+    const session = await lookup.begin(valid.filter((entry) => !owned(entry)).map((e) => e.row));
 
     const importedIsbns = new Set<string>();
     const importedKeys = new Set<string>();
@@ -156,19 +137,12 @@ export class LibraryTransferService {
           continue;
         }
 
-        let enriched: SourcedBook | null;
-        if (olEnrichment) {
-          enriched = row.isbn ? (olEnrichment.get(row.isbn) ?? null) : null;
-        } else {
-          // Google Books: stop importing once the daily budget is spent, leaving the rest for a
-          // later run. Deferred books aren't persisted, so a re-run resumes where this one stopped.
-          // The lookup itself counts against the quota inside GoogleBooksAdapter — not here.
-          if (this.googleUsage.remaining() <= 0) {
-            deferred++;
-            continue;
-          }
-          enriched = await this.lookupGoogle(row);
+        const outcome = await session.resolve(row);
+        if (outcome.status === 'deferred') {
+          deferred++;
+          continue;
         }
+        const enriched = outcome.book;
 
         if (
           enriched &&
@@ -192,47 +166,6 @@ export class LibraryTransferService {
     }
 
     return { imported, skipped, failed, deferred, errors };
-  }
-
-  // One Google Books lookup for a row: by ISBN when present (exact), else by title + lead author.
-  // Exactly one request per call so the usage counter stays accurate.
-  private async lookupGoogle(row: ImportRow): Promise<SourcedBook | null> {
-    const res = row.isbn
-      ? await this.googleBooks.search(row.isbn, 'isbn', { maxResults: 1 })
-      : await this.googleBooks.search(
-          [row.title, row.authors[0]].filter(Boolean).join(' '),
-          'anything',
-          { maxResults: 1 }
-        );
-    return res.results[0] ?? null;
-  }
-
-  // Resolve Open Library metadata for the books worth enriching, keyed by each row's canonical ISBN.
-  // Both ISBN variants a row carries go into one batched lookup so an edition indexed under only one
-  // of them still resolves. No cache: dedup-before-lookup already limits each ISBN to one fetch, and
-  // its identity is now the OLID, so an ISBN-keyed cache could never hit.
-  private async enrichViaOpenLibrary(
-    valid: { row: ImportRow }[],
-    existingIsbns: Set<string>
-  ): Promise<Map<string, SourcedBook>> {
-    // Every ISBN variant worth resolving: present, distinct, and not already owned.
-    const candidates = _(valid)
-      .flatMap(({ row }) => [row.isbn, row.isbnAlt])
-      .compact()
-      .uniq()
-      .reject((isbn) => existingIsbns.has(isbn))
-      .value();
-
-    const known = candidates.length > 0 ? await this.openLibrary.getByIsbns(candidates) : new Map();
-
-    // Map back to each row's canonical ISBN; the first variant that resolved wins.
-    const result = new Map<string, SourcedBook>();
-    for (const { row } of valid) {
-      if (!row.isbn || result.has(row.isbn)) continue;
-      const hit = known.get(row.isbn) ?? (row.isbnAlt ? known.get(row.isbnAlt) : undefined);
-      if (hit) result.set(row.isbn, hit);
-    }
-    return result;
   }
 
   // Create the library row (enriched metadata overlaid by the user's own CSV facts), apply rating
@@ -294,14 +227,5 @@ export class LibraryTransferService {
     const shelvedDate = end && end.date < row.addedDate ? end.date : row.addedDate;
     this.readingLogRepo.insert(libraryBookId, 'shelved', shelvedDate);
     if (end) this.readingLogRepo.insert(libraryBookId, end.event, end.date);
-  }
-
-  private requireFormat(formatId: string, capability: 'import' | 'export'): LibraryFormat {
-    const format = this.formats.get(formatId);
-    if (!format) throw createError(404, `Unknown format: ${formatId}`);
-    if (!format.capabilities[capability]) {
-      throw createError(400, `Format ${formatId} does not support ${capability}`);
-    }
-    return format;
   }
 }
