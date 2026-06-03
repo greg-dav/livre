@@ -17,6 +17,7 @@ import {
   SlidersHorizontal,
   Tablet,
   Trash2,
+  Upload,
   User,
   Users,
 } from 'lucide-react';
@@ -45,6 +46,7 @@ const ICONS = {
   edit: Pencil,
   delete: Trash2,
   download: Download,
+  upload: Upload,
   data: Database,
   check: Check,
   'chevron-down': ChevronDown,

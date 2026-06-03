@@ -2,12 +2,28 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { readFileSync, mkdirSync } from 'fs';
 import path from 'path';
+import { z } from 'zod';
 import { env } from '../env';
 import * as schema from './schema';
 
 mkdirSync(env.DATA_DIR, { recursive: true });
 
 const sqlite = new Database(path.join(env.DATA_DIR, 'livre.db'));
+
+// A `source` CHECK constraint can't be widened with ALTER in SQLite, so a table whose CHECK
+// predates a BookSource addition (e.g. OPEN_LIBRARY) must be rebuilt. Detect via its stored DDL.
+const ddlRowSchema = z.object({ sql: z.string() });
+const sourceCheckIsStale = (table: string): boolean => {
+  const row = ddlRowSchema.safeParse(
+    sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?").get(table)
+  );
+  return (
+    row.success && row.data.sql.includes('GOOGLE_BOOKS') && !row.data.sql.includes('OPEN_LIBRARY')
+  );
+};
+
+// book_cache is transient — a stale one is simply dropped here and recreated fresh by schema.sql.
+if (sourceCheckIsStale('book_cache')) sqlite.exec('DROP TABLE book_cache');
 
 const ddl = readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 sqlite.exec(ddl);
@@ -47,6 +63,50 @@ if (!libraryBooksColumns.includes('fiction'))
   sqlite.exec('ALTER TABLE library_books ADD COLUMN fiction INTEGER NOT NULL DEFAULT 0');
 if (!libraryBooksColumns.includes('genre'))
   sqlite.exec("ALTER TABLE library_books ADD COLUMN genre TEXT NOT NULL DEFAULT 'unknown'");
+
+// library_books holds user data, so widen its source CHECK by rebuilding in place (copy → drop →
+// rename) rather than dropping it. FKs are toggled off so reading_log's references survive the swap
+// (row ids are preserved). Runs after the column migrations above so every column exists to copy.
+if (sourceCheckIsStale('library_books')) {
+  sqlite.exec(`
+    PRAGMA foreign_keys = OFF;
+    CREATE TABLE library_books_new (
+      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      source         TEXT CHECK (source IS NULL OR source IN ('GOOGLE_BOOKS', 'OPEN_LIBRARY')),
+      external_id    TEXT,
+      title            TEXT NOT NULL,
+      authors          TEXT,
+      isbn             TEXT,
+      description      TEXT,
+      thumbnail        TEXT,
+      large_thumbnail  TEXT,
+      page_count       INTEGER,
+      publisher        TEXT,
+      published_date   TEXT,
+      tags             TEXT,
+      fiction          INTEGER NOT NULL DEFAULT 0,
+      genre            TEXT    NOT NULL DEFAULT 'unknown',
+      language         TEXT,
+      rating         REAL CHECK (rating IS NULL OR (rating >= 1 AND rating <= 5)),
+      review         TEXT,
+      added_date     TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+    INSERT INTO library_books_new (id, user_id, source, external_id, title, authors, isbn,
+      description, thumbnail, large_thumbnail, page_count, publisher, published_date, tags, fiction,
+      genre, language, rating, review, added_date)
+      SELECT id, user_id, source, external_id, title, authors, isbn, description, thumbnail,
+        large_thumbnail, page_count, publisher, published_date, tags, fiction, genre, language,
+        rating, review, added_date FROM library_books;
+    DROP TABLE library_books;
+    ALTER TABLE library_books_new RENAME TO library_books;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_library_books_source
+      ON library_books(user_id, source, external_id)
+      WHERE source IS NOT NULL AND external_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_library_books_user ON library_books(user_id);
+    PRAGMA foreign_keys = ON;
+  `);
+}
 
 // Migrate reading_log: rename note→text, add format column, add quote/format event types.
 // Sentinel: presence of the text column indicates the migration has already run.

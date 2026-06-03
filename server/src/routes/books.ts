@@ -1,8 +1,14 @@
 import { z } from 'zod';
-import { type Router, type RequestHandler } from 'express';
+import express, { type Router, type RequestHandler } from 'express';
 import {
   bookRefSchema,
   bookVolumeSchema,
+  libraryFormatsResponseSchema,
+  importResultSchema,
+  enrichmentSourceSchema,
+  enrichmentOptionsResponseSchema,
+  type BookSource,
+  type EnrichmentSource,
   bookSearchResponseSchema,
   searchScopeSchema,
   searchSortSchema,
@@ -48,6 +54,7 @@ import createError from 'http-errors';
 import { SchemaRouter } from '../lib/SchemaRouter';
 import { decodeBookRef } from '../lib/bookRef';
 import { type BooksService } from '../services/BooksService';
+import { type LibraryTransferService } from '../services/LibraryTransferService';
 
 const parseBookRef = (
   raw: unknown
@@ -61,7 +68,17 @@ const parseBookRef = (
   }
 };
 
-export function createBooksRouter(service: BooksService, requireAuth: RequestHandler): Router {
+// The client picks a kebab-case enrichment source; the server works in BookSource values.
+const ENRICHMENT_TO_SOURCE: Record<EnrichmentSource, BookSource> = {
+  'open-library': 'OPEN_LIBRARY',
+  'google-books': 'GOOGLE_BOOKS',
+};
+
+export function createBooksRouter(
+  service: BooksService,
+  transfer: LibraryTransferService,
+  requireAuth: RequestHandler
+): Router {
   const router = new SchemaRouter().use(requireAuth);
 
   const startIndexOf = (raw: unknown): number =>
@@ -130,19 +147,64 @@ export function createBooksRouter(service: BooksService, requireAuth: RequestHan
     respond(service.getTags(user.id));
   });
 
+  /** List the import/export formats the server offers, so both modals render from the server. */
+  router.get('/formats', libraryFormatsResponseSchema, async (respond, req) => {
+    if (!req.user) throw createError(401, 'Unauthorized');
+    respond(transfer.listFormats());
+  });
+
+  /** List the enrichment sources for the import view, with today's per-instance Google usage. */
+  router.get('/enrichment', enrichmentOptionsResponseSchema, async (respond, req) => {
+    if (!req.user) throw createError(401, 'Unauthorized');
+    respond(transfer.listEnrichmentSources());
+  });
+
   /**
-   * Export the whole library as a Goodreads-shaped CSV download. Registered on the raw router (not
-   * via SchemaRouter) because the body is text/csv, not the JSON envelope SchemaRouter enforces.
-   * Must precede the `/library/:libraryBookId` matcher so "export" isn't captured as an id.
+   * Export the whole library as a downloadable file in the chosen format (default goodreads).
+   * Registered on the raw router (not via SchemaRouter) because the body is the file itself, not
+   * the JSON envelope SchemaRouter enforces. Must precede the `/library/:libraryBookId` matcher so
+   * "export" isn't captured as an id.
    */
   router.router.get('/library/export', (req, res) => {
     const user = req.user;
     if (!user) throw createError(401, 'Unauthorized');
-    const date = new Date().toISOString().slice(0, 10);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="livre-library-${date}.csv"`);
-    res.send(service.exportLibraryCsv(user.id));
+    const format = z.string().min(1).safeParse(req.query.format).data ?? 'goodreads';
+    const { content, mimeType, filename } = transfer.export(user.id, format);
+    res.setHeader('Content-Type', `${mimeType}; charset=utf-8`);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(content);
   });
+
+  /**
+   * Import a library file in the chosen format (default goodreads), enriching from the chosen source
+   * (default open-library). The body is the raw file text, parsed by express.text rather than
+   * express.json — Goodreads exports run to several MB and carry CSV, not JSON. Existing books are
+   * skipped; the response reports imported/skipped/failed/deferred.
+   */
+  router.router.post(
+    '/library/import',
+    express.text({ type: () => true, limit: '5mb' }),
+    async (req, res, next) => {
+      try {
+        const user = req.user;
+        if (!user) throw createError(401, 'Unauthorized');
+        const content = typeof req.body === 'string' ? req.body : '';
+        if (!content.trim()) throw createError(400, 'Empty import file');
+        const format = z.string().min(1).safeParse(req.query.format).data ?? 'goodreads';
+        const enrichment =
+          enrichmentSourceSchema.safeParse(req.query.enrichment).data ?? 'open-library';
+        const result = await transfer.import(
+          user.id,
+          format,
+          content,
+          ENRICHMENT_TO_SOURCE[enrichment]
+        );
+        res.json(importResultSchema.parse(result));
+      } catch (e) {
+        next(e);
+      }
+    }
+  );
 
   /** Return full volume data and shelf metadata for a single library book. */
   router.get('/library/:libraryBookId', libraryBookDetailSchema, async (respond, req) => {

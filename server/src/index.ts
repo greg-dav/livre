@@ -16,12 +16,16 @@ import { BookCacheRepository } from './repositories/BookCacheRepository';
 import { LibraryBooksRepository } from './repositories/LibraryBooksRepository';
 import { ReadingLogRepository } from './repositories/ReadingLogRepository';
 import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
+import { GoogleBooksUsageProvider } from './providers/GoogleBooksUsageProvider';
+import { OpenLibraryProvider } from './providers/OpenLibraryProvider';
 import { BookCacheProvider } from './providers/BookCacheProvider';
 import { AuthService } from './services/AuthService';
 import { AccountService } from './services/AccountService';
 import { UsersService } from './services/UsersService';
 import { BooksService } from './services/BooksService';
+import { LibraryTransferService } from './services/LibraryTransferService';
 import { LogService } from './services/LogService';
+import { GoodreadsFormat } from './formats/GoodreadsFormat';
 import { createAuthRouter } from './routes/auth';
 import { createAccountRouter } from './routes/account';
 import { createUsersRouter } from './routes/users';
@@ -36,16 +40,27 @@ const setupRepository = new SetupRepository();
 const bookCacheRepository = new BookCacheRepository();
 const libraryBooksRepository = new LibraryBooksRepository();
 const readingLogRepository = new ReadingLogRepository();
-const googleBooksProvider = new GoogleBooksProvider(configRepository);
+const googleBooksUsageProvider = new GoogleBooksUsageProvider(configRepository);
+const googleBooksProvider = new GoogleBooksProvider(configRepository, googleBooksUsageProvider);
+const openLibraryProvider = new OpenLibraryProvider();
 const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
 const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
 const accountService = new AccountService(usersRepository);
 const usersService = new UsersService(usersRepository);
 const booksService = new BooksService(
   googleBooksProvider,
+  [googleBooksProvider, openLibraryProvider],
   bookCacheProvider,
   libraryBooksRepository,
   readingLogRepository
+);
+const libraryTransferService = new LibraryTransferService(
+  [GoodreadsFormat],
+  libraryBooksRepository,
+  readingLogRepository,
+  openLibraryProvider,
+  googleBooksProvider,
+  googleBooksUsageProvider
 );
 const logService = new LogService(libraryBooksRepository, readingLogRepository);
 const { requireAuth, requireAdmin } = createAuthMiddleware(usersRepository);
@@ -73,7 +88,7 @@ const authLimiter = rateLimit({
 app.use('/api/auth', authLimiter, createAuthRouter(authService, requireAuth));
 app.use('/api/account', authLimiter, createAccountRouter(accountService, requireAuth));
 app.use('/api/users', createUsersRouter(usersService, requireAdmin));
-app.use('/api/books', createBooksRouter(booksService, requireAuth));
+app.use('/api/books', createBooksRouter(booksService, libraryTransferService, requireAuth));
 app.use('/api/shelves', createShelvesRouter(booksService, requireAuth));
 app.use('/api/log', createLogRouter(logService, requireAuth));
 app.use('/api/config', createConfigRouter(configRepository, googleBooksProvider, requireAdmin));

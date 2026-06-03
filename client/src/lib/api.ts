@@ -30,9 +30,13 @@ import {
   resetReadingLogResponseSchema,
   removeFromLibraryResponseSchema,
   deleteLibraryResponseSchema,
+  libraryFormatsResponseSchema,
+  importResultSchema,
+  enrichmentOptionsResponseSchema,
   okResponseSchema,
   usersListResponseSchema,
   managedUserSchema,
+  type EnrichmentSource,
   type RefreshMetadataBody,
   type LogEventType,
   type BookFormat,
@@ -233,13 +237,19 @@ export const api = {
       }),
     deleteLibrary: () =>
       request('/books/library', deleteLibraryResponseSchema, { method: 'DELETE' }),
-    // CSV download bypasses the JSON request() helper: the response is a text/csv attachment, so we
+    // The available import/export formats, so the modals render from the server rather than a
+    // hardcoded list.
+    listFormats: () => request('/books/formats', libraryFormatsResponseSchema),
+    // File download bypasses the JSON request() helper: the response is a file attachment, so we
     // hand back the raw blob and server-supplied filename for the caller to save.
-    exportLibraryCsv: async (): Promise<{ filename: string; blob: Blob }> => {
+    exportLibrary: async (formatId: string): Promise<{ filename: string; blob: Blob }> => {
       const token = localStorage.getItem('livre_token');
-      const res = await fetch(`${BASE}/books/library/export`, {
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      });
+      const res = await fetch(
+        `${BASE}/books/library/export?format=${encodeURIComponent(formatId)}`,
+        {
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        }
+      );
       if (res.status === 401) {
         localStorage.removeItem('livre_token');
         window.location.replace('/login');
@@ -248,6 +258,19 @@ export const api = {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const match = (res.headers.get('Content-Disposition') ?? '').match(/filename="?([^"]+)"?/);
       return { filename: match?.[1] ?? 'livre-library.csv', blob: await res.blob() };
+    },
+    // Enrichment sources for the import view, with today's per-instance Google usage.
+    enrichmentOptions: () => request('/books/enrichment', enrichmentOptionsResponseSchema),
+    // The file's text is read in the browser and POSTed as the raw body; the server parses it. Uses
+    // the JSON request() helper for the response only, so 401 handling and error shapes are shared.
+    importLibrary: async (formatId: string, file: File, enrichment: EnrichmentSource) => {
+      const content = await file.text();
+      const params = new URLSearchParams({ format: formatId, enrichment });
+      return request(`/books/library/import?${params}`, importResultSchema, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/csv' },
+        body: content,
+      });
     },
   },
   shelves: {
@@ -268,6 +291,11 @@ export const api = {
       request('/config/google-books-key', okResponseSchema, {
         method: 'PUT',
         body: JSON.stringify({ apiKey }),
+      }),
+    updateGoogleBooksLimit: (limit: number) =>
+      request('/config/google-books-limit', okResponseSchema, {
+        method: 'PUT',
+        body: JSON.stringify({ limit }),
       }),
   },
   account: {

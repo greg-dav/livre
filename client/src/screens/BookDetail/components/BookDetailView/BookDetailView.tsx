@@ -9,7 +9,7 @@ import { useLanguageEdit } from '../../hooks/useLanguageEdit';
 import { useIsbnEdit } from '../../hooks/useIsbnEdit';
 import type { ReactNode } from 'react';
 import { Text, Lightbox, Dialog, Input, Button, EditableField } from '@livre/primitives';
-import { type BookVolume, type RefreshMetadataBody, type BookFormat } from '@livre/types';
+import { type LibraryVolume, type RefreshMetadataBody, type BookFormat } from '@livre/types';
 import { Layout } from '../../../../components';
 import { FormatSelector } from '../FormatSelector/FormatSelector';
 import {
@@ -58,7 +58,7 @@ import {
 } from '../../utils/BookDetail.utils';
 
 interface BookDetailViewProps {
-  book: BookVolume;
+  book: LibraryVolume;
   inLibrary?: boolean;
   justAcquired?: boolean;
   editable?: boolean;

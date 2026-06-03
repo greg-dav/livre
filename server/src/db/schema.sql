@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS config (
 -- library_books rather than referencing this row.
 CREATE TABLE IF NOT EXISTS book_cache (
   id               INTEGER PRIMARY KEY AUTOINCREMENT,
-  source           TEXT NOT NULL CHECK (source IN ('GOOGLE_BOOKS')),
+  source           TEXT NOT NULL CHECK (source IN ('GOOGLE_BOOKS', 'OPEN_LIBRARY')),
   external_id      TEXT NOT NULL,
   title            TEXT NOT NULL,
   authors          TEXT,           -- pipe-delimited
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS library_books (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   -- provider-agnostic provenance; both nullable to support future manual entries
-  source         TEXT CHECK (source IS NULL OR source IN ('GOOGLE_BOOKS')),
+  source         TEXT CHECK (source IS NULL OR source IN ('GOOGLE_BOOKS', 'OPEN_LIBRARY')),
   external_id    TEXT,
   -- metadata snapshot (user-owned copy)
   title            TEXT NOT NULL,

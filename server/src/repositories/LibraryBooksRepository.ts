@@ -5,6 +5,7 @@ import { libraryBooks, readingLog } from '../db/schema';
 import {
   shelfEntrySchema,
   bookVolumeSchema,
+  libraryVolumeSchema,
   bookGenreSchema,
   type BookMetadata,
   type BookSource,
@@ -14,6 +15,8 @@ import {
   type ShelfStatus,
 } from '@livre/types';
 import { encodeBookRef } from '../lib/bookRef';
+import { normalizeIsbn } from '../lib/isbn';
+import { titleAuthorKey } from '../lib/bookSignature';
 import { type ExportBook } from '../lib/goodreadsCsv';
 
 const LATEST_STATUS_EVENT_ID = sql<number>`(
@@ -143,6 +146,26 @@ const toBookVolume = (r: FullRow) =>
     language: r.language ?? undefined,
   });
 
+// Like toBookVolume but tolerates a null bookRef (manual entries), for the owner-facing detail
+// view where a book with no upstream source must still render rather than 404.
+const toLibraryVolume = (r: FullRow) =>
+  libraryVolumeSchema.parse({
+    bookRef: refFromRow(r.source, r.externalId),
+    title: r.title,
+    authors: r.authors ? r.authors.split('|') : [],
+    isbn: r.isbn ?? undefined,
+    description: r.description ?? undefined,
+    thumbnail: r.thumbnail ?? undefined,
+    largeThumbnail: r.largeThumbnail ?? undefined,
+    pageCount: r.pageCount ?? undefined,
+    publisher: r.publisher ?? undefined,
+    publishedDate: r.publishedDate ?? undefined,
+    tags: r.tags ? z.array(z.string()).parse(JSON.parse(r.tags)) : [],
+    fiction: r.fiction,
+    genre: bookGenreSchema.parse(r.genre),
+    language: r.language ?? undefined,
+  });
+
 export class LibraryBooksRepository {
   findAllByUser(userId: number): ShelfEntry[] {
     const rows = db
@@ -225,9 +248,9 @@ export class LibraryBooksRepository {
 
   /**
    * Single-query detail lookup. Returns the (entry, book) pair; the BooksService composes the
-   * reading log onto this from ReadingLogRepository. Returns null if the book doesn't exist,
-   * doesn't belong to the user, or has no source/externalId (manual entries can't be rendered
-   * as a BookVolume yet).
+   * reading log onto this from ReadingLogRepository. Returns null only if the book doesn't exist or
+   * doesn't belong to the user. Manual entries (no source/externalId) render fine via the
+   * nullable-bookRef LibraryVolume shape — they just can't be re-fetched from a provider.
    */
   findDetailByLibraryBookId(
     userId: number,
@@ -240,8 +263,7 @@ export class LibraryBooksRepository {
       .where(and(eq(libraryBooks.userId, userId), eq(libraryBooks.id, libraryBookId)))
       .get();
     if (!row) return null;
-    if (!row.source || !row.externalId) return null;
-    return { entry: toShelfEntry(row), book: toBookVolume(row) };
+    return { entry: toShelfEntry(row), book: toLibraryVolume(row) };
   }
 
   /** Cheap existence check used by mutations that don't need the full row. */
@@ -384,11 +406,40 @@ export class LibraryBooksRepository {
     db.update(libraryBooks).set(set).where(eq(libraryBooks.id, libraryBookId)).run();
   }
 
+  /** Normalized ISBNs of every book the user owns, for cross-provider import dedup. */
+  findIsbnsByUser(userId: number): string[] {
+    const rows = db
+      .select({ isbn: libraryBooks.isbn })
+      .from(libraryBooks)
+      .where(and(eq(libraryBooks.userId, userId), sql`${libraryBooks.isbn} IS NOT NULL`))
+      .all();
+    return rows.map((r) => normalizeIsbn(r.isbn)).filter((isbn): isbn is string => isbn !== null);
+  }
+
+  /** Title/author signatures of every book the user owns, for ISBN-less import dedup. */
+  findTitleAuthorKeysByUser(userId: number): string[] {
+    return db
+      .select({ title: libraryBooks.title, authors: libraryBooks.authors })
+      .from(libraryBooks)
+      .where(eq(libraryBooks.userId, userId))
+      .all()
+      .map((r) => titleAuthorKey(r.title, r.authors ? r.authors.split('|') : []));
+  }
+
   /**
-   * Copy a metadata snapshot into the user's library. Caller is responsible for ensuring no
-   * duplicate exists (use findIdBySource first). Returns the new library_books.id.
+   * Copy a metadata snapshot into the user's library. `source`/`externalId` are null for manual
+   * entries (e.g. an unenriched import). `addedDate` overrides the default of now() — imports pass
+   * the book's original shelving date so chronological sort and export round-trips stay faithful.
+   * Caller is responsible for ensuring no duplicate exists (use findIdBySource / findIsbnsByUser /
+   * findTitleAuthorKeysByUser first). Returns the new library_books.id.
    */
-  create(userId: number, source: BookSource, externalId: string, metadata: BookMetadata): number {
+  create(
+    userId: number,
+    source: BookSource | null,
+    externalId: string | null,
+    metadata: BookMetadata,
+    addedDate?: string
+  ): number {
     const row = db
       .insert(libraryBooks)
       .values({
@@ -408,6 +459,7 @@ export class LibraryBooksRepository {
         fiction: metadata.fiction,
         genre: metadata.genre,
         language: metadata.language ?? null,
+        ...(addedDate ? { addedDate } : {}),
       })
       .returning({ id: libraryBooks.id })
       .get();

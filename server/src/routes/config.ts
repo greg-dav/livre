@@ -1,5 +1,5 @@
 import { Router, type RequestHandler } from 'express';
-import { updateApiKeyBodySchema } from '@livre/types';
+import { updateApiKeyBodySchema, updateGoogleBooksLimitBodySchema } from '@livre/types';
 import { ConfigRepository } from '../repositories/ConfigRepository';
 import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
 
@@ -16,7 +16,17 @@ export const createConfigRouter = (
       const { apiKey } = updateApiKeyBodySchema.parse(req.body);
       await googleBooksProvider.validate(apiKey);
       configRepository.set(ConfigRepository.GOOGLE_BOOKS_API_KEY, apiKey);
-      googleBooksProvider.invalidate();
+      res.json({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /** Set the per-instance daily cap on Google Books import lookups; requires admin privileges. */
+  router.put('/google-books-limit', requireAdmin, async (req, res, next) => {
+    try {
+      const { limit } = updateGoogleBooksLimitBodySchema.parse(req.body);
+      configRepository.set(ConfigRepository.GOOGLE_BOOKS_DAILY_LIMIT, String(limit));
       res.json({ ok: true });
     } catch (err) {
       next(err);

@@ -17,26 +17,38 @@ import {
   type RefreshMetadataBody,
   type UpdateLogEntryBody,
 } from '@livre/types';
+import createError from 'http-errors';
 import { db } from '../db';
-import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
+import {
+  type BookSourceProvider,
+  type SearchableBookSource,
+} from '../providers/BookSourceProvider';
 import { type BookCacheProvider } from '../providers/BookCacheProvider';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
 import { toBookVolume, type SourcedBook, type SourcedBookSearchResponse } from '../lib/bookRef';
-import { toGoodreadsCsv } from '../lib/goodreadsCsv';
 
 /**
  * Services work internally in server-side (source, externalId) tuples — the opaque client-side
  * `bookRef` is decoded by the route layer before calling in here. Outbound responses are
  * converted back to the client-facing `BookVolume` (with bookRef) via `toBookVolume`.
+ *
+ * Metadata sources are reached through the {@link BookSourceProvider} contract: a registry keyed by
+ * `BookSource` resolves any book by id, while the discovery screens use the one injected
+ * {@link SearchableBookSource}. Adding a source means registering it here — no `switch` to extend.
  */
 export class BooksService {
+  private readonly sources: Map<BookSource, BookSourceProvider>;
+
   constructor(
-    private readonly googleBooks: GoogleBooksProvider,
+    private readonly searchSource: SearchableBookSource,
+    sources: BookSourceProvider[],
     private readonly bookCache: BookCacheProvider,
     private readonly libraryBooksRepo: LibraryBooksRepository,
     private readonly readingLogRepo: ReadingLogRepository
-  ) {}
+  ) {
+    this.sources = new Map(sources.map((s) => [s.source, s]));
+  }
 
   /**
    * Faceted catalog search. The source orders and pages the results; this layer joins each hit
@@ -51,7 +63,7 @@ export class BooksService {
     sort: SearchSort = 'relevance',
     startIndex = 0
   ): Promise<SearchResponse> {
-    const internal = await this.googleBooks.search(query, scope, { startIndex, sort });
+    const internal = await this.searchSource.search(query, scope, { startIndex, sort });
     return this.toFacetedResponse(userId, internal, startIndex, shelf);
   }
 
@@ -61,7 +73,7 @@ export class BooksService {
    * it doesn't need any of that work done server-side.
    */
   async quickSearch(query: string): Promise<BookSearchResponse> {
-    const internal = await this.googleBooks.search(query, 'anything', { maxResults: 10 });
+    const internal = await this.searchSource.search(query, 'anything', { maxResults: 10 });
     return { results: internal.results.map(toBookVolume), total: internal.total };
   }
 
@@ -73,7 +85,7 @@ export class BooksService {
   ): Promise<SearchResponse> {
     // Covers come pre-upgraded from GoogleBooksClient.upgradeCoverUrl, so we no longer need
     // a per-result getById to surface a large thumbnail.
-    const internal = await this.googleBooks.searchByAuthor(name, { startIndex, sort });
+    const internal = await this.searchSource.searchByAuthor(name, { startIndex, sort });
     return this.toFacetedResponse(userId, internal, startIndex);
   }
 
@@ -332,11 +344,6 @@ export class BooksService {
     });
   }
 
-  /** Serialise the user's whole library to a Goodreads-shaped CSV string. */
-  exportLibraryCsv(userId: number): string {
-    return toGoodreadsCsv(this.libraryBooksRepo.findExportRowsByUser(userId));
-  }
-
   /** Cache-aware lookup that falls through to the source on miss and writes back on the way out. */
   private async fetchSourced(source: BookSource, externalId: string): Promise<SourcedBook> {
     const cached = this.bookCache.get(source, externalId);
@@ -347,9 +354,8 @@ export class BooksService {
   }
 
   private async fetchFromSource(source: BookSource, externalId: string): Promise<SourcedBook> {
-    switch (source) {
-      case 'GOOGLE_BOOKS':
-        return this.googleBooks.getById(externalId);
-    }
+    const provider = this.sources.get(source);
+    if (!provider) throw createError(404, 'Book not found');
+    return provider.getById(externalId);
   }
 }

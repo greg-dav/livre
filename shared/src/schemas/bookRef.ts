@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 /**
  * Source of book metadata. Provider-agnostic so we never persist a Google-specific reference.
- * Adding a new provider (e.g. OPEN_LIBRARY) means appending to this enum and the matching DB
- * CHECK constraint — no migration of existing rows.
+ * Adding a new provider means appending to this enum and the matching DB CHECK constraint — no
+ * migration of existing rows.
  *
  * This enum is server-internal. The client never sees source values directly; books are
  * referenced from the client by an opaque `bookRef` string that encodes (source, externalId).
  */
-export const bookSourceSchema = z.enum(['GOOGLE_BOOKS']);
+export const bookSourceSchema = z.enum(['GOOGLE_BOOKS', 'OPEN_LIBRARY']);
 export type BookSource = z.infer<typeof bookSourceSchema>;
 
 /**

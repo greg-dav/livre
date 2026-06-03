@@ -33,6 +33,7 @@ export {
   bookMetadataSchema,
   bookRefSchema,
   bookVolumeSchema,
+  libraryVolumeSchema,
   bookSearchResultSchema,
   bookSearchResponseSchema,
   searchScopeSchema,
@@ -72,12 +73,20 @@ export {
   resetReadingLogResponseSchema,
   removeFromLibraryResponseSchema,
   deleteLibraryResponseSchema,
+  libraryFormatSchema,
+  libraryFormatsResponseSchema,
+  importResultSchema,
+  enrichmentSourceSchema,
+  enrichmentUsageSchema,
+  enrichmentOptionSchema,
+  enrichmentOptionsResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
   BookGenre,
   BookMetadata,
   BookVolume,
+  LibraryVolume,
   BookSearchResult,
   BookSearchResponse,
   SearchScope,
@@ -100,9 +109,16 @@ export type {
   UpdateReviewBody,
   UpdateLogEntryBody,
   DeleteLibraryResponse,
+  LibraryFormat,
+  LibraryFormatsResponse,
+  ImportResult,
+  EnrichmentSource,
+  EnrichmentUsage,
+  EnrichmentOption,
+  EnrichmentOptionsResponse,
 } from './schemas/books';
-export { updateApiKeyBodySchema } from './schemas/config';
-export type { UpdateApiKeyBody } from './schemas/config';
+export { updateApiKeyBodySchema, updateGoogleBooksLimitBodySchema } from './schemas/config';
+export type { UpdateApiKeyBody, UpdateGoogleBooksLimitBody } from './schemas/config';
 export {
   shelfStatusSchema,
   logEventTypeSchema,

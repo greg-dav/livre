@@ -89,6 +89,16 @@ export const bookVolumeSchema = bookMetadataSchema.extend({
 });
 export type BookVolume = z.infer<typeof bookVolumeSchema>;
 
+/**
+ * A book as it lives in a user's library. Identical to BookVolume except `bookRef` is nullable:
+ * a manual entry (e.g. an import with no resolvable source) has no upstream provider and therefore
+ * no ref. The library detail view uses this so those books still render instead of 404ing.
+ */
+export const libraryVolumeSchema = bookMetadataSchema.extend({
+  bookRef: bookRefSchema.nullable(),
+});
+export type LibraryVolume = z.infer<typeof libraryVolumeSchema>;
+
 export const bookSearchResultSchema = bookVolumeSchema;
 export type BookSearchResult = BookVolume;
 
@@ -141,7 +151,7 @@ export type SearchResponse = z.infer<typeof searchResponseSchema>;
 
 export const libraryBookDetailSchema = z.object({
   entry: shelfEntrySchema,
-  book: bookVolumeSchema,
+  book: libraryVolumeSchema,
   log: z.array(logEntrySchema),
 });
 export type LibraryBookDetail = z.infer<typeof libraryBookDetailSchema>;
@@ -240,3 +250,63 @@ export const deleteLibraryResponseSchema = z.object({
   deleted: z.number().int().nonnegative(),
 });
 export type DeleteLibraryResponse = z.infer<typeof deleteLibraryResponseSchema>;
+
+/**
+ * A library transfer format the server can import from and/or export to (e.g. Goodreads CSV). The
+ * client renders the import/export modals from this list rather than hardcoding formats, so adding
+ * a server-side format adapter surfaces in the UI with no client change.
+ */
+export const libraryFormatSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  fileExtension: z.string(),
+  capabilities: z.object({ import: z.boolean(), export: z.boolean() }),
+});
+export type LibraryFormat = z.infer<typeof libraryFormatSchema>;
+
+export const libraryFormatsResponseSchema = z.array(libraryFormatSchema);
+export type LibraryFormatsResponse = z.infer<typeof libraryFormatsResponseSchema>;
+
+/**
+ * Outcome of an import run. `imported` books were added, `skipped` matched a book already in the
+ * library (by ISBN, source id, or title/author) and was left untouched, and `failed` rows couldn't
+ * be parsed or persisted. `deferred` books weren't imported because the chosen enrichment source ran
+ * out of daily budget (Google Books) — re-running the import once the quota resets picks them up.
+ * Duplicate rows *within the file* aren't reported here — one copy is imported and the rest silently
+ * dropped. `errors` carries a bounded sample of per-row failures.
+ */
+export const importResultSchema = z.object({
+  imported: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+  deferred: z.number().int().nonnegative(),
+  errors: z.array(z.object({ row: z.number().int(), message: z.string() })),
+});
+export type ImportResult = z.infer<typeof importResultSchema>;
+
+/** Which metadata source an import uses to enrich its books. Client-facing (kebab-case), mapped to a
+ * server-side BookSource at the route boundary so the client never sees raw source values. */
+export const enrichmentSourceSchema = z.enum(['open-library', 'google-books']);
+export type EnrichmentSource = z.infer<typeof enrichmentSourceSchema>;
+
+/** Daily usage of a metered enrichment source (Google Books), per Livre instance. The limit resets
+ * at midnight US Pacific (Google's quota reset); `remaining` is what's left for today. */
+export const enrichmentUsageSchema = z.object({
+  used: z.number().int().nonnegative(),
+  limit: z.number().int().nonnegative(),
+  remaining: z.number().int().nonnegative(),
+});
+export type EnrichmentUsage = z.infer<typeof enrichmentUsageSchema>;
+
+/** An available enrichment source for the import view. `metered` sources carry today's `usage`;
+ * unmetered ones (Open Library) have `usage: null`. */
+export const enrichmentOptionSchema = z.object({
+  id: enrichmentSourceSchema,
+  label: z.string(),
+  metered: z.boolean(),
+  usage: enrichmentUsageSchema.nullable(),
+});
+export type EnrichmentOption = z.infer<typeof enrichmentOptionSchema>;
+
+export const enrichmentOptionsResponseSchema = z.array(enrichmentOptionSchema);
+export type EnrichmentOptionsResponse = z.infer<typeof enrichmentOptionsResponseSchema>;

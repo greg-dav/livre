@@ -35,7 +35,6 @@ export class AuthService {
         isAdmin,
         googleBooksApiKey,
       });
-      this.googleBooks.invalidate();
       return { token: signToken(user, 0), user };
     } catch (err) {
       if (isUniqueViolation(err)) throw createError(409, 'Username already taken');

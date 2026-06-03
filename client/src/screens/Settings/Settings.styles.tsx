@@ -126,3 +126,91 @@ export const DialogActions = styled('div')(({ theme }) => ({
   gap: theme.spacing(3),
   marginTop: theme.spacing(2),
 }));
+
+// The variable content of an import/export dialog, on its own vertical rhythm and set off from the
+// dialog's title/description above and the action row below — so the format selector never sits
+// flush against the buttons.
+export const DialogBody = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(4),
+  marginTop: theme.spacing(5),
+  marginBottom: theme.spacing(3),
+}));
+
+// Shared surface for the bordered cards inside the import/export dialogs (format chooser, result
+// tally) so they read as defined controls on the dialog background — and stay visually identical.
+const DialogCard = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: `${theme.spacing(4)} ${theme.spacing(4)} ${theme.spacing(5)}`,
+  border: `1px solid ${theme.borderSoft}`,
+  borderRadius: theme.radius.lg,
+  background: theme.bgElevated,
+}));
+
+// Container that gives the format chooser a header + the list of options.
+export const FormatCard = styled(DialogCard)(({ theme }) => ({
+  gap: theme.spacing(3),
+}));
+
+// Vertical list of selectable formats inside the card.
+export const FormatList = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+}));
+
+// A single selectable format row; the accent ring marks the current choice.
+export const FormatOption = styled('button')<{ $selected: boolean }>(({ theme, $selected }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+  padding: `${theme.spacing(3)} ${theme.spacing(4)}`,
+  borderRadius: theme.radius.md,
+  border: `1px solid ${$selected ? theme.accent : theme.border}`,
+  background: $selected ? theme.accentSoft : theme.bg,
+  color: $selected ? theme.accent : theme.text,
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+  '&:hover': {
+    borderColor: theme.accent,
+  },
+}));
+
+// A format/source option's label, stacked so a metered source can show a usage line beneath its name.
+export const OptionLabel = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(0.5),
+  minWidth: 0,
+}));
+
+// The usage meter shown inside the source card for a metered source: a thin bar plus a caption.
+export const Meter = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1.5),
+  marginTop: theme.spacing(1),
+}));
+
+// The file chooser row: a button to pick a .csv and the chosen filename beside it.
+export const FileRow = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(3),
+}));
+
+// Tally of imported / skipped / failed counts shown after an import completes. Shares the format
+// card's surface (border, radius, fill) so the two dialogs feel of a piece.
+export const ResultList = styled(DialogCard)(({ theme }) => ({
+  gap: theme.spacing(2),
+}));
+
+export const ResultRow = styled('div')(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: theme.spacing(4),
+}));

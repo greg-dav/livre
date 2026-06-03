@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Input, Text } from '@livre/primitives';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
@@ -7,16 +7,30 @@ import { Section } from './Section';
 import { Block, BlockHead, Field, Actions, Feedback } from './Settings.styles';
 
 /**
- * Instance configuration. Currently just the Google Books API key, which is validated against the
- * live API before it's stored. Admin-only — the Settings nav only surfaces this section to admins,
- * and the underlying route enforces the same.
+ * Instance configuration: the Google Books API key (validated against the live API before storing)
+ * and the per-instance daily cap on Google Books import lookups. Admin-only — the Settings nav only
+ * surfaces this section to admins, and the underlying routes enforce the same.
  */
 export const ConfigurationSection = () => {
+  const queryClient = useQueryClient();
   const [apiKey, setApiKey] = useState('');
 
   const mutation = useMutation({
     mutationFn: () => api.config.updateGoogleBooksKey(apiKey),
     onSuccess: () => setApiKey(''),
+  });
+
+  const enrichmentQuery = useQuery({
+    queryKey: ['enrichment'],
+    queryFn: () => api.books.enrichmentOptions(),
+  });
+  const currentLimit = enrichmentQuery.data?.find((o) => o.id === 'google-books')?.usage?.limit;
+  const [limit, setLimit] = useState<string | null>(null);
+  const limitValue = limit ?? (currentLimit !== undefined ? String(currentLimit) : '');
+
+  const limitMutation = useMutation({
+    mutationFn: () => api.config.updateGoogleBooksLimit(Number(limitValue)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['enrichment'] }),
   });
 
   return (
@@ -63,6 +77,52 @@ export const ConfigurationSection = () => {
           {mutation.isSuccess && (
             <Text variant="ui-sm" color="accent">
               API key updated.
+            </Text>
+          )}
+        </Feedback>
+      </Block>
+
+      <Block>
+        <BlockHead>
+          <Text variant="label" color="accent">
+            Daily import lookups
+          </Text>
+          <Text variant="ui-sm" color="muted">
+            How many Google Books lookups an import may spend per day on this instance, matching
+            your key&rsquo;s quota (Google&rsquo;s free tier is 1,000/day). Larger imports continue
+            after the limit resets at midnight Pacific.
+          </Text>
+        </BlockHead>
+        <Field>
+          <Input
+            type="number"
+            min={1}
+            value={limitValue}
+            onChange={(e) => setLimit(e.target.value)}
+            placeholder="1000"
+          />
+        </Field>
+        <Actions>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={!limitValue || Number(limitValue) < 1 || limitMutation.isPending}
+            onClick={() => limitMutation.mutate()}
+          >
+            <Text variant="label" color="onColor">
+              {limitMutation.isPending ? 'Saving…' : 'Save limit'}
+            </Text>
+          </Button>
+        </Actions>
+        <Feedback>
+          {limitMutation.isError && (
+            <Text variant="ui-sm" color="muted">
+              {errorMessage(limitMutation.error, 'Failed to update limit')}
+            </Text>
+          )}
+          {limitMutation.isSuccess && (
+            <Text variant="ui-sm" color="accent">
+              Daily limit updated.
             </Text>
           )}
         </Feedback>
