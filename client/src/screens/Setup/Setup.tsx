@@ -27,7 +27,6 @@ export const Setup = () => {
     mutation.mutate({
       username: String(data.get('username') ?? ''),
       password: String(data.get('password') ?? ''),
-      googleBooksApiKey: String(data.get('googleBooksApiKey') ?? ''),
     });
   };
 
@@ -104,20 +103,6 @@ export const Setup = () => {
             >
               <Text variant="ui-xs" color="accent">
                 Passwords do not match
-              </Text>
-            </Form.Message>
-          </Form.Field>
-
-          <Form.Field name="googleBooksApiKey">
-            <Form.Label>
-              <Text variant="label">Google Books API key</Text>
-            </Form.Label>
-            <Form.Control asChild>
-              <Input type="text" autoComplete="off" required />
-            </Form.Control>
-            <Form.Message match="valueMissing">
-              <Text variant="ui-xs" color="accent">
-                Google Books API key is required
               </Text>
             </Form.Message>
           </Form.Field>

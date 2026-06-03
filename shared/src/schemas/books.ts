@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { bookRefSchema } from './bookRef';
+import { bookRefSchema, bookSourceSchema } from './bookRef';
 import { shelfEntrySchema, shelfStatusSchema, logEntrySchema } from './shelves';
 
 export { bookSourceSchema, bookRefSchema } from './bookRef';
@@ -270,8 +270,8 @@ export type LibraryFormatsResponse = z.infer<typeof libraryFormatsResponseSchema
 /**
  * Outcome of an import run. `imported` books were added, `skipped` matched a book already in the
  * library (by ISBN, source id, or title/author) and was left untouched, and `failed` rows couldn't
- * be parsed or persisted. `deferred` books weren't imported because the chosen enrichment source ran
- * out of daily budget (Google Books) — re-running the import once the quota resets picks them up.
+ * be parsed or persisted. `deferred` books weren't imported because the chosen source ran out of
+ * daily budget (Google Books) — re-running the import once the quota resets picks them up.
  * Duplicate rows *within the file* aren't reported here — one copy is imported and the rest silently
  * dropped. `errors` carries a bounded sample of per-row failures.
  */
@@ -284,29 +284,24 @@ export const importResultSchema = z.object({
 });
 export type ImportResult = z.infer<typeof importResultSchema>;
 
-/** Which metadata source an import uses to enrich its books. Client-facing (kebab-case), mapped to a
- * server-side BookSource at the route boundary so the client never sees raw source values. */
-export const enrichmentSourceSchema = z.enum(['open-library', 'google-books']);
-export type EnrichmentSource = z.infer<typeof enrichmentSourceSchema>;
-
-/** Daily usage of a metered enrichment source (Google Books), per Livre instance. The limit resets
- * at midnight US Pacific (Google's quota reset); `remaining` is what's left for today. */
-export const enrichmentUsageSchema = z.object({
+/** Daily usage of a metered source (Google Books), per Livre instance. The limit resets at midnight
+ * US Pacific (Google's quota reset); `remaining` is what's left for today. */
+export const sourceUsageSchema = z.object({
   used: z.number().int().nonnegative(),
   limit: z.number().int().nonnegative(),
   remaining: z.number().int().nonnegative(),
 });
-export type EnrichmentUsage = z.infer<typeof enrichmentUsageSchema>;
+export type SourceUsage = z.infer<typeof sourceUsageSchema>;
 
-/** An available enrichment source for the import view. `metered` sources carry today's `usage`;
+/** A metadata source the import view can pull from. `metered` sources carry today's `usage`;
  * unmetered ones (Open Library) have `usage: null`. */
-export const enrichmentOptionSchema = z.object({
-  id: enrichmentSourceSchema,
+export const importSourceSchema = z.object({
+  id: bookSourceSchema,
   label: z.string(),
   metered: z.boolean(),
-  usage: enrichmentUsageSchema.nullable(),
+  usage: sourceUsageSchema.nullable(),
 });
-export type EnrichmentOption = z.infer<typeof enrichmentOptionSchema>;
+export type ImportSource = z.infer<typeof importSourceSchema>;
 
-export const enrichmentOptionsResponseSchema = z.array(enrichmentOptionSchema);
-export type EnrichmentOptionsResponse = z.infer<typeof enrichmentOptionsResponseSchema>;
+export const importSourcesResponseSchema = z.array(importSourceSchema);
+export type ImportSourcesResponse = z.infer<typeof importSourcesResponseSchema>;

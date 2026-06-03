@@ -7,7 +7,6 @@ export const registerBodySchema = z.object({
     .min(2, 'Username must be at least 2 characters')
     .max(32, 'Username must be at most 32 characters'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  googleBooksApiKey: z.string().min(1, 'Google Books API key is required'),
 });
 
 export const loginBodySchema = z.object({

@@ -1,32 +1,55 @@
 import { Router, type RequestHandler } from 'express';
-import { updateApiKeyBodySchema, updateGoogleBooksLimitBodySchema } from '@livre/types';
+import {
+  updateApiKeyBodySchema,
+  updateDailyLimitBodySchema,
+  bookSourceSchema,
+  type BookSource,
+} from '@livre/types';
+import createError from 'http-errors';
 import { ConfigRepository } from '../repositories/ConfigRepository';
-import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
+import { type ConfigurableSource } from '../ports/bookSource';
 
+/**
+ * Per-source instance settings (admin-only). The router is source-agnostic: it's handed a registry
+ * of the configurable sources and resolves the `:source` param against it, so adding a keyed source
+ * is registration-only.
+ */
 export const createConfigRouter = (
   configRepository: ConfigRepository,
-  googleBooksProvider: GoogleBooksProvider,
+  configurableSources: Map<BookSource, ConfigurableSource>,
   requireAdmin: RequestHandler
 ) => {
   const router = Router();
 
-  /** Update and validate the Google Books API key; requires admin privileges. */
-  router.put('/google-books-key', requireAdmin, async (req, res, next) => {
+  const resolveSource = (
+    raw: unknown
+  ): { source: BookSource; configurable: ConfigurableSource } => {
+    const parsed = bookSourceSchema.safeParse(raw);
+    if (!parsed.success) throw createError(404, 'Unknown source');
+    const configurable = configurableSources.get(parsed.data);
+    if (!configurable) throw createError(400, `Source ${parsed.data} is not configurable`);
+    return { source: parsed.data, configurable };
+  };
+
+  /** Update and validate a source's API key (validated against the live API before storing). */
+  router.put('/sources/:source/key', requireAdmin, async (req, res, next) => {
     try {
+      const { source, configurable } = resolveSource(req.params.source);
       const { apiKey } = updateApiKeyBodySchema.parse(req.body);
-      await googleBooksProvider.validate(apiKey);
-      configRepository.set(ConfigRepository.GOOGLE_BOOKS_API_KEY, apiKey);
+      await configurable.validate(apiKey);
+      configRepository.set(source, ConfigRepository.API_KEY, apiKey);
       res.json({ ok: true });
     } catch (err) {
       next(err);
     }
   });
 
-  /** Set the per-instance daily cap on Google Books import lookups; requires admin privileges. */
-  router.put('/google-books-limit', requireAdmin, async (req, res, next) => {
+  /** Set the per-instance daily cap on a source's import lookups. */
+  router.put('/sources/:source/limit', requireAdmin, async (req, res, next) => {
     try {
-      const { limit } = updateGoogleBooksLimitBodySchema.parse(req.body);
-      configRepository.set(ConfigRepository.GOOGLE_BOOKS_DAILY_LIMIT, String(limit));
+      const { source } = resolveSource(req.params.source);
+      const { limit } = updateDailyLimitBodySchema.parse(req.body);
+      configRepository.set(source, ConfigRepository.DAILY_LIMIT, String(limit));
       res.json({ ok: true });
     } catch (err) {
       next(err);

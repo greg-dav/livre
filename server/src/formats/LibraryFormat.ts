@@ -15,17 +15,17 @@ import { type ExportBook } from '../lib/goodreadsCsv';
 export interface ImportRow {
   title: string;
   authors: string[];
-  isbn: string | null;
-  isbnAlt: string | null;
-  rating: number | null;
-  review: string | null;
-  publisher: string | null;
-  pageCount: number | null;
-  publishedDate: string | null;
+  isbn: string | undefined;
+  isbnAlt: string | undefined;
+  rating: number | undefined;
+  review: string | undefined;
+  publisher: string | undefined;
+  pageCount: number | undefined;
+  publishedDate: string | undefined;
   tags: string[];
   status: ShelfStatus;
   addedDate: string;
-  dateRead: string | null;
+  dateRead: string | undefined;
 }
 
 /**

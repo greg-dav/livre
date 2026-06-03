@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Dialog, Icon, ProgressBar, Text } from '@livre/primitives';
-import { type EnrichmentOption, type EnrichmentSource, type LibraryFormat } from '@livre/types';
+import { type ImportSource, type BookSource, type LibraryFormat } from '@livre/types';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
 import { Section } from './Section';
@@ -55,13 +55,13 @@ const FormatField = (props: {
 
 /**
  * Metadata-source chooser for import. Each source is selectable; a metered source (Google Books)
- * also shows today's per-instance usage as a bar + caption so the reader can see how much enrichment
+ * also shows today's per-instance usage as a bar + caption so the reader can see how much lookup
  * budget is left before committing to a large import.
  */
-const EnrichmentField = (props: {
-  options: EnrichmentOption[];
-  selected: EnrichmentSource;
-  onSelect: (id: EnrichmentSource) => void;
+const ImportSourceField = (props: {
+  options: ImportSource[];
+  selected: BookSource;
+  onSelect: (id: BookSource) => void;
 }) => {
   const current = props.options.find((o) => o.id === props.selected);
   return (
@@ -129,15 +129,15 @@ export const DataSection = () => {
   const importFormats = formats.filter((f) => f.capabilities.import);
   const importSelected = importFormatId ?? importFormats[0]?.id ?? '';
 
-  const enrichmentQuery = useQuery({
-    queryKey: ['enrichment'],
-    queryFn: () => api.books.enrichmentOptions(),
+  const importSourcesQuery = useQuery({
+    queryKey: ['import-sources'],
+    queryFn: () => api.books.importSources(),
   });
-  const enrichmentOptions = enrichmentQuery.data ?? [];
-  const [enrichmentId, setEnrichmentId] = useState<EnrichmentSource | null>(null);
-  const enrichmentSelected = enrichmentId ?? enrichmentOptions[0]?.id ?? 'open-library';
-  const selectedEnrichment = enrichmentOptions.find((o) => o.id === enrichmentSelected);
-  const quotaExhausted = !!selectedEnrichment?.usage && selectedEnrichment.usage.remaining <= 0;
+  const importSources = importSourcesQuery.data ?? [];
+  const [sourceId, setSourceId] = useState<BookSource | null>(null);
+  const selectedSourceId = sourceId ?? importSources[0]?.id ?? 'OPEN_LIBRARY';
+  const selectedSource = importSources.find((o) => o.id === selectedSourceId);
+  const quotaExhausted = !!selectedSource?.usage && selectedSource.usage.remaining <= 0;
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -158,19 +158,19 @@ export const DataSection = () => {
     mutationFn: ({
       formatId,
       file,
-      enrichment,
+      source,
     }: {
       formatId: string;
       file: File;
-      enrichment: EnrichmentSource;
-    }) => api.books.importLibrary(formatId, file, enrichment),
+      source: BookSource;
+    }) => api.books.importLibrary(formatId, file, source),
     onSuccess: () => {
       // New books and reading-log events landed; refetch so the library, shelves, and timeline show
-      // them. Refetch enrichment too so the Google meter reflects the lookups this import spent.
+      // them. Refetch import sources too so the Google meter reflects the lookups this import spent.
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['log'] });
-      queryClient.invalidateQueries({ queryKey: ['enrichment'] });
+      queryClient.invalidateQueries({ queryKey: ['import-sources'] });
     },
   });
 
@@ -377,11 +377,11 @@ export const DataSection = () => {
                 selected={importSelected}
                 onSelect={setImportFormatId}
               />
-              {enrichmentOptions.length > 1 && (
-                <EnrichmentField
-                  options={enrichmentOptions}
-                  selected={enrichmentSelected}
-                  onSelect={setEnrichmentId}
+              {importSources.length > 1 && (
+                <ImportSourceField
+                  options={importSources}
+                  selected={selectedSourceId}
+                  onSelect={setSourceId}
                 />
               )}
               {quotaExhausted && (
@@ -435,7 +435,7 @@ export const DataSection = () => {
                   importMutation.mutate({
                     formatId: importSelected,
                     file,
-                    enrichment: enrichmentSelected,
+                    source: selectedSourceId,
                   })
                 }
               >

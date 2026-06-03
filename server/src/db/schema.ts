@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { integer, primaryKey, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -16,10 +16,15 @@ export const users = sqliteTable('users', {
   lastLogin: text('last_login'),
 });
 
-export const config = sqliteTable('config', {
-  key: text('key').primaryKey(),
-  value: text('value').notNull(),
-});
+export const config = sqliteTable(
+  'config',
+  {
+    source: text('source').notNull(),
+    key: text('key').notNull(),
+    value: text('value').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.source, t.key] })]
+);
 
 export const bookCache = sqliteTable(
   'book_cache',

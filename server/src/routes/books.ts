@@ -5,10 +5,8 @@ import {
   bookVolumeSchema,
   libraryFormatsResponseSchema,
   importResultSchema,
-  enrichmentSourceSchema,
-  enrichmentOptionsResponseSchema,
-  type BookSource,
-  type EnrichmentSource,
+  bookSourceSchema,
+  importSourcesResponseSchema,
   bookSearchResponseSchema,
   searchScopeSchema,
   searchSortSchema,
@@ -66,12 +64,6 @@ const parseBookRef = (
   } catch {
     throw createError(400, 'Invalid book reference');
   }
-};
-
-// The client picks a kebab-case enrichment source; the server works in BookSource values.
-const ENRICHMENT_TO_SOURCE: Record<EnrichmentSource, BookSource> = {
-  'open-library': 'OPEN_LIBRARY',
-  'google-books': 'GOOGLE_BOOKS',
 };
 
 export function createBooksRouter(
@@ -153,10 +145,10 @@ export function createBooksRouter(
     respond(transfer.listFormats());
   });
 
-  /** List the enrichment sources for the import view, with today's per-instance Google usage. */
-  router.get('/enrichment', enrichmentOptionsResponseSchema, async (respond, req) => {
+  /** List the metadata sources for the import view, with today's per-instance Google usage. */
+  router.get('/import-sources', importSourcesResponseSchema, async (respond, req) => {
     if (!req.user) throw createError(401, 'Unauthorized');
-    respond(transfer.listEnrichmentSources());
+    respond(transfer.listImportSources());
   });
 
   /**
@@ -176,8 +168,8 @@ export function createBooksRouter(
   });
 
   /**
-   * Import a library file in the chosen format (default goodreads), enriching from the chosen source
-   * (default open-library). The body is the raw file text, parsed by express.text rather than
+   * Import a library file in the chosen format (default goodreads), pulling metadata from the chosen
+   * source (default OPEN_LIBRARY). The body is the raw file text, parsed by express.text rather than
    * express.json — Goodreads exports run to several MB and carry CSV, not JSON. Existing books are
    * skipped; the response reports imported/skipped/failed/deferred.
    */
@@ -191,14 +183,8 @@ export function createBooksRouter(
         const content = typeof req.body === 'string' ? req.body : '';
         if (!content.trim()) throw createError(400, 'Empty import file');
         const format = z.string().min(1).safeParse(req.query.format).data ?? 'goodreads';
-        const enrichment =
-          enrichmentSourceSchema.safeParse(req.query.enrichment).data ?? 'open-library';
-        const result = await transfer.import(
-          user.id,
-          format,
-          content,
-          ENRICHMENT_TO_SOURCE[enrichment]
-        );
+        const source = bookSourceSchema.safeParse(req.query.source).data ?? 'OPEN_LIBRARY';
+        const result = await transfer.import(user.id, format, content, source);
         res.json(importResultSchema.parse(result));
       } catch (e) {
         next(e);

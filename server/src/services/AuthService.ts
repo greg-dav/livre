@@ -5,36 +5,23 @@ import { signToken } from '../lib/token';
 import { isUniqueViolation } from '../lib/serviceHelpers';
 import { type UsersRepository } from '../repositories/UsersRepository';
 import { type SetupRepository } from '../repositories/SetupRepository';
-import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
 
 export class AuthService {
   constructor(
     private readonly users: UsersRepository,
-    private readonly setup: SetupRepository,
-    private readonly googleBooks: GoogleBooksProvider
+    private readonly setup: SetupRepository
   ) {}
 
   getStatus() {
     return { hasUsers: this.users.count() > 0 };
   }
 
-  async register(
-    username: string,
-    password: string,
-    googleBooksApiKey: string
-  ): Promise<AuthResponse> {
-    await this.googleBooks.validate(googleBooksApiKey);
-
+  async register(username: string, password: string): Promise<AuthResponse> {
     const passwordHash = await bcrypt.hash(password, 12);
 
     try {
       const isAdmin = this.users.count() === 0;
-      const user = this.setup.execute({
-        username,
-        passwordHash,
-        isAdmin,
-        googleBooksApiKey,
-      });
+      const user = this.setup.execute({ username, passwordHash, isAdmin });
       return { token: signToken(user, 0), user };
     } catch (err) {
       if (isUniqueViolation(err)) throw createError(409, 'Username already taken');

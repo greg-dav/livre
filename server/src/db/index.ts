@@ -42,6 +42,37 @@ if (!userColumns.includes('token_version'))
 if (userColumns.includes('public_key')) sqlite.exec('ALTER TABLE users DROP COLUMN public_key');
 if (userColumns.includes('private_key')) sqlite.exec('ALTER TABLE users DROP COLUMN private_key');
 
+// config gained a `source` column and a (source, key) primary key. Databases that predate it stored
+// Google Books settings under `google_books_*` keys with no source; rebuild in place, remapping
+// those rows to (GOOGLE_BOOKS, api_key|daily_limit|usage). The admin's saved API key is carried
+// across, so no reconfiguration is needed after upgrade.
+const configColumns = sqlite
+  .prepare("SELECT name FROM pragma_table_info('config')")
+  .all()
+  .map((r) => (r as { name: string }).name);
+if (!configColumns.includes('source')) {
+  sqlite.exec(`
+    CREATE TABLE config_new (
+      source TEXT NOT NULL CHECK (source IN ('GOOGLE_BOOKS', 'OPEN_LIBRARY')),
+      key    TEXT NOT NULL,
+      value  TEXT NOT NULL,
+      PRIMARY KEY (source, key)
+    );
+    INSERT INTO config_new (source, key, value)
+      SELECT 'GOOGLE_BOOKS',
+             CASE key
+               WHEN 'google_books_api_key' THEN 'api_key'
+               WHEN 'google_books_daily_limit' THEN 'daily_limit'
+               WHEN 'google_books_usage' THEN 'usage'
+               ELSE key
+             END,
+             value
+      FROM config;
+    DROP TABLE config;
+    ALTER TABLE config_new RENAME TO config;
+  `);
+}
+
 const bookCacheColumns = sqlite
   .prepare("SELECT name FROM pragma_table_info('book_cache')")
   .all()

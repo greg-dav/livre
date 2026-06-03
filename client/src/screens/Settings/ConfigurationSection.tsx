@@ -16,21 +16,21 @@ export const ConfigurationSection = () => {
   const [apiKey, setApiKey] = useState('');
 
   const mutation = useMutation({
-    mutationFn: () => api.config.updateGoogleBooksKey(apiKey),
+    mutationFn: () => api.config.updateSourceKey('GOOGLE_BOOKS', apiKey),
     onSuccess: () => setApiKey(''),
   });
 
-  const enrichmentQuery = useQuery({
-    queryKey: ['enrichment'],
-    queryFn: () => api.books.enrichmentOptions(),
+  const importSourcesQuery = useQuery({
+    queryKey: ['import-sources'],
+    queryFn: () => api.books.importSources(),
   });
-  const currentLimit = enrichmentQuery.data?.find((o) => o.id === 'google-books')?.usage?.limit;
+  const currentLimit = importSourcesQuery.data?.find((o) => o.id === 'GOOGLE_BOOKS')?.usage?.limit;
   const [limit, setLimit] = useState<string | null>(null);
   const limitValue = limit ?? (currentLimit !== undefined ? String(currentLimit) : '');
 
   const limitMutation = useMutation({
-    mutationFn: () => api.config.updateGoogleBooksLimit(Number(limitValue)),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['enrichment'] }),
+    mutationFn: () => api.config.updateSourceLimit('GOOGLE_BOOKS', Number(limitValue)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['import-sources'] }),
   });
 
   return (

@@ -19,25 +19,25 @@ const EXCLUSIVE_SHELF_TO_STATUS: Record<string, ShelfStatus> = {
 const RESERVED_SHELVES = new Set(Object.keys(EXCLUSIVE_SHELF_TO_STATUS));
 
 // Goodreads dates are YYYY/MM/DD; normalize to the YYYY-MM-DD Livre stores. Anything unparseable
-// (including the common empty cell) yields null.
-const parseDate = (raw: string | undefined): string | null => {
+// (including the common empty cell) yields undefined.
+const parseDate = (raw: string | undefined): string | undefined => {
   const m = (raw ?? '').trim().match(/^(\d{4})[/-](\d{2})[/-](\d{2})/);
-  return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : undefined;
 };
 
-const parseRating = (raw: string | undefined): number | null => {
+const parseRating = (raw: string | undefined): number | undefined => {
   const n = Number.parseInt((raw ?? '').trim(), 10);
-  return Number.isFinite(n) && n >= 1 && n <= 5 ? n : null;
+  return Number.isFinite(n) && n >= 1 && n <= 5 ? n : undefined;
 };
 
-const parseInteger = (raw: string | undefined): number | null => {
+const parseInteger = (raw: string | undefined): number | undefined => {
   const n = Number.parseInt((raw ?? '').trim(), 10);
-  return Number.isFinite(n) ? n : null;
+  return Number.isFinite(n) ? n : undefined;
 };
 
-const nonEmpty = (raw: string | undefined): string | null => {
+const nonEmpty = (raw: string | undefined): string | undefined => {
   const t = (raw ?? '').trim();
-  return t.length > 0 ? t : null;
+  return t.length > 0 ? t : undefined;
 };
 
 // "Author" is the primary; "Additional Authors" is a comma-separated list. Blanks are dropped.
@@ -63,17 +63,17 @@ const rowFrom = (record: Record<string, string>): ImportRow => {
   // the alternate (when both are present) so enrichment can try both.
   const isbn13 = normalizeIsbn(record['ISBN13']);
   const isbn10 = normalizeIsbn(record['ISBN']);
-  const isbn = isbn13 ?? isbn10;
+  const isbn = isbn13 ?? isbn10 ?? undefined;
   return {
     title: (record['Title'] ?? '').trim(),
     authors: parseAuthors(record['Author'], record['Additional Authors']),
     isbn,
-    isbnAlt: isbn13 && isbn10 ? isbn10 : null,
+    isbnAlt: isbn13 && isbn10 ? isbn10 : undefined,
     rating: parseRating(record['My Rating']),
     review: nonEmpty(record['My Review']),
     publisher: nonEmpty(record['Publisher']),
     pageCount: parseInteger(record['Number of Pages']),
-    publishedDate: (record['Year Published'] ?? '').trim().match(/\d{4}/)?.[0] ?? null,
+    publishedDate: (record['Year Published'] ?? '').trim().match(/\d{4}/)?.[0] ?? undefined,
     tags: parseTags(record['Bookshelves']),
     status,
     addedDate: parseDate(record['Date Added']) ?? today(),

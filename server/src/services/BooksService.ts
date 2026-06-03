@@ -19,10 +19,7 @@ import {
 } from '@livre/types';
 import createError from 'http-errors';
 import { db } from '../db';
-import {
-  type BookSourceProvider,
-  type SearchableBookSource,
-} from '../providers/BookSourceProvider';
+import { type BookSourceProvider, type SearchableBookSource } from '../ports/bookSource';
 import { type BookCacheProvider } from '../providers/BookCacheProvider';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
@@ -353,6 +350,11 @@ export class BooksService {
     return book;
   }
 
+  /**
+   * Dispatch a by-id fetch to the source registered for `source`, keyed by {@link BookSource}. The
+   * registry is what keeps adding a source registration-only — no `switch` here to extend. A book
+   * referencing a source with no registered adapter reads as not found rather than crashing.
+   */
   private async fetchFromSource(source: BookSource, externalId: string): Promise<SourcedBook> {
     const provider = this.sources.get(source);
     if (!provider) throw createError(404, 'Book not found');

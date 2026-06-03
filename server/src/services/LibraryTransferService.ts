@@ -3,7 +3,7 @@ import createError from 'http-errors';
 import {
   type BookMetadata,
   type BookSource,
-  type EnrichmentOption,
+  type ImportSource,
   type ImportResult,
   type LibraryFormat as LibraryFormatInfo,
   type ShelfStatus,
@@ -13,16 +13,17 @@ import { type SourcedBook } from '../lib/bookRef';
 import { titleAuthorKey } from '../lib/bookSignature';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
-import { type OpenLibraryProvider } from '../providers/OpenLibraryProvider';
-import { type GoogleBooksProvider } from '../providers/GoogleBooksProvider';
-import { type GoogleBooksUsageProvider } from '../providers/GoogleBooksUsageProvider';
+import {
+  type BatchIsbnSource,
+  type ConfigurableSource,
+  type SearchableBookSource,
+} from '../ports/bookSource';
+import { type GoogleBooksUsageStore } from '../stores/GoogleBooksUsageStore';
 import { type ImportRow, type LibraryFormat } from '../formats/LibraryFormat';
 
 // Cap how many per-row failures travel back to the client; the count is always exact, the list is
 // just a sample so a pathological file can't return a megabyte of error text.
 const MAX_ERRORS = 50;
-
-const undef = <T>(value: T | null): T | undefined => value ?? undefined;
 
 /**
  * Moves a user's whole library in and out of Livre through pluggable {@link LibraryFormat} adapters.
@@ -30,9 +31,10 @@ const undef = <T>(value: T | null): T | undefined => value ?? undefined;
  * {@link ImportRow} into a persisted book: enrich by ISBN via Open Library, copy into library_books,
  * and synthesize the reading-log events that give the book its shelf status.
  *
- * Per the repo's layering rules it composes repositories and providers directly rather than calling
- * other services — the create-and-seed-log flow overlaps BooksService.addToLibrary but is duplicated
- * here because import seeds multiple events at historical dates rather than one event at "now".
+ * Per the repo's layering rules it composes repositories, source ports, and the usage store directly
+ * rather than calling other services — the create-and-seed-log flow overlaps BooksService.addToLibrary
+ * but is duplicated here because import seeds multiple events at historical dates rather than one
+ * event at "now".
  */
 export class LibraryTransferService {
   private readonly formats: Map<string, LibraryFormat>;
@@ -41,25 +43,25 @@ export class LibraryTransferService {
     formats: LibraryFormat[],
     private readonly libraryBooksRepo: LibraryBooksRepository,
     private readonly readingLogRepo: ReadingLogRepository,
-    private readonly openLibrary: OpenLibraryProvider,
-    private readonly googleBooks: GoogleBooksProvider,
-    private readonly googleUsage: GoogleBooksUsageProvider
+    private readonly openLibrary: BatchIsbnSource,
+    private readonly googleBooks: SearchableBookSource & ConfigurableSource,
+    private readonly googleUsage: GoogleBooksUsageStore
   ) {
     this.formats = new Map(formats.map((f) => [f.id, f]));
   }
 
   /**
-   * Enrichment sources offered to the import view. Open Library is always available (free, no key,
+   * Metadata sources offered to the import view. Open Library is always available (free, no key,
    * unlimited); Google Books appears only when an API key is configured, and carries today's
    * per-instance usage so the client can show the meter and warn before a large import.
    */
-  listEnrichmentSources(): EnrichmentOption[] {
-    const options: EnrichmentOption[] = [
-      { id: 'open-library', label: 'Open Library', metered: false, usage: null },
+  listImportSources(): ImportSource[] {
+    const options: ImportSource[] = [
+      { id: 'OPEN_LIBRARY', label: 'Open Library', metered: false, usage: null },
     ];
     if (this.googleBooks.isConfigured()) {
       options.push({
-        id: 'google-books',
+        id: 'GOOGLE_BOOKS',
         label: 'Google Books',
         metered: true,
         usage: this.googleUsage.snapshot(),
@@ -160,7 +162,7 @@ export class LibraryTransferService {
         } else {
           // Google Books: stop importing once the daily budget is spent, leaving the rest for a
           // later run. Deferred books aren't persisted, so a re-run resumes where this one stopped.
-          // The lookup itself counts against the quota inside GoogleBooksProvider — not here.
+          // The lookup itself counts against the quota inside GoogleBooksAdapter — not here.
           if (this.googleUsage.remaining() <= 0) {
             deferred++;
             continue;
@@ -248,8 +250,8 @@ export class LibraryTransferService {
         metadata,
         row.addedDate
       );
-      if (row.rating !== null) this.libraryBooksRepo.updateRating(libraryBookId, row.rating);
-      if (row.review !== null) this.libraryBooksRepo.updateReview(libraryBookId, row.review);
+      if (row.rating !== undefined) this.libraryBooksRepo.updateRating(libraryBookId, row.rating);
+      if (row.review !== undefined) this.libraryBooksRepo.updateReview(libraryBookId, row.review);
       this.seedLog(libraryBookId, row);
     });
   }
@@ -262,10 +264,10 @@ export class LibraryTransferService {
     return {
       title: row.title.trim() || enriched?.title || row.title,
       authors: row.authors.length > 0 ? row.authors : (enriched?.authors ?? []),
-      isbn: undef(row.isbn) ?? enriched?.isbn,
-      publisher: undef(row.publisher) ?? enriched?.publisher,
-      pageCount: undef(row.pageCount) ?? enriched?.pageCount,
-      publishedDate: undef(row.publishedDate) ?? enriched?.publishedDate,
+      isbn: row.isbn ?? enriched?.isbn,
+      publisher: row.publisher ?? enriched?.publisher,
+      pageCount: row.pageCount ?? enriched?.pageCount,
+      publishedDate: row.publishedDate ?? enriched?.publishedDate,
       description: enriched?.description,
       thumbnail: enriched?.thumbnail,
       largeThumbnail: enriched?.largeThumbnail,

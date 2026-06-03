@@ -18,13 +18,13 @@ export function createAuthRouter(service: AuthService, requireAuth: RequestHandl
     respond(service.getStatus());
   });
 
-  /** Register a new user account, validate the Google Books API key, and return a JWT. */
+  /** Register a new user account and return a JWT. */
   open.post(
     '/register',
     registerBodySchema,
     authResponseSchema,
-    async ({ username, password, googleBooksApiKey }, respond) => {
-      respond(await service.register(username, password, googleBooksApiKey), 201);
+    async ({ username, password }, respond) => {
+      respond(await service.register(username, password), 201);
     }
   );
 

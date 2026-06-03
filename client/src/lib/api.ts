@@ -32,11 +32,11 @@ import {
   deleteLibraryResponseSchema,
   libraryFormatsResponseSchema,
   importResultSchema,
-  enrichmentOptionsResponseSchema,
+  importSourcesResponseSchema,
   okResponseSchema,
   usersListResponseSchema,
   managedUserSchema,
-  type EnrichmentSource,
+  type BookSource,
   type RefreshMetadataBody,
   type LogEventType,
   type BookFormat,
@@ -81,10 +81,10 @@ async function request<T>(path: string, schema: z.ZodType<T>, options?: RequestI
 export const api = {
   auth: {
     status: () => request('/auth/status', instanceStatusSchema),
-    register: (username: string, password: string, googleBooksApiKey: string) =>
+    register: (username: string, password: string) =>
       request('/auth/register', authResponseSchema, {
         method: 'POST',
-        body: JSON.stringify({ username, password, googleBooksApiKey }),
+        body: JSON.stringify({ username, password }),
       }),
     login: (username: string, password: string) =>
       request('/auth/login', authResponseSchema, {
@@ -259,13 +259,13 @@ export const api = {
       const match = (res.headers.get('Content-Disposition') ?? '').match(/filename="?([^"]+)"?/);
       return { filename: match?.[1] ?? 'livre-library.csv', blob: await res.blob() };
     },
-    // Enrichment sources for the import view, with today's per-instance Google usage.
-    enrichmentOptions: () => request('/books/enrichment', enrichmentOptionsResponseSchema),
+    // Metadata sources for the import view, with today's per-instance Google usage.
+    importSources: () => request('/books/import-sources', importSourcesResponseSchema),
     // The file's text is read in the browser and POSTed as the raw body; the server parses it. Uses
     // the JSON request() helper for the response only, so 401 handling and error shapes are shared.
-    importLibrary: async (formatId: string, file: File, enrichment: EnrichmentSource) => {
+    importLibrary: async (formatId: string, file: File, source: BookSource) => {
       const content = await file.text();
-      const params = new URLSearchParams({ format: formatId, enrichment });
+      const params = new URLSearchParams({ format: formatId, source });
       return request(`/books/library/import?${params}`, importResultSchema, {
         method: 'POST',
         headers: { 'Content-Type': 'text/csv' },
@@ -287,13 +287,13 @@ export const api = {
       ),
   },
   config: {
-    updateGoogleBooksKey: (apiKey: string) =>
-      request('/config/google-books-key', okResponseSchema, {
+    updateSourceKey: (source: BookSource, apiKey: string) =>
+      request(`/config/sources/${source}/key`, okResponseSchema, {
         method: 'PUT',
         body: JSON.stringify({ apiKey }),
       }),
-    updateGoogleBooksLimit: (limit: number) =>
-      request('/config/google-books-limit', okResponseSchema, {
+    updateSourceLimit: (source: BookSource, limit: number) =>
+      request(`/config/sources/${source}/limit`, okResponseSchema, {
         method: 'PUT',
         body: JSON.stringify({ limit }),
       }),

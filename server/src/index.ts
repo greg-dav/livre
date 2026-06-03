@@ -3,10 +3,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import { type BookSource } from '@livre/types';
 import { env } from './env';
 
 import './db';
 
+import { type ConfigurableSource } from './ports/bookSource';
 import { errorHandler } from './lib/route';
 import { createAuthMiddleware } from './middleware/auth';
 import { UsersRepository } from './repositories/UsersRepository';
@@ -15,9 +17,10 @@ import { SetupRepository } from './repositories/SetupRepository';
 import { BookCacheRepository } from './repositories/BookCacheRepository';
 import { LibraryBooksRepository } from './repositories/LibraryBooksRepository';
 import { ReadingLogRepository } from './repositories/ReadingLogRepository';
-import { GoogleBooksProvider } from './providers/GoogleBooksProvider';
-import { GoogleBooksUsageProvider } from './providers/GoogleBooksUsageProvider';
-import { OpenLibraryProvider } from './providers/OpenLibraryProvider';
+import { GoogleBooksAdapter } from './adapters/GoogleBooksAdapter';
+import { GoogleBooksClientProvider } from './providers/GoogleBooksClientProvider';
+import { GoogleBooksUsageStore } from './stores/GoogleBooksUsageStore';
+import { OpenLibraryAdapter } from './adapters/OpenLibraryAdapter';
 import { BookCacheProvider } from './providers/BookCacheProvider';
 import { AuthService } from './services/AuthService';
 import { AccountService } from './services/AccountService';
@@ -40,16 +43,21 @@ const setupRepository = new SetupRepository();
 const bookCacheRepository = new BookCacheRepository();
 const libraryBooksRepository = new LibraryBooksRepository();
 const readingLogRepository = new ReadingLogRepository();
-const googleBooksUsageProvider = new GoogleBooksUsageProvider(configRepository);
-const googleBooksProvider = new GoogleBooksProvider(configRepository, googleBooksUsageProvider);
-const openLibraryProvider = new OpenLibraryProvider();
+const googleBooksUsageStore = new GoogleBooksUsageStore(configRepository);
+const googleBooksClientProvider = new GoogleBooksClientProvider(configRepository);
+const googleBooksAdapter = new GoogleBooksAdapter(googleBooksClientProvider, googleBooksUsageStore);
+const openLibraryAdapter = new OpenLibraryAdapter();
+// Sources that carry per-instance configuration (an API key). Keyed by source for the config router.
+const configurableSources = new Map<BookSource, ConfigurableSource>([
+  ['GOOGLE_BOOKS', googleBooksAdapter],
+]);
 const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
-const authService = new AuthService(usersRepository, setupRepository, googleBooksProvider);
+const authService = new AuthService(usersRepository, setupRepository);
 const accountService = new AccountService(usersRepository);
 const usersService = new UsersService(usersRepository);
 const booksService = new BooksService(
-  googleBooksProvider,
-  [googleBooksProvider, openLibraryProvider],
+  googleBooksAdapter,
+  [googleBooksAdapter, openLibraryAdapter],
   bookCacheProvider,
   libraryBooksRepository,
   readingLogRepository
@@ -58,9 +66,9 @@ const libraryTransferService = new LibraryTransferService(
   [GoodreadsFormat],
   libraryBooksRepository,
   readingLogRepository,
-  openLibraryProvider,
-  googleBooksProvider,
-  googleBooksUsageProvider
+  openLibraryAdapter,
+  googleBooksAdapter,
+  googleBooksUsageStore
 );
 const logService = new LogService(libraryBooksRepository, readingLogRepository);
 const { requireAuth, requireAdmin } = createAuthMiddleware(usersRepository);
@@ -91,7 +99,7 @@ app.use('/api/users', createUsersRouter(usersService, requireAdmin));
 app.use('/api/books', createBooksRouter(booksService, libraryTransferService, requireAuth));
 app.use('/api/shelves', createShelvesRouter(booksService, requireAuth));
 app.use('/api/log', createLogRouter(logService, requireAuth));
-app.use('/api/config', createConfigRouter(configRepository, googleBooksProvider, requireAdmin));
+app.use('/api/config', createConfigRouter(configRepository, configurableSources, requireAdmin));
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);

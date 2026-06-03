@@ -76,10 +76,9 @@ export {
   libraryFormatSchema,
   libraryFormatsResponseSchema,
   importResultSchema,
-  enrichmentSourceSchema,
-  enrichmentUsageSchema,
-  enrichmentOptionSchema,
-  enrichmentOptionsResponseSchema,
+  sourceUsageSchema,
+  importSourceSchema,
+  importSourcesResponseSchema,
 } from './schemas/books';
 export type {
   BookSource,
@@ -112,13 +111,12 @@ export type {
   LibraryFormat,
   LibraryFormatsResponse,
   ImportResult,
-  EnrichmentSource,
-  EnrichmentUsage,
-  EnrichmentOption,
-  EnrichmentOptionsResponse,
+  SourceUsage,
+  ImportSource,
+  ImportSourcesResponse,
 } from './schemas/books';
-export { updateApiKeyBodySchema, updateGoogleBooksLimitBodySchema } from './schemas/config';
-export type { UpdateApiKeyBody, UpdateGoogleBooksLimitBody } from './schemas/config';
+export { updateApiKeyBodySchema, updateDailyLimitBodySchema } from './schemas/config';
+export type { UpdateApiKeyBody, UpdateDailyLimitBody } from './schemas/config';
 export {
   shelfStatusSchema,
   logEventTypeSchema,

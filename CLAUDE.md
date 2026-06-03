@@ -227,25 +227,48 @@ export const ShelfTabs = ...
 
 ## Backend architecture
 
-### Five-layer structure
+### Layered structure
 
 ```
 routes/       ← thin HTTP layer; validates input/output shapes, delegates to services
 services/     ← business logic; no HTTP concerns, no SQL
-providers/    ← lifecycle management for external services (lazy init, caching, invalidation)
+ports/        ← domain-owned interfaces (the contracts consumers depend on)
+adapters/     ← translate a foreign API into our domain types; implement ports
+providers/    ← lifecycle management of a collaborator (lazy init, caching, invalidation)
+stores/       ← stateful accumulators persisted via a repository (not lifecycle)
 clients/      ← external HTTP adapters; one class per external API
 repositories/ ← all database access; Zod validation at the DB boundary
 ```
 
-Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`, services never import other services (use providers or repositories instead).
+Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`, services never import other services (use ports, providers, stores, or repositories instead).
 
 **`clients/`** are pure HTTP adapters. They take config in their constructor, own the wire-format schema (private — never exported), and return types from `@livre/types`. If the external API changes, only the client changes.
 
-**`providers/`** manage the lifecycle of a client — lazy initialisation from config, caching the instance, invalidating it when config changes. Services call providers, never clients directly:
+#### Ports & Adapters (anti-corruption boundary)
+
+**`adapters/`** wrap a `client` and translate its foreign API into our domain types (e.g. `GoogleBooksAdapter`, `OpenLibraryAdapter` → `SourcedBook`). An adapter implements one or more **ports**.
+
+**`ports/`** are the domain-owned interfaces consumers depend on (`BookSourceProvider`, `SearchableBookSource`, `ConfigurableSource`, `IsbnEnrichmentSource`). Conformance is enforced on **consumers, not classes**: every consumer types its dep as the **narrowest port** it actually uses (intersect ports when it needs more than one), never a concrete adapter. Segregate ports so every public method of an adapter belongs to some consumed port. The composition root (`index.ts`) is the **only** place that names concrete adapter classes.
 
 ```ts
-// correct — service calls provider
-async search(query: string) { return this.googleBooks.search(query); }
+// correct — consumer depends on a segregated port (or an intersection)
+constructor(private readonly googleBooks: SearchableBookSource & ConfigurableSource) {}
+
+// never — consumer names the concrete adapter
+import { GoogleBooksAdapter } from '../adapters/GoogleBooksAdapter';
+```
+
+Singleton stores and repositories (one impl, not swappable) may be consumed as concrete `type` imports — the ports-only rule is scoped to swappable external **sources/adapters**.
+
+Per-source instance settings live in the `config` table keyed by `(source, key)` (see `ConfigRepository`), so source-specific configuration goes through the same `ConfigurableSource` port rather than forcing a consumer to name a concrete adapter. The config router is driven by a `Map<BookSource, ConfigurableSource>` registry, resolving the client-facing kebab `:source` param against it — adding a configurable source is registration-only.
+
+#### Provider vs store vs adapter
+
+"Provider" is reserved **strictly for lifecycle** — lazy init from config, caching an instance, invalidating it on config change (e.g. `BookCacheProvider`). A stateful counter/accumulator persisted through a repository is a **store** (e.g. `GoogleBooksUsageStore`), not a provider. A wrapper that only translates a foreign API is an **adapter**, not a provider. Don't file something under `providers/` unless it manages a lifecycle.
+
+```ts
+// correct — service calls a port / store, never a client directly
+async search(query: string) { return this.searchSource.search(query); }
 
 // never — service instantiates or imports a client
 import { GoogleBooksClient } from '../clients/GoogleBooksClient';
@@ -266,6 +289,10 @@ Route files export factory functions (`createAuthRouter(service)`) rather than p
 ### File naming
 
 Class files in `server/` use **PascalCase matching the exported class**: `UsersRepository.ts`, `AuthService.ts`, `SchemaRouter.ts`. All other server files are lowercase (`route.ts`, `env.ts`, `index.ts`).
+
+### Schema placement
+
+Shared **wire contracts** — anything that crosses the client/server boundary or is consumed by more than one module — live in `shared/src/schemas` (`@livre/types`). A schema that is **private to one module** (a client's wire-format shape, a parser's row shape, a store's persisted record) stays in that module, unexported. Examples that are correct in-module: `googleVolumeSchema`/`olEntrySchema` (client wire shapes), `csvRecordsSchema` (parser), `usageRecordSchema` (store), `ddlRowSchema`. Don't promote a private schema to `shared/` until a second consumer actually needs it.
 
 ### better-sqlite3 prepared statements
 
@@ -311,12 +338,12 @@ Both `book_cache` and `library_books` carry `source` + `external_id` instead of 
 
 On `library_books`, both `source` and `external_id` are **nullable** to support future manual entries. The partial unique index `idx_library_books_source` only enforces dedup when both are present.
 
-### `bookRef` — the client never sees a source
+### `bookRef` — the client never sees a source _for book identity_
 
-The client is **deliberately blind** to which provider a book came from. URLs, query keys, dedup maps, and localStorage all reference books by an opaque string `bookRef` — never by `source` / `externalId`.
+The client is **deliberately blind** to which provider a book came from. URLs, query keys, dedup maps, and localStorage all reference books by an opaque string `bookRef` — never by `source` / `externalId`. This blindness is about **book identity**. Where the user _explicitly chooses_ a source — import enrichment, per-source config — the client legitimately names it: those features use the shared `BookSource` enum directly (`EnrichmentOption.id`, the `/config/sources/:source/*` param). There is **one** source enum (`bookSourceSchema`); don't introduce a parallel client-facing copy.
 
 - **Encoding lives server-only** in `server/src/lib/bookRef.ts`. `encodeBookRef(source, externalId)` returns a base64url string; `decodeBookRef(ref)` reverses it and validates the source against `bookSourceSchema`.
-- **Wire shapes** (`BookVolume`, `ShelfEntry`) carry `bookRef` instead of `source` / `externalId`. The shared `bookSourceSchema` enum exists for server use; client code must not import or reference it.
+- **Wire shapes** (`BookVolume`, `ShelfEntry`) carry `bookRef` instead of `source` / `externalId` — book identity never leaks a source. (Source-selection features above are the bounded exception.)
 - **Server-internal flow** still works in `(source, externalId)` tuples. The route layer decodes `:bookRef` from URL params before calling services; services and repos convert to client-facing `BookVolume` at the API boundary via `toBookVolume(SourcedBook)`.
 - **`SourcedBook`** (`server/src/lib/bookRef.ts`) is the server-internal book shape: `BookMetadata & { source, externalId }`. The Google Books client, cache repository, and cache provider all traffic in `SourcedBook`. Never expose it across the API.
 - **Client URLs**: `/search/book/:bookRef` for discovery, `/library/:libraryBookId` for library detail. Dedup against the library uses `entry.bookRef === book.bookRef` (string equality).

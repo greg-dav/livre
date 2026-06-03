@@ -12,9 +12,13 @@ CREATE TABLE IF NOT EXISTS users (
   last_login    TEXT
 );
 
+-- Per-source instance settings (API key, daily limit, usage counter). Keyed by (source, key) so
+-- each external source owns its own namespace rather than baking the source into the key name.
 CREATE TABLE IF NOT EXISTS config (
-  key   TEXT PRIMARY KEY,
-  value TEXT NOT NULL
+  source TEXT NOT NULL CHECK (source IN ('GOOGLE_BOOKS', 'OPEN_LIBRARY')),
+  key    TEXT NOT NULL,
+  value  TEXT NOT NULL,
+  PRIMARY KEY (source, key)
 );
 
 -- Transient cache of book metadata fetched from external sources (Google Books, etc.).
