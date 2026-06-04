@@ -27,6 +27,12 @@ export const NavHeader = styled('div')(({ theme }) => ({
   padding: `0 ${theme.spacing(2)}`,
 }));
 
+// A second-level header that opens a grouped run of nav items (e.g. the admin-only sections), set
+// off from the group above it with extra top space so the two read as distinct sections.
+export const NavGroupHeader = styled(NavHeader)(({ theme }) => ({
+  marginTop: theme.spacing(5),
+}));
+
 export const NavDivider = styled('hr')(({ theme }) => ({
   flex: 1,
   border: 'none',

@@ -11,6 +11,7 @@ import {
   Split,
   NavPanel,
   NavHeader,
+  NavGroupHeader,
   NavDivider,
   NavItem,
   ContentPanel,
@@ -48,14 +49,30 @@ const SECTIONS: SectionDef[] = [
 
 /**
  * Settings screen. Mirrors the Library's split layout: a fixed left rail of section actions and a
- * scrolling content panel for the selected section. Admin-only sections (Users, Configuration) are
- * filtered out for non-admins entirely, so the rail never offers something the server would reject.
+ * scrolling content panel for the selected section. The rail is split into the reader's own
+ * settings and a separate Administration group (Users, Configuration); admin sections are dropped
+ * for non-admins entirely, so the rail never offers something the server would reject.
  */
 export const Settings = () => {
   const { user } = useAuth();
-  const sections = SECTIONS.filter((s) => !s.adminOnly || user?.is_admin);
+  const personalSections = SECTIONS.filter((s) => !s.adminOnly);
+  const adminSections = user?.is_admin ? SECTIONS.filter((s) => s.adminOnly) : [];
+  const visible = [...personalSections, ...adminSections];
   const [active, setActive] = useState<SectionId>('account');
-  const current = sections.find((s) => s.id === active) ?? sections[0];
+  const current = visible.find((s) => s.id === active) ?? visible[0];
+
+  const renderItem = (section: SectionDef) => (
+    <NavItem
+      key={section.id}
+      $active={section.id === current.id}
+      onClick={() => setActive(section.id)}
+    >
+      <Icon icon={section.icon} />
+      <Text variant="ui-sm" color={section.id === current.id ? 'accent' : 'default'}>
+        {section.label}
+      </Text>
+    </NavItem>
+  );
 
   return (
     <Layout fullWidth title="Settings">
@@ -67,18 +84,18 @@ export const Settings = () => {
             </Text>
             <NavDivider />
           </NavHeader>
-          {sections.map((section) => (
-            <NavItem
-              key={section.id}
-              $active={section.id === current.id}
-              onClick={() => setActive(section.id)}
-            >
-              <Icon icon={section.icon} />
-              <Text variant="ui-sm" color={section.id === current.id ? 'accent' : 'default'}>
-                {section.label}
-              </Text>
-            </NavItem>
-          ))}
+          {personalSections.map(renderItem)}
+          {adminSections.length > 0 && (
+            <>
+              <NavGroupHeader>
+                <Text variant="label" color="accent">
+                  Administration
+                </Text>
+                <NavDivider />
+              </NavGroupHeader>
+              {adminSections.map(renderItem)}
+            </>
+          )}
         </NavPanel>
         <ContentPanel>
           <ContentInner>{current.render()}</ContentInner>

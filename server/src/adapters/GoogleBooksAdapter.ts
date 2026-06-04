@@ -5,17 +5,18 @@ import { type GoogleBooksUsageStore } from '../stores/GoogleBooksUsageStore';
 import {
   type BookSearchOptions,
   type ConfigurableSource,
+  type MeteredSource,
   type SearchableBookSource,
 } from '../ports/bookSource';
 
 /**
  * Adapter translating the Google Books API into our `SourcedBook` domain shape. Implements the
- * searchable-source and configurable-source ports; the wire format lives in {@link GoogleBooksClient}.
- * It owns only translation and metering — {@link GoogleBooksClientProvider} owns config→client
- * lifecycle, and every dispatched request is charged against the per-instance daily quota via
- * {@link GoogleBooksUsageStore}.
+ * searchable-, configurable-, and metered-source ports; the wire format lives in
+ * {@link GoogleBooksClient}. It owns only translation and metering — {@link GoogleBooksClientProvider}
+ * owns config→client lifecycle, and every dispatched request is charged against the per-instance
+ * daily quota via {@link GoogleBooksUsageStore}.
  */
-export class GoogleBooksAdapter implements SearchableBookSource, ConfigurableSource {
+export class GoogleBooksAdapter implements SearchableBookSource, ConfigurableSource, MeteredSource {
   readonly source: BookSource = 'GOOGLE_BOOKS';
 
   constructor(
@@ -63,5 +64,10 @@ export class GoogleBooksAdapter implements SearchableBookSource, ConfigurableSou
   /** Whether an API key is configured — i.e. whether this source can be offered at all. */
   isConfigured(): boolean {
     return this.clients.isConfigured();
+  }
+
+  /** Whether any of today's per-instance quota is left to serve a request. */
+  hasBudget(): boolean {
+    return this.usage.remaining() > 0;
   }
 }

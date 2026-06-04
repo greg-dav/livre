@@ -51,3 +51,14 @@ export interface ConfigurableSource {
 export interface BatchIsbnSource {
   getByIsbns(isbns: string[]): Promise<Map<string, SourcedBook>>;
 }
+
+/**
+ * A source whose requests draw down a per-instance daily budget. Lets the registry skip a metered
+ * source that's out of budget when choosing the live search source, so it can fall back to an
+ * unmetered one without naming the concrete adapter. Only Google Books implements it; Open Library
+ * is free and unmetered.
+ */
+export interface MeteredSource {
+  /** Whether the source has budget left to serve a request right now. */
+  hasBudget(): boolean;
+}

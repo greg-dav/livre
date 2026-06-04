@@ -9,4 +9,7 @@ export const config = {
     client.updateApiKey({ params: { source }, body: { apiKey } }).then(ok),
   updateSourceLimit: (source: BookSource, limit: number) =>
     client.updateDailyLimit({ params: { source }, body: { limit } }).then(ok),
+  preferredSource: () => client.getPreferredSource().then(ok),
+  setPreferredSource: (source: BookSource) =>
+    client.setPreferredSource({ body: { source } }).then(ok),
 };

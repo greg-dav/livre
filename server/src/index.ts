@@ -59,7 +59,8 @@ const bookSourceRegistry = new BookSourceRegistry(
   [
     new OpenLibraryImportLookup(openLibraryAdapter),
     new GoogleBooksImportLookup(googleBooksAdapter, googleBooksUsageStore),
-  ]
+  ],
+  configRepository
 );
 const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
 const bookLookupProvider = new BookLookupProvider(bookSourceRegistry, bookCacheProvider);
@@ -112,10 +113,7 @@ app.use('/api/users', createUsersRouter(usersService, requireAdmin));
 app.use('/api/search', createSearchRouter(searchService, requireAuth));
 app.use('/api/library', createLibraryRouter(libraryService, libraryTransferService, requireAuth));
 app.use('/api/log', createLogRouter(logService, requireAuth));
-app.use(
-  '/api/config',
-  createConfigRouter(configRepository, bookSourceRegistry.configurableSources(), requireAdmin)
-);
+app.use('/api/config', createConfigRouter(configRepository, bookSourceRegistry, requireAdmin));
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(errorHandler);
