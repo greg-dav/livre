@@ -5,13 +5,15 @@ import sortBy from 'lodash/sortBy';
 import union from 'lodash/union';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { BookCard, BookGrid, Loader, Text } from '@livre/primitives';
+import { BookCard, BookGrid, Button, Icon, Loader, Text } from '@livre/primitives';
 import {
   Layout,
   SortMenu,
   CurrentlyReadingCard,
   ShelfTabs,
   TagFacet,
+  ManualEntryDialog,
+  ImportLibraryDialog,
   type ShelfStatus,
   type TagFacetOption,
 } from '../../components';
@@ -25,6 +27,9 @@ import {
   ShelfHeading,
   ShelfHeadingLeft,
   EmptyNote,
+  LeftEmpty,
+  FirstRunEmpty,
+  FirstRunActions,
 } from './Library.styles';
 
 const SHELF_LABELS: Record<ShelfStatus, string> = {
@@ -55,6 +60,8 @@ export const Library = () => {
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<LibrarySort>('newest');
+  const [manualOpen, setManualOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: readingData } = useQuery({
     queryKey: ['shelves', 'reading'],
@@ -120,6 +127,10 @@ export const Library = () => {
 
   const filtered = selectedTags.size > 0;
   const count = visibleEntries.length;
+  // A wholly empty library (no books on any shelf) gets the first-run welcome; an empty *active*
+  // shelf when others have books gets a quieter per-shelf note.
+  const libraryEmpty =
+    !!data && data.counts.want + data.counts.reading + data.counts.read + data.counts.dnf === 0;
 
   return (
     <Layout fullWidth title="Library">
@@ -131,17 +142,25 @@ export const Library = () => {
             </Text>
             <LeftPanelDivider />
           </LeftPanelHeader>
-          {readingEntries.map((entry) => (
-            <CurrentlyReadingCard
-              key={entry.libraryBookId}
-              title={entry.title}
-              author={entry.authors.join(', ')}
-              coverUrl={entry.coverUrl ?? undefined}
-              startedDate={formatDate(entry.startedDate ?? entry.addedDate)}
-              onClick={() => navigate(`/library/${entry.libraryBookId}`)}
-              onLog={(type, text) => logEntry({ libraryBookId: entry.libraryBookId, type, text })}
-            />
-          ))}
+          {readingEntries.length === 0 ? (
+            <LeftEmpty>
+              <Text variant="body2" color="muted">
+                Nothing in progress yet.
+              </Text>
+            </LeftEmpty>
+          ) : (
+            readingEntries.map((entry) => (
+              <CurrentlyReadingCard
+                key={entry.libraryBookId}
+                title={entry.title}
+                author={entry.authors.join(', ')}
+                coverUrl={entry.coverUrl ?? undefined}
+                startedDate={formatDate(entry.startedDate ?? entry.addedDate)}
+                onClick={() => navigate(`/library/${entry.libraryBookId}`)}
+                onLog={(type, text) => logEntry({ libraryBookId: entry.libraryBookId, type, text })}
+              />
+            ))
+          )}
           {tagOptions.length > 0 && (
             <>
               <LeftPanelHeader $spaced>
@@ -193,6 +212,38 @@ export const Library = () => {
                 No books on this shelf carry those tags.
               </Text>
             </EmptyNote>
+          ) : libraryEmpty ? (
+            <FirstRunEmpty>
+              <Text variant="body1" color="muted">
+                Your shelves are empty. Add your first book to begin.
+              </Text>
+              <FirstRunActions>
+                <Button variant="primary" size="sm" onClick={() => navigate('/search')}>
+                  <Icon icon="search" size={16} />
+                  <Text variant="label" color="onColor">
+                    Search the catalog
+                  </Text>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
+                  <Icon icon="download" size={16} />
+                  <Text variant="label" color="default">
+                    Import library
+                  </Text>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setManualOpen(true)}>
+                  <Icon icon="add" size={16} />
+                  <Text variant="label" color="default">
+                    Add manually
+                  </Text>
+                </Button>
+              </FirstRunActions>
+            </FirstRunEmpty>
+          ) : count === 0 ? (
+            <EmptyNote>
+              <Text variant="body1" color="muted">
+                No books on this shelf yet.
+              </Text>
+            </EmptyNote>
           ) : (
             <BookGrid>
               {visibleEntries.map((entry) => (
@@ -209,6 +260,8 @@ export const Library = () => {
           )}
         </RightPanel>
       </Split>
+      <ManualEntryDialog open={manualOpen} onOpenChange={setManualOpen} />
+      <ImportLibraryDialog open={importOpen} onOpenChange={setImportOpen} />
     </Layout>
   );
 };

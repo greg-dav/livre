@@ -60,6 +60,8 @@ export function createLibraryRouter(
       );
     },
 
+    createManual: async ({ body, req }) => ok(service.createManualBook(userOf(req).id, body)),
+
     getLibrary: async ({ req }) => ok(service.getLibrary(userOf(req).id)),
 
     deleteLibrary: async ({ req }) =>

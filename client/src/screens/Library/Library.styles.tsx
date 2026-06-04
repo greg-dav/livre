@@ -59,3 +59,28 @@ export const EmptyNote = styled('div')(({ theme }) => ({
   padding: `${theme.spacing(5)} 2px`,
   fontStyle: 'italic',
 }));
+
+// Quiet hint under the Currently Reading header when nothing is in progress, so the panel reads as
+// intentionally empty rather than broken on first login.
+export const LeftEmpty = styled('div')(({ theme }) => ({
+  padding: `${theme.spacing(0.5)} 0 ${theme.spacing(2)}`,
+}));
+
+// First-run state for a brand-new, wholly empty library: a centered line and the three ways in
+// (search, import, manual). Deliberately minimal — one line, one row of actions, no onboarding tour.
+export const FirstRunEmpty = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  textAlign: 'center',
+  gap: theme.spacing(6),
+  padding: `${theme.spacing(16)} ${theme.spacing(4)} ${theme.spacing(10)}`,
+}));
+
+export const FirstRunActions = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  gap: theme.spacing(3),
+}));

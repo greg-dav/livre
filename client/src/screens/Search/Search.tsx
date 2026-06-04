@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { BookCard, BookGrid, Icon, Loader, Text } from '@livre/primitives';
@@ -19,7 +19,7 @@ import {
   SORT_LABELS,
   STATUS_LABELS,
 } from '../../lib/search';
-import { Layout, SortMenu, LoadMore } from '../../components';
+import { Layout, SortMenu, LoadMore, ManualEntryDialog } from '../../components';
 import {
   Split,
   LeftRail,
@@ -33,6 +33,8 @@ import {
   QueryBar,
   Field,
   FieldInput,
+  ManualHint,
+  ManualHintButton,
   Results,
   Toolbar,
   HeadLine,
@@ -55,6 +57,7 @@ export const Search = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { term, setTerm, scope, setScope, shelf, toggleShelf, sort, setSort } = useSearchSession();
+  const [manualOpen, setManualOpen] = useState(false);
 
   const debounced = useDebounce(term, 300);
   const queryTerm = debounced.trim();
@@ -165,6 +168,17 @@ export const Search = () => {
                 onChange={(e) => setTerm(e.target.value)}
               />
             </Field>
+            <ManualHint>
+              <Text variant="ui-sm" color="muted">
+                Can’t find it, or it isn’t in the catalog?
+              </Text>
+              <ManualHintButton type="button" onClick={() => setManualOpen(true)}>
+                <Icon icon="add" size={14} />
+                <Text variant="ui-sm" color="accent">
+                  Add a book manually
+                </Text>
+              </ManualHintButton>
+            </ManualHint>
           </QueryBar>
 
           <Results>
@@ -265,6 +279,7 @@ export const Search = () => {
           </Results>
         </RightCol>
       </Split>
+      <ManualEntryDialog open={manualOpen} onOpenChange={setManualOpen} seedTitle={queryTerm} />
     </Layout>
   );
 };

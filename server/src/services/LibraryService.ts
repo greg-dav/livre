@@ -1,7 +1,9 @@
 import {
   type BookFormat,
+  type BookMetadata,
   type BookSource,
   type CreateLogEventResponse,
+  type CreateManualBody,
   type LibraryBookDetail,
   type LibraryResponse,
   type ShelfResponse,
@@ -14,6 +16,15 @@ import { db } from '../db';
 import { type BookLookupProvider } from '../providers/BookLookupProvider';
 import { type LibraryBooksRepository } from '../repositories/LibraryBooksRepository';
 import { type ReadingLogRepository } from '../repositories/ReadingLogRepository';
+
+// The terminal reading-log event that, atop a `shelved` head, yields each shelf status. `want` needs
+// no terminal event — a lone `shelved` already derives to "want". Status is read from the latest
+// event, so seeding both keeps the book on the right shelf.
+const TERMINAL_EVENT_BY_STATUS: Partial<Record<ShelfStatus, 'started' | 'finished' | 'dnf'>> = {
+  reading: 'started',
+  read: 'finished',
+  dnf: 'dnf',
+};
 
 /**
  * The user's owned library: the collection itself, saving a discovered book, the per-book metadata
@@ -56,6 +67,42 @@ export class LibraryService {
       const libraryBookId = this.libraryBooksRepo.create(userId, source, externalId, book);
       const logDate = date ?? new Date().toISOString().slice(0, 10);
       const logId = this.readingLogRepo.insert(libraryBookId, event, logDate);
+      return { libraryBookId, logId };
+    });
+  }
+
+  /**
+   * Create a book the user typed in by hand. The row has no upstream source (null source/externalId),
+   * so it can't be re-fetched from a provider — it renders purely from this saved snapshot. The
+   * reading log is seeded to land the book on the chosen shelf: a `shelved` head plus, for non-want
+   * statuses, the terminal event. The supplied cover URL fills both thumbnail fields so list and
+   * detail views (which prefer the large one) render the same image.
+   */
+  createManualBook(userId: number, fields: CreateManualBody): CreateLogEventResponse {
+    const metadata: BookMetadata = {
+      title: fields.title,
+      authors: fields.authors ?? [],
+      isbn: fields.isbn,
+      description: fields.description,
+      thumbnail: fields.coverUrl,
+      largeThumbnail: fields.coverUrl,
+      pageCount: fields.pageCount,
+      publisher: fields.publisher,
+      publishedDate: fields.publishedDate,
+      language: fields.language,
+      tags: [],
+      fiction: false,
+      genre: 'unknown',
+    };
+
+    return db.transaction(() => {
+      const libraryBookId = this.libraryBooksRepo.create(userId, null, null, metadata);
+      const today = new Date().toISOString().slice(0, 10);
+      const shelvedId = this.readingLogRepo.insert(libraryBookId, 'shelved', today);
+      const terminal = TERMINAL_EVENT_BY_STATUS[fields.status];
+      const logId = terminal
+        ? this.readingLogRepo.insert(libraryBookId, terminal, today)
+        : shelvedId;
       return { libraryBookId, logId };
     });
   }

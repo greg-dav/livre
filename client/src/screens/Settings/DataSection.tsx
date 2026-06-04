@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Dialog, Icon, ProgressBar, Text } from '@livre/primitives';
-import { type ImportSource, type BookSource, type LibraryFormat } from '@livre/types';
+import { type LibraryFormat } from '@livre/types';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
+import { ImportLibraryDialog } from '../../components';
 import { Section } from './Section';
 import {
   Block,
@@ -15,11 +16,6 @@ import {
   FormatCard,
   FormatList,
   FormatOption,
-  OptionLabel,
-  Meter,
-  FileRow,
-  ResultList,
-  ResultRow,
 } from './Settings.styles';
 
 /** The format chooser wrapped in a labelled card, shared by the import and export dialogs. */
@@ -54,59 +50,6 @@ const FormatField = (props: {
 );
 
 /**
- * Metadata-source chooser for import. Each source is selectable; a metered source (Google Books)
- * also shows today's per-instance usage as a bar + caption so the reader can see how much lookup
- * budget is left before committing to a large import.
- */
-const ImportSourceField = (props: {
-  options: ImportSource[];
-  selected: BookSource;
-  onSelect: (id: BookSource) => void;
-}) => {
-  const current = props.options.find((o) => o.id === props.selected);
-  return (
-    <FormatCard>
-      <Text variant="label" color="muted">
-        Metadata source
-      </Text>
-      <FormatList>
-        {props.options.map((option) => {
-          const active = option.id === props.selected;
-          return (
-            <FormatOption
-              key={option.id}
-              type="button"
-              $selected={active}
-              onClick={() => props.onSelect(option.id)}
-            >
-              <OptionLabel>
-                <Text variant="ui-md" color={active ? 'accent' : 'default'}>
-                  {option.label}
-                </Text>
-                <Text variant="ui-xs" color="muted">
-                  {option.usage
-                    ? `${option.usage.remaining} of ${option.usage.limit} lookups left today`
-                    : 'Free · unlimited'}
-                </Text>
-              </OptionLabel>
-              {active && <Icon icon="check" size={16} />}
-            </FormatOption>
-          );
-        })}
-      </FormatList>
-      {current?.usage && (
-        <Meter>
-          <ProgressBar value={(current.usage.used / Math.max(current.usage.limit, 1)) * 100} />
-          <Text variant="ui-xs" color="muted">
-            {current.usage.used} / {current.usage.limit} used today · resets midnight Pacific
-          </Text>
-        </Meter>
-      )}
-    </FormatCard>
-  );
-};
-
-/**
  * Library-wide data tools: import a library from another app, export everything, or wipe the whole
  * library. All act on the signed-in reader's own data only. Import and export each open a modal
  * listing the formats the server advertises, so adding a server-side format surfaces here with no
@@ -126,22 +69,6 @@ export const DataSection = () => {
   const exportSelected = exportFormatId ?? exportFormats[0]?.id ?? '';
 
   const [importOpen, setImportOpen] = useState(false);
-  const [importFormatId, setImportFormatId] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const importFormats = formats.filter((f) => f.capabilities.import);
-  const importSelected = importFormatId ?? importFormats[0]?.id ?? '';
-
-  const importSourcesQuery = useQuery({
-    queryKey: ['import-sources'],
-    queryFn: () => api.library.importSources(),
-  });
-  const importSources = importSourcesQuery.data ?? [];
-  const [sourceId, setSourceId] = useState<BookSource | null>(null);
-  const selectedSourceId = sourceId ?? importSources[0]?.id ?? 'OPEN_LIBRARY';
-  const selectedSource = importSources.find((o) => o.id === selectedSourceId);
-  const quotaExhausted = !!selectedSource?.usage && selectedSource.usage.remaining <= 0;
-
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const exportMutation = useMutation({
@@ -157,32 +84,6 @@ export const DataSection = () => {
     },
   });
 
-  const importMutation = useMutation({
-    mutationFn: ({
-      formatId,
-      file,
-      source,
-    }: {
-      formatId: string;
-      file: File;
-      source: BookSource;
-    }) => api.library.importLibrary(formatId, file, source),
-    onSuccess: () => {
-      // New books and reading-log events landed; refetch so the library, shelves, and timeline show
-      // them. Refetch import sources too so the Google meter reflects the lookups this import spent.
-      queryClient.invalidateQueries({ queryKey: ['library'] });
-      queryClient.invalidateQueries({ queryKey: ['shelves'] });
-      queryClient.invalidateQueries({ queryKey: ['log'] });
-      queryClient.invalidateQueries({ queryKey: ['import-sources'] });
-    },
-  });
-
-  const closeImport = () => {
-    setImportOpen(false);
-    setFile(null);
-    importMutation.reset();
-  };
-
   const deleteMutation = useMutation({
     mutationFn: () => api.library.deleteLibrary(),
     onSuccess: () => {
@@ -193,8 +94,6 @@ export const DataSection = () => {
       setConfirmOpen(false);
     },
   });
-
-  const result = importMutation.data;
 
   return (
     <Section
@@ -310,146 +209,7 @@ export const DataSection = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={importOpen}
-        onOpenChange={(open) => !open && closeImport()}
-        title="Import library"
-        description="Choose a format and a file. Books already in your library are skipped."
-      >
-        {result ? (
-          <>
-            <DialogBody>
-              <ResultList>
-                <ResultRow>
-                  <Text variant="ui-sm" color="muted">
-                    Imported
-                  </Text>
-                  <Text variant="ui-sm" color="success">
-                    {result.imported}
-                  </Text>
-                </ResultRow>
-                <ResultRow>
-                  <Text variant="ui-sm" color="muted">
-                    Skipped (already in library)
-                  </Text>
-                  <Text variant="ui-sm" color="default">
-                    {result.skipped}
-                  </Text>
-                </ResultRow>
-                <ResultRow>
-                  <Text variant="ui-sm" color="muted">
-                    Failed
-                  </Text>
-                  <Text variant="ui-sm" color={result.failed > 0 ? 'destructive' : 'default'}>
-                    {result.failed}
-                  </Text>
-                </ResultRow>
-                {result.deferred > 0 && (
-                  <ResultRow>
-                    <Text variant="ui-sm" color="muted">
-                      Deferred (daily limit reached)
-                    </Text>
-                    <Text variant="ui-sm" color="default">
-                      {result.deferred}
-                    </Text>
-                  </ResultRow>
-                )}
-              </ResultList>
-              {result.deferred > 0 && (
-                <Feedback>
-                  <Text variant="ui-sm" color="muted">
-                    Run the import again after the daily limit resets (midnight Pacific) to bring in
-                    the deferred books.
-                  </Text>
-                </Feedback>
-              )}
-            </DialogBody>
-            <DialogActions>
-              <Button variant="primary" size="sm" onClick={closeImport}>
-                <Text variant="label" color="onColor">
-                  Done
-                </Text>
-              </Button>
-            </DialogActions>
-          </>
-        ) : (
-          <>
-            <DialogBody>
-              <FormatField
-                formats={importFormats}
-                selected={importSelected}
-                onSelect={setImportFormatId}
-              />
-              {importSources.length > 1 && (
-                <ImportSourceField
-                  options={importSources}
-                  selected={selectedSourceId}
-                  onSelect={setSourceId}
-                />
-              )}
-              {quotaExhausted && (
-                <Feedback>
-                  <Text variant="ui-sm" color="muted">
-                    Today&rsquo;s Google Books lookups are used up — this import would defer every
-                    book. Switch to Open Library to import now, or try again after midnight Pacific.
-                  </Text>
-                </Feedback>
-              )}
-              <FileRow>
-                <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <Text variant="label" color="default">
-                    Choose file
-                  </Text>
-                </Button>
-                <Text variant="ui-sm" color="muted">
-                  {file?.name ?? 'No file selected'}
-                </Text>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,text/csv"
-                  hidden
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                />
-              </FileRow>
-              {importMutation.isPending && <ProgressBar />}
-              {importMutation.isError && (
-                <Feedback>
-                  <Text variant="ui-sm" color="destructive">
-                    {errorMessage(importMutation.error, 'Failed to import library')}
-                  </Text>
-                </Feedback>
-              )}
-            </DialogBody>
-            <DialogActions>
-              <Dialog.Close asChild>
-                <Button variant="ghost" size="sm">
-                  <Text variant="label" color="default">
-                    Cancel
-                  </Text>
-                </Button>
-              </Dialog.Close>
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={!file || !importSelected || importMutation.isPending}
-                onClick={() =>
-                  file &&
-                  importMutation.mutate({
-                    formatId: importSelected,
-                    file,
-                    source: selectedSourceId,
-                  })
-                }
-              >
-                <Text variant="label" color="onColor">
-                  {importMutation.isPending ? 'Importing…' : 'Import'}
-                </Text>
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+      <ImportLibraryDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <Dialog
         open={confirmOpen}

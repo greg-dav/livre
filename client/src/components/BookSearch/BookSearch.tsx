@@ -8,6 +8,7 @@ import { getRecentBooks, type RecentBook } from '../../lib/recentBooks';
 import { bookPath } from '../../lib/bookPath';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useSearchSession } from '../../context/SearchContext';
+import { ManualEntryDialog } from '../ManualEntryDialog/ManualEntryDialog';
 import {
   Container,
   SearchInput,
@@ -21,6 +22,7 @@ import {
   SectionLabel,
   SectionDivider,
   ShelfBadge,
+  ManualAction,
   HintFooter,
 } from './BookSearch.styles';
 
@@ -41,6 +43,7 @@ const SHELF_LABELS: Record<ShelfStatus, string> = {
 export const BookSearch = () => {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const [manualSeed, setManualSeed] = useState<string | null>(null);
   const [recentBooks] = useState<RecentBook[]>(() => getRecentBooks());
   const debouncedQuery = useDebounce(query, 300);
   const navigate = useNavigate();
@@ -113,6 +116,13 @@ export const BookSearch = () => {
   const handleRefNavigate = (bookRef: string) => closeAndNavigate(bookPath(bookRef, libraryData));
   const handleLibraryNavigate = (libraryBookId: number) =>
     closeAndNavigate(`/library/${libraryBookId}`);
+
+  // Carry the typed query into the manual form as a seed, then collapse the dropdown.
+  const openManual = () => {
+    setManualSeed(query.trim());
+    setQuery('');
+    setOpen(false);
+  };
 
   // Enter escalates the quick preview into the full faceted Search screen, seeding the session with
   // the term so the screen picks up where the dropdown left off.
@@ -245,15 +255,32 @@ export const BookSearch = () => {
             )}
           </ResultsList>
           {!showRecents && query.length > 1 && (
-            <HintFooter>
-              <Icon icon="enter" size={14} />
-              <Text variant="ui-xs" color="muted">
-                Press Enter to see all results
-              </Text>
-            </HintFooter>
+            <>
+              <ManualAction
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={openManual}
+              >
+                <Icon icon="add" size={14} />
+                <Text variant="ui-sm" color="accent">
+                  Add “{query.trim()}” manually
+                </Text>
+              </ManualAction>
+              <HintFooter>
+                <Icon icon="enter" size={14} />
+                <Text variant="ui-xs" color="muted">
+                  Press Enter to see all results
+                </Text>
+              </HintFooter>
+            </>
           )}
         </Dropdown>
       )}
+      <ManualEntryDialog
+        open={manualSeed !== null}
+        onOpenChange={(o) => !o && setManualSeed(null)}
+        seedTitle={manualSeed ?? undefined}
+      />
     </Container>
   );
 };

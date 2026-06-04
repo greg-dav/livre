@@ -133,6 +133,26 @@ export const FieldInput = styled('input')(({ theme }) => ({
   '&::placeholder': { color: theme.textMuted, opacity: 1 },
 }));
 
+// Persistent invitation under the bar to add a book by hand — shown regardless of results, since a
+// missing book is rare enough that gating this behind an empty result set would only bury it.
+export const ManualHint = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  marginTop: theme.spacing(3),
+  paddingLeft: theme.spacing(0.5),
+}));
+
+export const ManualHintButton = styled('button')(({ theme }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: theme.spacing(1.5),
+  cursor: 'pointer',
+  color: theme.accent,
+  transition: 'opacity 0.15s',
+  '&:hover': { opacity: 0.75 },
+}));
+
 export const Results = styled('div')(({ theme }) => ({
   padding: `${theme.spacing(6)} ${theme.spacing(9)} ${theme.spacing(20)}`,
 }));

@@ -126,3 +126,23 @@ export const ShelfBadge = styled('span')(({ theme }) => ({
   border: `1px solid ${theme.border}`,
   flexShrink: 0,
 }));
+
+/*
+ * Pinned "add manually" action, sitting above the Enter-to-search footer. Always present while
+ * typing so it doubles as the graceful catch when nothing matches — a missing book is rare, so the
+ * action shouldn't hide until the result set is empty.
+ */
+export const ManualAction = styled('button')(({ theme }) => ({
+  flexShrink: 0,
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  padding: `${theme.spacing(2.5)} ${theme.spacing(3)}`,
+  borderTop: `1px solid ${theme.border}`,
+  background: theme.bgElevated,
+  color: theme.accent,
+  cursor: 'pointer',
+  transition: 'background 0.15s',
+  '&:hover': { background: theme.bg },
+}));

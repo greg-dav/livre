@@ -315,6 +315,47 @@
       .tb-dd-enter kbd { font-family: var(--font-mono); font-size: 0.625rem; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; color: var(--text); background: var(--bg); }
       .tb-dd-enter b { font-family: var(--font-display); font-style: italic; font-weight: 500; color: var(--text); }
 
+      /* ── Manual entry: dropdown action, search link, dialog, empty state ──
+         A book the catalogue doesn't have is added by hand. The path is offered wherever a search
+         is happening (the topbar dropdown, the Search screen) plus the first-run empty library. */
+      .tb-dd-manual { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-top: 1px solid var(--border-soft); font-family: var(--font-ui); font-size: 0.75rem; color: var(--accent); cursor: pointer; transition: background 0.12s; }
+      .tb-dd-manual:hover { background: var(--accent-soft); }
+      .tb-dd-manual b { font-family: var(--font-display); font-style: italic; font-weight: 500; }
+
+      .sf-manual { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-left: 2px; }
+      .sf-manual .hint { font-family: var(--font-body); font-size: 0.85rem; color: var(--text-muted); }
+      .sf-manual button { font-family: var(--font-ui); font-size: 0.85rem; color: var(--accent); display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+      .sf-manual button:hover { opacity: 0.75; }
+
+      /* First-run empty library — minimal note + the three ways in (Option B). */
+      .lib-firstrun { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 24px; padding: 96px 16px 56px; }
+      .lib-firstrun.show { display: flex; }
+      .lib-firstrun .fr-line { font-family: var(--font-body); font-size: 1.0625rem; color: var(--text-muted); }
+      .fr-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+      .fr-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 8px; font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text); cursor: pointer; transition: border-color 0.15s; }
+      .fr-btn:hover { border-color: var(--text-muted); }
+      .fr-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+      /* Prototype-only switch to preview the empty state against the populated demo. */
+      .proto-toggle { font-family: var(--font-ui); font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); border: 1px dashed var(--border); border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+      .proto-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+      .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
+      .modal-overlay.open { display: flex; }
+      .modal { width: 520px; max-width: 92vw; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.16); padding: 24px; }
+      .modal h2 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.5rem; }
+      .modal .modal-sub { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--text-muted); margin-top: 4px; }
+      .me-body { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+      .me-field { display: flex; flex-direction: column; gap: 6px; }
+      .me-field label { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+      .me-field input { font-family: var(--font-ui); font-size: 0.92rem; color: var(--text); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; }
+      .me-field input:focus { outline: none; border-color: var(--accent); }
+      .me-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .me-shelf .opt { font-family: var(--font-ui); font-size: 0.8rem; padding: 7px 14px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); background: var(--bg-elevated); cursor: pointer; }
+      .me-shelf .opt.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+      .me-more { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-ui); font-size: 0.82rem; color: var(--text-muted); cursor: pointer; }
+      .me-more:hover { color: var(--text); }
+      .me-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+
       /* ════════════════════════════════════════════════════════════
          SCREEN — SEARCH  (faceted; the simple topbar field + dropdown
          escalate here on Enter. The old author page is just this screen
@@ -714,6 +755,10 @@
                   <div class="tb-dd-cover" style="background:#1f4a3d;"></div>
                   <div class="tb-dd-body"><div class="tb-dd-title">Children of Dune</div><div class="tb-dd-sub">Frank Herbert · 1976</div></div>
                 </div>
+                <!-- Always-present manual action — doubles as the graceful catch when nothing matches -->
+                <div class="tb-dd-manual" onclick="openManual('dune')">
+                  <span>＋</span><span>Add “<b>dune</b>” manually</span>
+                </div>
                 <!-- Enter escalates the quick preview into the full faceted Search screen -->
                 <div class="tb-dd-enter" onclick="runFullSearch()">
                   <kbd>⏎</kbd><span>Search everything for “<b>dune</b>”</span>
@@ -721,6 +766,7 @@
               </div>
             </div>
             <div class="tb-spacer"></div>
+            <button class="proto-toggle" onclick="toggleFirstRun()">Preview first-run</button>
             <div class="tb-avatar">G</div>
           </div>
           <div class="body">
@@ -897,6 +943,16 @@
               </div>
 
               <p class="empty-note" id="lib-empty" hidden>No books on this shelf carry those tags.</p>
+
+              <!-- First-run state: shown for a brand-new, wholly empty library (toggle in topbar) -->
+              <div class="lib-firstrun" id="lib-firstrun">
+                <p class="fr-line">Your shelves are empty. Add your first book to begin.</p>
+                <div class="fr-actions">
+                  <button class="fr-btn primary" onclick="runFullSearch()">⌕ Search the catalogue</button>
+                  <button class="fr-btn" onclick="toggleFirstRun()">⭳ Import library</button>
+                  <button class="fr-btn" onclick="openManual('')">＋ Add manually</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1099,6 +1155,11 @@
                   <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5L17 17"/></svg>
                   <input id="sfQuery" value="dune" />
                 </div>
+                <!-- Always-on manual entry, never gated behind an empty result set -->
+                <div class="sf-manual">
+                  <span class="hint">Can’t find it, or it isn’t in the catalogue?</span>
+                  <button onclick="openManual(document.getElementById('sfQuery').value)">＋ Add a book manually</button>
+                </div>
               </div>
               <div class="sf-results">
                 <div class="sf-toolbar">
@@ -1157,6 +1218,44 @@
 
       </div><!-- /screens -->
     </div><!-- /app -->
+
+    <!-- ─── Manual entry dialog ──────────────────────────────────────
+         Opened from the topbar dropdown, the Search screen, or the empty library. Asks for only
+         title / author / shelf up front; the rest of the metadata sits behind "More details". -->
+    <div class="modal-overlay" id="manualOverlay" onclick="if(event.target===this)closeManual()">
+      <div class="modal" role="dialog" aria-label="Add a book manually">
+        <h2>Add a book manually</h2>
+        <div class="modal-sub">Enter a book that isn’t in the catalogue. You can edit any of these later.</div>
+        <div class="me-body">
+          <div class="me-field">
+            <label>Title</label>
+            <input id="meTitle" placeholder="Book title" />
+          </div>
+          <div class="me-field">
+            <label>Author</label>
+            <input placeholder="Separate multiple authors with commas" />
+          </div>
+          <div class="me-field">
+            <label>Shelf</label>
+            <div class="me-shelf">
+              <span class="opt sel" onclick="pickShelf(this)">Read</span>
+              <span class="opt" onclick="pickShelf(this)">Currently Reading</span>
+              <span class="opt" onclick="pickShelf(this)">Want to Read</span>
+              <span class="opt" onclick="pickShelf(this)">Did Not Finish</span>
+            </div>
+          </div>
+          <span class="me-more" onclick="toggleMeMore(this)">▾ More details — cover, ISBN, pages, publisher…</span>
+          <div id="meMore" hidden style="display:flex;flex-direction:column;gap:16px;">
+            <div class="me-field"><label>Cover image URL</label><input placeholder="https://…" /></div>
+            <div class="me-field"><label>ISBN</label><input /></div>
+          </div>
+          <div class="me-actions">
+            <button class="fr-btn" onclick="closeManual()">Cancel</button>
+            <button class="fr-btn primary" onclick="closeManual()">Add to library</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
       /* ── Data ─────────────────────────────────────────────────── */
@@ -1217,6 +1316,40 @@
         resetScope();
         closeTbDropdown();
         showScreen('search');
+      }
+
+      /* ── Manual entry ─────────────────────────────────────────────
+         The dialog the three placements (dropdown action, Search link, empty-state button) open,
+         seeded with whatever the reader typed. */
+      const manualOverlay = document.getElementById('manualOverlay');
+      function openManual(seed) {
+        closeTbDropdown();
+        document.getElementById('meTitle').value = (seed || '').trim();
+        manualOverlay.classList.add('open');
+      }
+      function closeManual() { manualOverlay.classList.remove('open'); }
+      function pickShelf(el) {
+        el.parentElement.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+        el.classList.add('sel');
+      }
+      function toggleMeMore(el) {
+        const more = document.getElementById('meMore');
+        const open = more.hasAttribute('hidden');
+        if (open) more.removeAttribute('hidden'); else more.setAttribute('hidden', '');
+        el.textContent = (open ? '▴ Fewer details' : '▾ More details — cover, ISBN, pages, publisher…');
+      }
+
+      /* Prototype-only: preview the first-run empty library against the populated demo. */
+      function toggleFirstRun() {
+        const fr = document.getElementById('lib-firstrun');
+        const showing = fr.classList.toggle('show');
+        document.querySelector('.shelf-tabs').style.display = showing ? 'none' : '';
+        document.getElementById('shelf-read').style.display = showing ? 'none' : '';
+        document.getElementById('shelf-want').style.display = 'none';
+        document.getElementById('shelf-dnf').style.display = 'none';
+        if (!showing) {
+          document.querySelectorAll('.shelf-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+        }
       }
 
       /* ── Search facets ────────────────────────────────────────── */

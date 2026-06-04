@@ -40,6 +40,24 @@ export type CreateLogEventBody = z.infer<typeof createLogEventBody>;
 const addToLibraryBody = z.intersection(z.object({ bookRef: bookRefSchema }), createLogEventBody);
 export type AddToLibraryBody = z.infer<typeof addToLibraryBody>;
 
+// Manual book creation: the user types in a book the catalog doesn't have (or that they'd rather not
+// fetch). Only the title is required; everything else is optional metadata. `status` seeds the
+// reading log so the book lands on the chosen shelf. The created row carries null source/external_id
+// — it has no upstream provider — which the schema already permits (library_books nullable provenance).
+const createManualBody = z.object({
+  title: z.string().min(1),
+  authors: z.array(z.string()).optional(),
+  coverUrl: z.string().optional(),
+  isbn: z.string().optional(),
+  pageCount: z.number().int().positive().optional(),
+  publisher: z.string().optional(),
+  publishedDate: z.string().optional(),
+  description: z.string().optional(),
+  language: z.string().optional(),
+  status: shelfStatusSchema,
+});
+export type CreateManualBody = z.infer<typeof createManualBody>;
+
 const updateTagsBody = z.object({ tags: z.array(z.string()) });
 
 // Tighten the two fields a user types directly (title, pageCount) beyond bookMetadataSchema's
@@ -131,6 +149,12 @@ export const libraryContract = c.router(
       method: 'POST',
       path: '/',
       body: addToLibraryBody,
+      responses: { 200: createLogEventResponse },
+    },
+    createManual: {
+      method: 'POST',
+      path: '/manual',
+      body: createManualBody,
       responses: { 200: createLogEventResponse },
     },
     getLibrary: {

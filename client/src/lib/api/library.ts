@@ -7,6 +7,7 @@ import {
   type BookFormat,
   type LogEventType,
   type CreateLogEventBody,
+  type CreateManualBody,
   type UpdateMetadataBody,
   type ShelfStatus,
 } from '@livre/types';
@@ -33,6 +34,7 @@ export const library = {
   book: (libraryBookId: number) => client.getLibraryBook({ params: { libraryBookId } }).then(ok),
   add: (bookRef: string, event: LogEventType, date?: string) =>
     client.add({ body: { bookRef, ...logBody(event, date) } }).then(ok),
+  createManual: (fields: CreateManualBody) => client.createManual({ body: fields }).then(ok),
   log: (
     libraryBookId: number,
     event: LogEventType,

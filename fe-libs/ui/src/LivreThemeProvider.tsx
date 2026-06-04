@@ -8,6 +8,17 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
     margin: 0,
     padding: 0,
   },
+  // Reset the user-agent button chrome. Without this a bare <button> inherits system colors
+  // (ButtonFace/ButtonBorder) that track the OS appearance — so on a light theme under macOS dark
+  // mode it renders with a dark fill and a stray border. Components that need a surface (Button, the
+  // pill selectors) set their own background/border, which still wins over this baseline.
+  button: {
+    background: 'none',
+    border: 'none',
+    font: 'inherit',
+    color: 'inherit',
+    cursor: 'pointer',
+  },
   // Disables the trackpad/touch overscroll bounce so the sticky TopBar doesn't get dragged off
   // the top of the viewport on Mac/iOS. Also stops scroll chaining to any parent context.
   'html, body': {

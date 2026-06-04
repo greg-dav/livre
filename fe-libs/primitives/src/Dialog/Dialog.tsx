@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type FormEvent, type ReactNode } from 'react';
 import styled from 'styled-components';
 import * as Radix from '@radix-ui/react-dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -22,6 +22,22 @@ interface BareDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+interface ScrollDialogProps {
+  trigger?: ReactNode;
+  title: string;
+  description?: string;
+  /** Pinned footer, typically the action buttons. Omit for a body-only scroll dialog. */
+  footer?: ReactNode;
+  /**
+   * When provided, the body + footer are wrapped in a <form> so Enter submits and a footer button
+   * with type="submit" participates. The header stays outside the form (it holds no controls).
+   */
+  onSubmit?: (e: FormEvent) => void;
+  children: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 const Overlay = styled(Radix.Overlay)({
   position: 'fixed',
   inset: 0,
@@ -29,7 +45,7 @@ const Overlay = styled(Radix.Overlay)({
   zIndex: 200,
 });
 
-const Content = styled(Radix.Content)(({ theme }) => ({
+const Content = styled(Radix.Content)<{ $flush?: boolean }>(({ theme, $flush }) => ({
   position: 'fixed',
   top: '50%',
   left: '50%',
@@ -44,7 +60,9 @@ const Content = styled(Radix.Content)(({ theme }) => ({
   background: theme.bg,
   border: `1px solid ${theme.border}`,
   borderRadius: theme.radius.lg,
-  padding: theme.spacing(6),
+  // Flush variant drops the uniform padding so the ScrollDialog's header/body/footer own their own
+  // insets and the divider lines span edge to edge.
+  padding: $flush ? 0 : theme.spacing(6),
   boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
   zIndex: 201,
 
@@ -57,6 +75,44 @@ const Content = styled(Radix.Content)(({ theme }) => ({
 const Description = styled('div')(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
+
+// ── ScrollDialog parts ───────────────────────────────────────────────────────
+// Pinned header with a divider; never scrolls.
+const ScrollHeader = styled('div')(({ theme }) => ({
+  flexShrink: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+  padding: `${theme.spacing(6)} ${theme.spacing(6)} ${theme.spacing(4)}`,
+  borderBottom: `1px solid ${theme.borderSoft}`,
+}));
+
+// The only scrolling region. Fills the space between the pinned header and footer.
+const ScrollBody = styled('div')(({ theme }) => ({
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  padding: theme.spacing(6),
+}));
+
+// Pinned footer with a divider; holds the actions.
+const ScrollFooter = styled('div')(({ theme }) => ({
+  flexShrink: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: theme.spacing(2),
+  padding: `${theme.spacing(4)} ${theme.spacing(6)}`,
+  borderTop: `1px solid ${theme.borderSoft}`,
+}));
+
+// Column that holds body + footer; rendered as a <form> when onSubmit is supplied, else a <div>.
+const ScrollPanel = styled('form')({
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
+});
 
 /**
  * Modal dialog with built-in overlay, portal, and accessible title. Pass a trigger element for
@@ -117,3 +173,47 @@ const BareDialogComponent = ({ trigger, title, children, open, onOpenChange }: B
 );
 
 export const BareDialog = Object.assign(BareDialogComponent, { Close: Radix.Close });
+
+/**
+ * Dialog for long content: a pinned header (title + optional description, with a divider), a single
+ * scrollable body, and a pinned footer for actions. Use this instead of Dialog when the body can
+ * grow past the viewport (e.g. a form with many fields) so the header and actions stay in view while
+ * the middle scrolls. Pass onSubmit to make it a form. Use ScrollDialog.Close inside the footer.
+ */
+const ScrollDialogComponent = ({
+  trigger,
+  title,
+  description,
+  footer,
+  onSubmit,
+  children,
+  open,
+  onOpenChange,
+}: ScrollDialogProps) => (
+  <Radix.Root open={open} onOpenChange={onOpenChange}>
+    {trigger && <Radix.Trigger asChild>{trigger}</Radix.Trigger>}
+    <Radix.Portal>
+      <Overlay />
+      <Content $flush>
+        <ScrollHeader>
+          <Radix.Title asChild>
+            <Text variant="h5">{title}</Text>
+          </Radix.Title>
+          {description && (
+            <Radix.Description asChild>
+              <Text variant="ui-sm" color="muted">
+                {description}
+              </Text>
+            </Radix.Description>
+          )}
+        </ScrollHeader>
+        <ScrollPanel as={onSubmit ? 'form' : 'div'} onSubmit={onSubmit}>
+          <ScrollBody>{children}</ScrollBody>
+          {footer && <ScrollFooter>{footer}</ScrollFooter>}
+        </ScrollPanel>
+      </Content>
+    </Radix.Portal>
+  </Radix.Root>
+);
+
+export const ScrollDialog = Object.assign(ScrollDialogComponent, { Close: Radix.Close });

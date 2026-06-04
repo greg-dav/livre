@@ -57,6 +57,7 @@ export type { BookSearchResponse, SearchResult, SearchResponse } from './contrac
 export { libraryContract } from './contracts/library';
 export type {
   AddToLibraryBody,
+  CreateManualBody,
   CreateLogEventBody,
   CreateLogEventResponse,
   UpdateMetadataBody,
