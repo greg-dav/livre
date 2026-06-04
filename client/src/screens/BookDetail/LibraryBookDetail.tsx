@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Text, Button, Popover, Dialog, Icon, Loader } from '@livre/primitives';
-import { type LogEventType, type RefreshMetadataBody, type BookFormat } from '@livre/types';
+import { type LogEventType, type UpdateMetadataBody, type BookFormat } from '@livre/types';
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
@@ -97,7 +97,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: saveTitle } = useMutation({
-    mutationFn: (title: string) => api.books.updateTitle(libraryBookId, title),
+    mutationFn: (title: string) => api.books.updateMetadata(libraryBookId, { title }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -105,14 +105,15 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: saveDescription } = useMutation({
-    mutationFn: (description: string) => api.books.updateDescription(libraryBookId, description),
+    mutationFn: (description: string) => api.books.updateMetadata(libraryBookId, { description }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
     },
   });
 
   const { mutate: saveCover } = useMutation({
-    mutationFn: (url: string) => api.books.updateCover(libraryBookId, url),
+    mutationFn: (url: string) =>
+      api.books.updateMetadata(libraryBookId, { thumbnail: url, largeThumbnail: url }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -123,33 +124,33 @@ export const LibraryBookDetail = () => {
     queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
 
   const { mutate: savePublisher } = useMutation({
-    mutationFn: (publisher: string) => api.books.updatePublisher(libraryBookId, publisher),
+    mutationFn: (publisher: string) => api.books.updateMetadata(libraryBookId, { publisher }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: savePageCount } = useMutation({
-    mutationFn: (pageCount: number) => api.books.updatePageCount(libraryBookId, pageCount),
+    mutationFn: (pageCount: number) => api.books.updateMetadata(libraryBookId, { pageCount }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: savePublishedDate } = useMutation({
     mutationFn: (publishedDate: string) =>
-      api.books.updatePublishedDate(libraryBookId, publishedDate),
+      api.books.updateMetadata(libraryBookId, { publishedDate }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: saveLanguage } = useMutation({
-    mutationFn: (language: string) => api.books.updateLanguage(libraryBookId, language),
+    mutationFn: (language: string) => api.books.updateMetadata(libraryBookId, { language }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: saveIsbn } = useMutation({
-    mutationFn: (isbn: string) => api.books.updateIsbn(libraryBookId, isbn),
+    mutationFn: (isbn: string) => api.books.updateMetadata(libraryBookId, { isbn }),
     onSuccess: invalidateDetail,
   });
 
-  const { mutate: refreshMetadata } = useMutation({
-    mutationFn: (fields: RefreshMetadataBody) => api.books.refreshMetadata(libraryBookId, fields),
+  const { mutate: saveMetadata } = useMutation({
+    mutationFn: (fields: UpdateMetadataBody) => api.books.updateMetadata(libraryBookId, fields),
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -297,7 +298,7 @@ export const LibraryBookDetail = () => {
       onPublishedDateChange={savePublishedDate}
       onLanguageChange={saveLanguage}
       onIsbnChange={saveIsbn}
-      onRefreshMetadata={refreshMetadata}
+      onMetadataChange={saveMetadata}
       journal={
         <Journal
           entry={entry}

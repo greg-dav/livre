@@ -163,48 +163,9 @@ export const updateTagsResponseSchema = z.object({ ok: z.literal(true) });
 
 export const libraryTagsResponseSchema = z.array(z.string());
 
-export const updateDescriptionBodySchema = z.object({ description: z.string() });
-export type UpdateDescriptionBody = z.infer<typeof updateDescriptionBodySchema>;
-
-export const updateDescriptionResponseSchema = z.object({ ok: z.literal(true) });
-
-export const updateCoverBodySchema = z.object({ url: z.string() });
-export type UpdateCoverBody = z.infer<typeof updateCoverBodySchema>;
-
-export const updateCoverResponseSchema = z.object({ ok: z.literal(true) });
-
-export const updateTitleBodySchema = z.object({ title: z.string().min(1) });
-export type UpdateTitleBody = z.infer<typeof updateTitleBodySchema>;
-
-export const updateTitleResponseSchema = z.object({ ok: z.literal(true) });
-
 const okResponse = z.object({ ok: z.literal(true) });
 
-export const updatePublisherBodySchema = z.object({ publisher: z.string() });
-export type UpdatePublisherBody = z.infer<typeof updatePublisherBodySchema>;
-export const updatePublisherResponseSchema = okResponse;
-
-export const updatePageCountBodySchema = z.object({ pageCount: z.number().int().positive() });
-export type UpdatePageCountBody = z.infer<typeof updatePageCountBodySchema>;
-export const updatePageCountResponseSchema = okResponse;
-
-export const updatePublishedDateBodySchema = z.object({
-  publishedDate: z.string().regex(/^\d{4}(-\d{2}(-\d{2})?)?$/),
-});
-export type UpdatePublishedDateBody = z.infer<typeof updatePublishedDateBodySchema>;
-export const updatePublishedDateResponseSchema = okResponse;
-
-export const updateLanguageBodySchema = z.object({
-  language: z.string().min(2).max(10),
-});
-export type UpdateLanguageBody = z.infer<typeof updateLanguageBodySchema>;
-export const updateLanguageResponseSchema = okResponse;
-
-export const updateIsbnBodySchema = z.object({ isbn: z.string() });
-export type UpdateIsbnBody = z.infer<typeof updateIsbnBodySchema>;
-export const updateIsbnResponseSchema = okResponse;
-
-export const refreshMetadataBodySchema = bookMetadataSchema
+export const updateMetadataBodySchema = bookMetadataSchema
   .pick({
     title: true,
     authors: true,
@@ -218,8 +179,8 @@ export const refreshMetadataBodySchema = bookMetadataSchema
     language: true,
   })
   .partial();
-export type RefreshMetadataBody = z.infer<typeof refreshMetadataBodySchema>;
-export const refreshMetadataResponseSchema = okResponse;
+export type UpdateMetadataBody = z.infer<typeof updateMetadataBodySchema>;
+export const updateMetadataResponseSchema = okResponse;
 
 export const updateRatingBodySchema = z.object({
   rating: z.number().min(1).max(5).multipleOf(0.5).nullable(),

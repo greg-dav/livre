@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useMetaEdit } from './useMetaEdit';
 import { api } from '../../../lib/api';
-import type { BookVolume, RefreshMetadataBody } from '@livre/types';
+import type { BookVolume, UpdateMetadataBody } from '@livre/types';
 
 type Phase = 'enter' | 'looking' | 'found' | 'not-found';
 
@@ -38,7 +38,7 @@ const validateIsbn = (raw: string): boolean => {
 export const useIsbnEdit = (
   isbn: string | undefined,
   onSave: ((isbn: string) => void) | undefined,
-  onRefreshMetadata: ((fields: RefreshMetadataBody) => void) | undefined
+  onMetadataChange: ((fields: UpdateMetadataBody) => void) | undefined
 ) => {
   const { open, draft, setDraft, openDialog, handleOpenChange } = useMetaEdit(
     applyIsbnMask(isbn ?? '')
@@ -89,7 +89,7 @@ export const useIsbnEdit = (
 
   const handleSaveWithMetadata = useCallback(() => {
     if (!foundBook) return;
-    const fields: RefreshMetadataBody = {
+    const fields: UpdateMetadataBody = {
       title: foundBook.title,
       authors: foundBook.authors,
       description: foundBook.description,
@@ -101,9 +101,9 @@ export const useIsbnEdit = (
       publishedDate: foundBook.publishedDate,
       language: foundBook.language,
     };
-    onRefreshMetadata?.(fields);
+    onMetadataChange?.(fields);
     handleOpenChangeWrapped(false);
-  }, [foundBook, digits, onRefreshMetadata, handleOpenChangeWrapped]);
+  }, [foundBook, digits, onMetadataChange, handleOpenChangeWrapped]);
 
   return {
     open,

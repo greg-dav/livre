@@ -1,18 +1,15 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import {
   createUserBodySchema,
   managedUserSchema,
   okResponseSchema,
   updateUserBodySchema,
-  userSchema,
   usersListResponseSchema,
 } from '@livre/types';
 import { type RequestHandler } from 'express';
 import { SchemaRouter } from '../lib/SchemaRouter';
+import { requireUser, idParam } from '../lib/request';
 import { type UsersService } from '../services/UsersService';
-
-const userIdSchema = z.coerce.number().int().positive();
 
 export function createUsersRouter(service: UsersService, requireAdmin: RequestHandler): Router {
   const admin = new SchemaRouter().use(requireAdmin);
@@ -29,12 +26,12 @@ export function createUsersRouter(service: UsersService, requireAdmin: RequestHa
 
   /** Edit an existing account (username, password, and/or admin flag). */
   admin.patch('/:id', updateUserBodySchema, managedUserSchema, async (body, respond, req) => {
-    respond(await service.update(userIdSchema.parse(req.params.id), body));
+    respond(await service.update(idParam(req, 'id'), body));
   });
 
   /** Remove an account. */
   admin.delete('/:id', okResponseSchema, (respond, req) => {
-    service.remove(userSchema.parse(req.user).id, userIdSchema.parse(req.params.id));
+    service.remove(requireUser(req).id, idParam(req, 'id'));
     respond({ ok: true });
   });
 

@@ -4,9 +4,9 @@ import {
   updatePasswordBodySchema,
   updateThemeBodySchema,
   updateUsernameBodySchema,
-  userSchema,
 } from '@livre/types';
 import { SchemaRouter } from '../lib/SchemaRouter';
+import { requireUser } from '../lib/request';
 import { type AccountService } from '../services/AccountService';
 
 export function createAccountRouter(service: AccountService, requireAuth: RequestHandler): Router {
@@ -18,7 +18,7 @@ export function createAccountRouter(service: AccountService, requireAuth: Reques
     updateUsernameBodySchema,
     authResponseSchema,
     ({ username }, respond, req) => {
-      respond(service.updateUsername(userSchema.parse(req.user).id, username));
+      respond(service.updateUsername(requireUser(req).id, username));
     }
   );
 
@@ -32,15 +32,13 @@ export function createAccountRouter(service: AccountService, requireAuth: Reques
     updatePasswordBodySchema,
     authResponseSchema,
     async ({ currentPassword, newPassword }, respond, req) => {
-      respond(
-        await service.updatePassword(userSchema.parse(req.user).id, currentPassword, newPassword)
-      );
+      respond(await service.updatePassword(requireUser(req).id, currentPassword, newPassword));
     }
   );
 
   /** Persist the authenticated user's theme; re-issues the JWT to reflect the new theme. */
   authed.patch('/theme', updateThemeBodySchema, authResponseSchema, ({ theme }, respond, req) => {
-    respond(service.updateTheme(userSchema.parse(req.user).id, theme));
+    respond(service.updateTheme(requireUser(req).id, theme));
   });
 
   return authed.router;

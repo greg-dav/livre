@@ -1,7 +1,7 @@
 import { type Router, type RequestHandler } from 'express';
-import createError from 'http-errors';
 import { timelineResponseSchema } from '@livre/types';
 import { SchemaRouter } from '../lib/SchemaRouter';
+import { requireUser } from '../lib/request';
 import { type LogService } from '../services/LogService';
 
 export function createLogRouter(service: LogService, requireAuth: RequestHandler): Router {
@@ -13,8 +13,7 @@ export function createLogRouter(service: LogService, requireAuth: RequestHandler
    * the full set.
    */
   router.get('/', timelineResponseSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
+    const user = requireUser(req);
     const { start, end } = req.query;
     const range = typeof start === 'string' && typeof end === 'string' ? { start, end } : undefined;
     respond(service.getTimeline(user.id, range));

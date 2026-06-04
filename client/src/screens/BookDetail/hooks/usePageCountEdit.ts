@@ -12,7 +12,9 @@ export const usePageCountEdit = (
   const isValid = Number.isInteger(parsed) && parsed > 0;
 
   const handleSave = () => {
-    if (isValid) onSave?.(parsed);
+    if (!isValid) return;
+    onSave?.(parsed);
+    handleOpenChange(false);
   };
 
   return { open, handleOpenChange, openDialog, draft, setDraft, handleSave, isValid };

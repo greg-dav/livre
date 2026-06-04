@@ -313,56 +313,6 @@ export class LibraryBooksRepository {
       .run();
   }
 
-  updateDescription(libraryBookId: number, description: string): void {
-    db.update(libraryBooks)
-      .set({ description: description || null })
-      .where(eq(libraryBooks.id, libraryBookId))
-      .run();
-  }
-
-  updateCover(libraryBookId: number, url: string): void {
-    db.update(libraryBooks)
-      .set({ largeThumbnail: url, thumbnail: url })
-      .where(eq(libraryBooks.id, libraryBookId))
-      .run();
-  }
-
-  updateTitle(libraryBookId: number, title: string): void {
-    db.update(libraryBooks).set({ title }).where(eq(libraryBooks.id, libraryBookId)).run();
-  }
-
-  updatePublisher(libraryBookId: number, publisher: string): void {
-    db.update(libraryBooks)
-      .set({ publisher: publisher || null })
-      .where(eq(libraryBooks.id, libraryBookId))
-      .run();
-  }
-
-  updatePageCount(libraryBookId: number, pageCount: number): void {
-    db.update(libraryBooks).set({ pageCount }).where(eq(libraryBooks.id, libraryBookId)).run();
-  }
-
-  updatePublishedDate(libraryBookId: number, publishedDate: string): void {
-    db.update(libraryBooks)
-      .set({ publishedDate: publishedDate || null })
-      .where(eq(libraryBooks.id, libraryBookId))
-      .run();
-  }
-
-  updateLanguage(libraryBookId: number, language: string): void {
-    db.update(libraryBooks)
-      .set({ language: language || null })
-      .where(eq(libraryBooks.id, libraryBookId))
-      .run();
-  }
-
-  updateIsbn(libraryBookId: number, isbn: string): void {
-    db.update(libraryBooks)
-      .set({ isbn: isbn || null })
-      .where(eq(libraryBooks.id, libraryBookId))
-      .run();
-  }
-
   updateRating(libraryBookId: number, rating: number | null): void {
     db.update(libraryBooks).set({ rating }).where(eq(libraryBooks.id, libraryBookId)).run();
   }
@@ -390,7 +340,7 @@ export class LibraryBooksRepository {
     return db.delete(libraryBooks).where(eq(libraryBooks.userId, userId)).run().changes;
   }
 
-  refreshMetadata(libraryBookId: number, fields: import('@livre/types').RefreshMetadataBody): void {
+  updateMetadata(libraryBookId: number, fields: import('@livre/types').UpdateMetadataBody): void {
     const set: Record<string, unknown> = {};
     if (fields.title !== undefined) set.title = fields.title;
     if (fields.authors !== undefined) set.authors = fields.authors.join('|') || null;

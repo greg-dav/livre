@@ -19,24 +19,8 @@ import {
   libraryTagsResponseSchema,
   updateTagsBodySchema,
   updateTagsResponseSchema,
-  updateDescriptionBodySchema,
-  updateDescriptionResponseSchema,
-  updateCoverBodySchema,
-  updateCoverResponseSchema,
-  updateTitleBodySchema,
-  updateTitleResponseSchema,
-  updatePublisherBodySchema,
-  updatePublisherResponseSchema,
-  updatePageCountBodySchema,
-  updatePageCountResponseSchema,
-  updatePublishedDateBodySchema,
-  updatePublishedDateResponseSchema,
-  updateLanguageBodySchema,
-  updateLanguageResponseSchema,
-  updateIsbnBodySchema,
-  updateIsbnResponseSchema,
-  refreshMetadataBodySchema,
-  refreshMetadataResponseSchema,
+  updateMetadataBodySchema,
+  updateMetadataResponseSchema,
   updateRatingBodySchema,
   updateRatingResponseSchema,
   updateReviewBodySchema,
@@ -50,6 +34,7 @@ import {
 } from '@livre/types';
 import createError from 'http-errors';
 import { SchemaRouter } from '../lib/SchemaRouter';
+import { requireUser, idParam } from '../lib/request';
 import { decodeBookRef } from '../lib/bookRef';
 import { type BooksService } from '../services/BooksService';
 import { type LibraryTransferService } from '../services/LibraryTransferService';
@@ -78,8 +63,7 @@ export function createBooksRouter(
 
   /** Faceted search: scope the query to a field, filter by shelf membership, sort, and paginate. */
   router.get('/search', searchResponseSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
+    const user = requireUser(req);
     const q = z.string().min(1, 'Query is required').safeParse(req.query.q);
     if (!q.success) throw createError(400, q.error.issues[0]?.message ?? 'Invalid query');
     const scope = searchScopeSchema.safeParse(req.query.scope).data ?? 'anything';
@@ -99,8 +83,7 @@ export function createBooksRouter(
 
   /** Books by a given author — the same faceted/paginated shape as search, pre-scoped to author. */
   router.get('/search/author/:name', searchResponseSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
+    const user = requireUser(req);
     const name = z.string().min(1).parse(req.params.name);
     const sort = searchSortSchema.safeParse(req.query.sort).data ?? 'relevance';
     respond(await service.getAuthorBooks(user.id, name, sort, startIndexOf(req.query.startIndex)));
@@ -118,8 +101,7 @@ export function createBooksRouter(
     createLogEventBodySchema,
     createLogEventResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
+      const user = requireUser(req);
       const { source, externalId } = parseBookRef(req.params.bookRef);
       respond(await service.addToLibrary(user.id, source, externalId, body.event, body.date));
     }
@@ -127,27 +109,23 @@ export function createBooksRouter(
 
   /** Return all books in the authenticated user's library. */
   router.get('/library', libraryResponseSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
-    respond(service.getLibrary(user.id));
+    respond(service.getLibrary(requireUser(req).id));
   });
 
   /** Return the distinct tags across the user's library, for autocomplete. */
   router.get('/library/tags', libraryTagsResponseSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
-    respond(service.getTags(user.id));
+    respond(service.getTags(requireUser(req).id));
   });
 
   /** List the import/export formats the server offers, so both modals render from the server. */
   router.get('/formats', libraryFormatsResponseSchema, async (respond, req) => {
-    if (!req.user) throw createError(401, 'Unauthorized');
+    requireUser(req);
     respond(transfer.listFormats());
   });
 
   /** List the metadata sources for the import view, with today's per-instance Google usage. */
   router.get('/import-sources', importSourcesResponseSchema, async (respond, req) => {
-    if (!req.user) throw createError(401, 'Unauthorized');
+    requireUser(req);
     respond(transfer.listImportSources());
   });
 
@@ -158,8 +136,7 @@ export function createBooksRouter(
    * "export" isn't captured as an id.
    */
   router.router.get('/library/export', (req, res) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
+    const user = requireUser(req);
     const format = z.string().min(1).safeParse(req.query.format).data ?? 'goodreads';
     const { content, mimeType, filename } = transfer.export(user.id, format);
     res.setHeader('Content-Type', `${mimeType}; charset=utf-8`);
@@ -178,8 +155,7 @@ export function createBooksRouter(
     express.text({ type: () => true, limit: '5mb' }),
     async (req, res, next) => {
       try {
-        const user = req.user;
-        if (!user) throw createError(401, 'Unauthorized');
+        const user = requireUser(req);
         const content = typeof req.body === 'string' ? req.body : '';
         if (!content.trim()) throw createError(400, 'Empty import file');
         const format = z.string().min(1).safeParse(req.query.format).data ?? 'goodreads';
@@ -194,10 +170,7 @@ export function createBooksRouter(
 
   /** Return full volume data and shelf metadata for a single library book. */
   router.get('/library/:libraryBookId', libraryBookDetailSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
-    const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-    const detail = service.getLibraryBook(user.id, libraryBookId);
+    const detail = service.getLibraryBook(requireUser(req).id, idParam(req, 'libraryBookId'));
     if (!detail) throw createError(404, 'Book not found');
     respond(detail);
   });
@@ -208,145 +181,23 @@ export function createBooksRouter(
     updateTagsBodySchema,
     updateTagsResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateTags(user.id, libraryBookId, body.tags);
+      const ok = service.updateTags(requireUser(req).id, idParam(req, 'libraryBookId'), body.tags);
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
   );
 
-  /** Update the description on a library book. */
-  router.patch(
-    '/library/:libraryBookId/description',
-    updateDescriptionBodySchema,
-    updateDescriptionResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateDescription(user.id, libraryBookId, body.description);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the cover image URL on a library book. */
-  router.patch(
-    '/library/:libraryBookId/cover',
-    updateCoverBodySchema,
-    updateCoverResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateCover(user.id, libraryBookId, body.url);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the title on a library book. */
-  router.patch(
-    '/library/:libraryBookId/title',
-    updateTitleBodySchema,
-    updateTitleResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateTitle(user.id, libraryBookId, body.title);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the publisher on a library book. */
-  router.patch(
-    '/library/:libraryBookId/publisher',
-    updatePublisherBodySchema,
-    updatePublisherResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updatePublisher(user.id, libraryBookId, body.publisher);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the page count on a library book. */
-  router.patch(
-    '/library/:libraryBookId/page-count',
-    updatePageCountBodySchema,
-    updatePageCountResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updatePageCount(user.id, libraryBookId, body.pageCount);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the published date on a library book. */
-  router.patch(
-    '/library/:libraryBookId/published-date',
-    updatePublishedDateBodySchema,
-    updatePublishedDateResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updatePublishedDate(user.id, libraryBookId, body.publishedDate);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the language on a library book. */
-  router.patch(
-    '/library/:libraryBookId/language',
-    updateLanguageBodySchema,
-    updateLanguageResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateLanguage(user.id, libraryBookId, body.language);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Update the ISBN on a library book. */
-  router.patch(
-    '/library/:libraryBookId/isbn',
-    updateIsbnBodySchema,
-    updateIsbnResponseSchema,
-    async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateIsbn(user.id, libraryBookId, body.isbn);
-      if (!ok) throw createError(404, 'Book not found');
-      respond({ ok: true });
-    }
-  );
-
-  /** Bulk-refresh metadata on a library book (e.g. after an ISBN lookup). */
+  /**
+   * Partial update of a library book's metadata snapshot — any subset of the editable fields
+   * (title, authors, description, cover, isbn, pageCount, publisher, publishedDate, language).
+   * Backs both the inline per-field edits and the ISBN-lookup "apply found metadata" flow.
+   */
   router.patch(
     '/library/:libraryBookId/metadata',
-    refreshMetadataBodySchema,
-    refreshMetadataResponseSchema,
+    updateMetadataBodySchema,
+    updateMetadataResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.refreshMetadata(user.id, libraryBookId, body);
+      const ok = service.updateMetadata(requireUser(req).id, idParam(req, 'libraryBookId'), body);
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
@@ -358,9 +209,8 @@ export function createBooksRouter(
     createLogEventBodySchema,
     createLogEventResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
+      const user = requireUser(req);
+      const libraryBookId = idParam(req, 'libraryBookId');
       const text = body.event === 'note' || body.event === 'quote' ? body.text : undefined;
       const format = body.event === 'format' ? body.format : undefined;
       const result = service.logEvent(user.id, libraryBookId, body.event, body.date, text, format);
@@ -375,10 +225,11 @@ export function createBooksRouter(
     updateRatingBodySchema,
     updateRatingResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateRating(user.id, libraryBookId, body.rating);
+      const ok = service.updateRating(
+        requireUser(req).id,
+        idParam(req, 'libraryBookId'),
+        body.rating
+      );
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
@@ -390,10 +241,11 @@ export function createBooksRouter(
     updateReviewBodySchema,
     updateReviewResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.updateReview(user.id, libraryBookId, body.review);
+      const ok = service.updateReview(
+        requireUser(req).id,
+        idParam(req, 'libraryBookId'),
+        body.review
+      );
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
@@ -405,11 +257,12 @@ export function createBooksRouter(
     updateLogEntryBodySchema,
     updateLogEntryResponseSchema,
     async (body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const logId = z.coerce.number().int().positive().parse(req.params.logId);
-      const ok = service.updateLogEntry(user.id, libraryBookId, logId, body);
+      const ok = service.updateLogEntry(
+        requireUser(req).id,
+        idParam(req, 'libraryBookId'),
+        idParam(req, 'logId'),
+        body
+      );
       if (!ok) throw createError(404, 'Log entry not found');
       respond({ ok: true });
     }
@@ -420,11 +273,11 @@ export function createBooksRouter(
     '/library/:libraryBookId/log/:logId',
     deleteLogEntryResponseSchema,
     async (respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const logId = z.coerce.number().int().positive().parse(req.params.logId);
-      const ok = service.deleteLogEntry(user.id, libraryBookId, logId);
+      const ok = service.deleteLogEntry(
+        requireUser(req).id,
+        idParam(req, 'libraryBookId'),
+        idParam(req, 'logId')
+      );
       if (!ok) throw createError(404, 'Log entry not found');
       respond({ ok: true });
     }
@@ -436,10 +289,7 @@ export function createBooksRouter(
     z.object({}).strict(),
     resetReadingLogResponseSchema,
     async (_body, respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.resetReadingLog(user.id, libraryBookId);
+      const ok = service.resetReadingLog(requireUser(req).id, idParam(req, 'libraryBookId'));
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }
@@ -447,9 +297,7 @@ export function createBooksRouter(
 
   /** Wipe the user's entire library — every book, rating, review, and reading-log event. */
   router.delete('/library', deleteLibraryResponseSchema, async (respond, req) => {
-    const user = req.user;
-    if (!user) throw createError(401, 'Unauthorized');
-    respond({ ok: true, deleted: service.deleteLibrary(user.id) });
+    respond({ ok: true, deleted: service.deleteLibrary(requireUser(req).id) });
   });
 
   /** Permanently remove a book from the user's library. */
@@ -457,10 +305,7 @@ export function createBooksRouter(
     '/library/:libraryBookId',
     removeFromLibraryResponseSchema,
     async (respond, req) => {
-      const user = req.user;
-      if (!user) throw createError(401, 'Unauthorized');
-      const libraryBookId = z.coerce.number().int().positive().parse(req.params.libraryBookId);
-      const ok = service.removeFromLibrary(user.id, libraryBookId);
+      const ok = service.removeFromLibrary(requireUser(req).id, idParam(req, 'libraryBookId'));
       if (!ok) throw createError(404, 'Book not found');
       respond({ ok: true });
     }

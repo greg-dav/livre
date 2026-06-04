@@ -15,6 +15,7 @@ This is non-negotiable. Prototypes encode deliberate decisions the working code 
 - **Frontend**: React 19, Vite 5, TypeScript, styled-components v6
 - **Backend**: Node.js (Express), TypeScript via `tsx` in dev / `tsc` in prod
 - **Database**: SQLite via `better-sqlite3` — requires **Node 20 LTS** (incompatible with Node 26+)
+- **ORM**: Drizzle ORM — all repository data access goes through its query builder
 - **Monorepo**: npm workspaces — `client`, `server`, `shared`, `fe-libs/*`
 - **UI primitives**: Radix UI (installed in `@livre/primitives`)
 - **Shared types**: `@livre/types` (`shared/`) — Zod schemas and inferred TypeScript types consumed by both client and server
@@ -304,21 +305,23 @@ Class files in `server/` use **PascalCase matching the exported class**: `UsersR
 
 Shared **wire contracts** — anything that crosses the client/server boundary or is consumed by more than one module — live in `shared/src/schemas` (`@livre/types`). A schema that is **private to one module** (a client's wire-format shape, a parser's row shape, a store's persisted record) stays in that module, unexported. Examples that are correct in-module: `googleVolumeSchema`/`olEntrySchema` (client wire shapes), `csvRecordsSchema` (parser), `usageRecordSchema` (store), `ddlRowSchema`. Don't promote a private schema to `shared/` until a second consumer actually needs it.
 
-### better-sqlite3 prepared statements
+### Database access (Drizzle ORM)
 
-Prepare statements once at class construction time — never inside a method. Group them into a private `query` / `mutation` object:
+All repository data access goes through the **Drizzle query builder** — never hand-written SQL strings, never raw `db.prepare(...)`. Express each query inline in the method that needs it, using `db.select/insert/update/delete` with the table objects from `db/schema` and the `eq`, `and`, `sql` helpers from `drizzle-orm`:
 
 ```ts
-private readonly query = {
-  findByName: db.prepare('SELECT ...'),
-};
-private readonly mutation = (() => {
-  const insert = db.prepare('INSERT ...');   // closure-scoped, not exposed
-  return {
-    create: db.transaction((data) => { ... insert.run(...) ... }),
-  };
-})();
+get(source: BookSource, key: string): string | undefined {
+  return db
+    .select({ value: config.value })
+    .from(config)
+    .where(and(eq(config.source, source), eq(config.key, key)))
+    .get()?.value;
+}
 ```
+
+Wrap multi-statement mutations that must be atomic in `db.transaction(...)`; pass the transaction handle (`Tx`) down to repository methods that accept an optional `tx` so they enlist in the caller's transaction.
+
+The **one** place raw better-sqlite3 is expected is `db/index.ts`, which uses it directly to bootstrap the schema and run migrations before Drizzle is wired up. Application code never touches better-sqlite3 directly.
 
 ## Book data model
 

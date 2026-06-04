@@ -8,6 +8,7 @@ export const usePublisherEdit = (
 
   const handleSave = () => {
     onSave?.(draft.trim());
+    handleOpenChange(false);
   };
 
   return {

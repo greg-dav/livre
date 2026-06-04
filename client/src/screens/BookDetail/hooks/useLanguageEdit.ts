@@ -60,7 +60,9 @@ export const useLanguageEdit = (
   const isValid = draft.length > 0;
 
   const handleSave = () => {
-    if (isValid) onSave?.(draft);
+    if (!isValid) return;
+    onSave?.(draft);
+    handleOpenChange(false);
   };
 
   return { open, handleOpenChange, openDialog, draft, setDraft, isValid, handleSave };

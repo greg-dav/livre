@@ -9,7 +9,7 @@ import { useLanguageEdit } from '../../hooks/useLanguageEdit';
 import { useIsbnEdit } from '../../hooks/useIsbnEdit';
 import type { ReactNode } from 'react';
 import { Text, Lightbox, Dialog, Input, Button, EditableField } from '@livre/primitives';
-import { type LibraryVolume, type RefreshMetadataBody, type BookFormat } from '@livre/types';
+import { type LibraryVolume, type UpdateMetadataBody, type BookFormat } from '@livre/types';
 import { Layout } from '../../../../components';
 import { FormatSelector } from '../FormatSelector/FormatSelector';
 import {
@@ -74,7 +74,7 @@ interface BookDetailViewProps {
   onPublishedDateChange?: (publishedDate: string) => void;
   onLanguageChange?: (language: string) => void;
   onIsbnChange?: (isbn: string) => void;
-  onRefreshMetadata?: (fields: RefreshMetadataBody) => void;
+  onMetadataChange?: (fields: UpdateMetadataBody) => void;
   /** When provided, renders alongside the book content in a two-column layout. */
   journal?: ReactNode;
   focusMode?: boolean;
@@ -112,7 +112,7 @@ export const BookDetailView = ({
   onPublishedDateChange,
   onLanguageChange,
   onIsbnChange,
-  onRefreshMetadata,
+  onMetadataChange,
   journal,
   focusMode,
   onExitFocus,
@@ -133,7 +133,7 @@ export const BookDetailView = ({
   const pageCountEdit = usePageCountEdit(book.pageCount, onPageCountChange);
   const dateEdit = useDateEdit(book.publishedDate, onPublishedDateChange);
   const languageEdit = useLanguageEdit(book.language, onLanguageChange);
-  const isbnEdit = useIsbnEdit(book.isbn, onIsbnChange, onRefreshMetadata);
+  const isbnEdit = useIsbnEdit(book.isbn, onIsbnChange, onMetadataChange);
 
   useEffect(() => {
     setCoverIndex(0);

@@ -17,7 +17,9 @@ export const useDateEdit = (
 
   const handleSave = () => {
     const stored = displayToStored(draft);
-    if (stored) onSave?.(stored);
+    if (!stored) return;
+    onSave?.(stored);
+    handleOpenChange(false);
   };
 
   const handleChange = (raw: string) => {

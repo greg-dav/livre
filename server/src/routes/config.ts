@@ -1,11 +1,13 @@
-import { Router, type RequestHandler } from 'express';
+import { type Router, type RequestHandler } from 'express';
 import {
   updateApiKeyBodySchema,
   updateDailyLimitBodySchema,
+  okResponseSchema,
   bookSourceSchema,
   type BookSource,
 } from '@livre/types';
 import createError from 'http-errors';
+import { SchemaRouter } from '../lib/SchemaRouter';
 import { ConfigRepository } from '../repositories/ConfigRepository';
 import { type ConfigurableSource } from '../ports/bookSource';
 
@@ -18,8 +20,8 @@ export const createConfigRouter = (
   configRepository: ConfigRepository,
   configurableSources: Map<BookSource, ConfigurableSource>,
   requireAdmin: RequestHandler
-) => {
-  const router = Router();
+): Router => {
+  const admin = new SchemaRouter().use(requireAdmin);
 
   const resolveSource = (
     raw: unknown
@@ -32,29 +34,29 @@ export const createConfigRouter = (
   };
 
   /** Update and validate a source's API key (validated against the live API before storing). */
-  router.put('/sources/:source/key', requireAdmin, async (req, res, next) => {
-    try {
+  admin.put(
+    '/sources/:source/key',
+    updateApiKeyBodySchema,
+    okResponseSchema,
+    async ({ apiKey }, respond, req) => {
       const { source, configurable } = resolveSource(req.params.source);
-      const { apiKey } = updateApiKeyBodySchema.parse(req.body);
       await configurable.validate(apiKey);
       configRepository.set(source, ConfigRepository.API_KEY, apiKey);
-      res.json({ ok: true });
-    } catch (err) {
-      next(err);
+      respond({ ok: true });
     }
-  });
+  );
 
   /** Set the per-instance daily cap on a source's import lookups. */
-  router.put('/sources/:source/limit', requireAdmin, async (req, res, next) => {
-    try {
+  admin.put(
+    '/sources/:source/limit',
+    updateDailyLimitBodySchema,
+    okResponseSchema,
+    ({ limit }, respond, req) => {
       const { source } = resolveSource(req.params.source);
-      const { limit } = updateDailyLimitBodySchema.parse(req.body);
       configRepository.set(source, ConfigRepository.DAILY_LIMIT, String(limit));
-      res.json({ ok: true });
-    } catch (err) {
-      next(err);
+      respond({ ok: true });
     }
-  });
+  );
 
-  return router;
+  return admin.router;
 };

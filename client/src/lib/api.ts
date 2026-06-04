@@ -14,15 +14,7 @@ import {
   libraryResponseSchema,
   libraryTagsResponseSchema,
   updateTagsResponseSchema,
-  updateDescriptionResponseSchema,
-  updateCoverResponseSchema,
-  updateTitleResponseSchema,
-  updatePublisherResponseSchema,
-  updatePageCountResponseSchema,
-  updatePublishedDateResponseSchema,
-  updateLanguageResponseSchema,
-  updateIsbnResponseSchema,
-  refreshMetadataResponseSchema,
+  updateMetadataResponseSchema,
   updateRatingResponseSchema,
   updateReviewResponseSchema,
   updateLogEntryResponseSchema,
@@ -37,7 +29,7 @@ import {
   usersListResponseSchema,
   managedUserSchema,
   type BookSource,
-  type RefreshMetadataBody,
+  type UpdateMetadataBody,
   type LogEventType,
   type BookFormat,
   type SearchScope,
@@ -153,48 +145,8 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify({ tags }),
       }),
-    updateDescription: (libraryBookId: number, description: string) =>
-      request(`/books/library/${libraryBookId}/description`, updateDescriptionResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ description }),
-      }),
-    updateCover: (libraryBookId: number, url: string) =>
-      request(`/books/library/${libraryBookId}/cover`, updateCoverResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ url }),
-      }),
-    updateTitle: (libraryBookId: number, title: string) =>
-      request(`/books/library/${libraryBookId}/title`, updateTitleResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ title }),
-      }),
-    updatePublisher: (libraryBookId: number, publisher: string) =>
-      request(`/books/library/${libraryBookId}/publisher`, updatePublisherResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ publisher }),
-      }),
-    updatePageCount: (libraryBookId: number, pageCount: number) =>
-      request(`/books/library/${libraryBookId}/page-count`, updatePageCountResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ pageCount }),
-      }),
-    updatePublishedDate: (libraryBookId: number, publishedDate: string) =>
-      request(`/books/library/${libraryBookId}/published-date`, updatePublishedDateResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ publishedDate }),
-      }),
-    updateLanguage: (libraryBookId: number, language: string) =>
-      request(`/books/library/${libraryBookId}/language`, updateLanguageResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ language }),
-      }),
-    updateIsbn: (libraryBookId: number, isbn: string) =>
-      request(`/books/library/${libraryBookId}/isbn`, updateIsbnResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ isbn }),
-      }),
-    refreshMetadata: (libraryBookId: number, fields: RefreshMetadataBody) =>
-      request(`/books/library/${libraryBookId}/metadata`, refreshMetadataResponseSchema, {
+    updateMetadata: (libraryBookId: number, fields: UpdateMetadataBody) =>
+      request(`/books/library/${libraryBookId}/metadata`, updateMetadataResponseSchema, {
         method: 'PATCH',
         body: JSON.stringify(fields),
       }),

@@ -14,7 +14,7 @@ import {
   type LibraryResponse,
   type ShelfStatus,
   type LogEventType,
-  type RefreshMetadataBody,
+  type UpdateMetadataBody,
   type UpdateLogEntryBody,
 } from '@livre/types';
 import createError from 'http-errors';
@@ -222,54 +222,6 @@ export class BooksService {
     return true;
   }
 
-  updateDescription(userId: number, libraryBookId: number, description: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updateDescription(libraryBookId, description);
-    return true;
-  }
-
-  updateCover(userId: number, libraryBookId: number, url: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updateCover(libraryBookId, url);
-    return true;
-  }
-
-  updateTitle(userId: number, libraryBookId: number, title: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updateTitle(libraryBookId, title);
-    return true;
-  }
-
-  updatePublisher(userId: number, libraryBookId: number, publisher: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updatePublisher(libraryBookId, publisher);
-    return true;
-  }
-
-  updatePageCount(userId: number, libraryBookId: number, pageCount: number): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updatePageCount(libraryBookId, pageCount);
-    return true;
-  }
-
-  updatePublishedDate(userId: number, libraryBookId: number, publishedDate: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updatePublishedDate(libraryBookId, publishedDate);
-    return true;
-  }
-
-  updateLanguage(userId: number, libraryBookId: number, language: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updateLanguage(libraryBookId, language);
-    return true;
-  }
-
-  updateIsbn(userId: number, libraryBookId: number, isbn: string): boolean {
-    if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.updateIsbn(libraryBookId, isbn);
-    return true;
-  }
-
   updateRating(userId: number, libraryBookId: number, rating: number | null): boolean {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
     this.libraryBooksRepo.updateRating(libraryBookId, rating);
@@ -282,9 +234,9 @@ export class BooksService {
     return true;
   }
 
-  refreshMetadata(userId: number, libraryBookId: number, fields: RefreshMetadataBody): boolean {
+  updateMetadata(userId: number, libraryBookId: number, fields: UpdateMetadataBody): boolean {
     if (!this.libraryBooksRepo.exists(userId, libraryBookId)) return false;
-    this.libraryBooksRepo.refreshMetadata(libraryBookId, fields);
+    this.libraryBooksRepo.updateMetadata(libraryBookId, fields);
     return true;
   }
 
