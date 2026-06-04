@@ -1,6 +1,7 @@
 import { Fragment, useState, useCallback, useEffect, useRef } from 'react';
 import { useDescriptionEdit } from '../../hooks/useDescriptionEdit';
 import { useTitleEdit } from '../../hooks/useTitleEdit';
+import { useAuthorEdit } from '../../hooks/useAuthorEdit';
 import { useCoverEdit } from '../../hooks/useCoverEdit';
 import { usePublisherEdit } from '../../hooks/usePublisherEdit';
 import { usePageCountEdit } from '../../hooks/usePageCountEdit';
@@ -45,6 +46,7 @@ import {
   CoverDialogActions,
 } from './BookDetailView.styles';
 import { TagList } from '../TagList/TagList';
+import { AuthorDialog } from '../MetaEditDialogs/AuthorDialog';
 import { PublisherDialog } from '../MetaEditDialogs/PublisherDialog';
 import { PageCountDialog } from '../MetaEditDialogs/PageCountDialog';
 import { DateDialog } from '../MetaEditDialogs/DateDialog';
@@ -67,6 +69,7 @@ interface BookDetailViewProps {
   onTagsChange?: (tags: string[]) => void;
   tagSuggestions?: string[];
   onTitleChange?: (title: string) => void;
+  onAuthorsChange?: (authors: string[]) => void;
   onDescriptionChange?: (description: string) => void;
   onCoverChange?: (url: string) => void;
   onPublisherChange?: (publisher: string) => void;
@@ -105,6 +108,7 @@ export const BookDetailView = ({
   onTagsChange,
   tagSuggestions,
   onTitleChange,
+  onAuthorsChange,
   onDescriptionChange,
   onCoverChange,
   onPublisherChange,
@@ -127,6 +131,7 @@ export const BookDetailView = ({
   const coverSrc = coverSrcs[coverIndex];
 
   const titleEdit = useTitleEdit(book.title, onTitleChange);
+  const authorEdit = useAuthorEdit(dedupeAuthors(book.authors), onAuthorsChange);
   const descriptionEdit = useDescriptionEdit(book.description, onDescriptionChange);
   const coverEdit = useCoverEdit(onCoverChange);
   const publisherEdit = usePublisherEdit(book.publisher, onPublisherChange);
@@ -160,6 +165,7 @@ export const BookDetailView = ({
   const metaEditable =
     editable &&
     !!(
+      onAuthorsChange ||
       onPublisherChange ||
       onPageCountChange ||
       onPublishedDateChange ||
@@ -297,6 +303,24 @@ export const BookDetailView = ({
 
       <Divider />
       <MetaGrid>
+        {dedupeAuthors(book.authors).length > 0 && (
+          <>
+            <MetaLabel>
+              <Text variant="label" color="muted">
+                {dedupeAuthors(book.authors).length > 1 ? 'Authors' : 'Author'}
+              </Text>
+            </MetaLabel>
+            <MetaValue>
+              {metaEditable && onAuthorsChange ? (
+                <EditableField type="button" onClick={authorEdit.openDialog}>
+                  <Text variant="ui-sm">{dedupeAuthors(book.authors).join(', ')}</Text>
+                </EditableField>
+              ) : (
+                <Text variant="ui-sm">{dedupeAuthors(book.authors).join(', ')}</Text>
+              )}
+            </MetaValue>
+          </>
+        )}
         {book.isbn && (
           <>
             <MetaLabel>
@@ -422,6 +446,7 @@ export const BookDetailView = ({
 
       {metaEditable && (
         <>
+          {onAuthorsChange && <AuthorDialog {...authorEdit} />}
           {onPublisherChange && <PublisherDialog {...publisherEdit} />}
           {onPageCountChange && <PageCountDialog {...pageCountEdit} />}
           {onPublishedDateChange && <DateDialog {...dateEdit} />}

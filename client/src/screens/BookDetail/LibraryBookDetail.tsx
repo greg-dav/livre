@@ -104,6 +104,14 @@ export const LibraryBookDetail = () => {
     },
   });
 
+  const { mutate: saveAuthors } = useMutation({
+    mutationFn: (authors: string[]) => api.library.updateMetadata(libraryBookId, { authors }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+    },
+  });
+
   const { mutate: saveDescription } = useMutation({
     mutationFn: (description: string) => api.library.updateMetadata(libraryBookId, { description }),
     onSuccess: () => {
@@ -291,6 +299,7 @@ export const LibraryBookDetail = () => {
       onTagsChange={saveTags}
       tagSuggestions={tagSuggestions}
       onTitleChange={saveTitle}
+      onAuthorsChange={saveAuthors}
       onDescriptionChange={saveDescription}
       onCoverChange={saveCover}
       onPublisherChange={savePublisher}
