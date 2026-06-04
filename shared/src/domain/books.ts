@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { bookRefSchema, bookSourceSchema } from './bookRef';
-import { shelfEntrySchema, shelfStatusSchema, logEntrySchema } from './shelves';
 
 export { bookSourceSchema, bookRefSchema } from './bookRef';
 export type { BookSource } from './bookRef';
@@ -99,14 +98,8 @@ export const libraryVolumeSchema = bookMetadataSchema.extend({
 });
 export type LibraryVolume = z.infer<typeof libraryVolumeSchema>;
 
-export const bookSearchResultSchema = bookVolumeSchema;
+/** A quick-search hit is just a book volume; aliased for call-site clarity. */
 export type BookSearchResult = BookVolume;
-
-export const bookSearchResponseSchema = z.object({
-  results: z.array(bookVolumeSchema),
-  total: z.number(),
-});
-export type BookSearchResponse = z.infer<typeof bookSearchResponseSchema>;
 
 /**
  * Which field a search query is matched against. Provider-agnostic on purpose — the client picks a
@@ -129,90 +122,6 @@ export const shelfFilterSchema = z.enum(['in', 'out']);
 export type ShelfFilter = z.infer<typeof shelfFilterSchema>;
 
 /**
- * A search hit annotated with the user's library state, so the client renders shelf status and
- * routes to the owned copy without a second round-trip. Both fields are null when the book isn't
- * in the user's library.
- */
-export const searchResultSchema = bookVolumeSchema.extend({
-  libraryBookId: z.number().nullable(),
-  libraryStatus: shelfStatusSchema.nullable(),
-});
-export type SearchResult = z.infer<typeof searchResultSchema>;
-
-export const searchResponseSchema = z.object({
-  results: z.array(searchResultSchema),
-  total: z.number(),
-  shelfCounts: z.object({ in: z.number(), out: z.number() }),
-  // Cursor for the next page, or null when the source has no more results. Advances by the raw page
-  // size (not the filtered result count) so shelf-filtered pagination still walks the full source.
-  nextStartIndex: z.number().nullable(),
-});
-export type SearchResponse = z.infer<typeof searchResponseSchema>;
-
-export const libraryBookDetailSchema = z.object({
-  entry: shelfEntrySchema,
-  book: libraryVolumeSchema,
-  log: z.array(logEntrySchema),
-});
-export type LibraryBookDetail = z.infer<typeof libraryBookDetailSchema>;
-
-export const updateTagsBodySchema = z.object({ tags: z.array(z.string()) });
-export type UpdateTagsBody = z.infer<typeof updateTagsBodySchema>;
-
-export const updateTagsResponseSchema = z.object({ ok: z.literal(true) });
-
-export const libraryTagsResponseSchema = z.array(z.string());
-
-const okResponse = z.object({ ok: z.literal(true) });
-
-export const updateMetadataBodySchema = bookMetadataSchema
-  .pick({
-    title: true,
-    authors: true,
-    description: true,
-    thumbnail: true,
-    largeThumbnail: true,
-    isbn: true,
-    pageCount: true,
-    publisher: true,
-    publishedDate: true,
-    language: true,
-  })
-  .partial();
-export type UpdateMetadataBody = z.infer<typeof updateMetadataBodySchema>;
-export const updateMetadataResponseSchema = okResponse;
-
-export const updateRatingBodySchema = z.object({
-  rating: z.number().min(1).max(5).multipleOf(0.5).nullable(),
-});
-export type UpdateRatingBody = z.infer<typeof updateRatingBodySchema>;
-export const updateRatingResponseSchema = okResponse;
-
-export const updateReviewBodySchema = z.object({ review: z.string() });
-export type UpdateReviewBody = z.infer<typeof updateReviewBodySchema>;
-export const updateReviewResponseSchema = okResponse;
-
-export const updateLogEntryBodySchema = z.object({
-  text: z.string().optional(),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional(),
-});
-export type UpdateLogEntryBody = z.infer<typeof updateLogEntryBodySchema>;
-export const updateLogEntryResponseSchema = okResponse;
-export const deleteLogEntryResponseSchema = okResponse;
-
-export const resetReadingLogResponseSchema = okResponse;
-export const removeFromLibraryResponseSchema = okResponse;
-
-export const deleteLibraryResponseSchema = z.object({
-  ok: z.literal(true),
-  deleted: z.number().int().nonnegative(),
-});
-export type DeleteLibraryResponse = z.infer<typeof deleteLibraryResponseSchema>;
-
-/**
  * A library transfer format the server can import from and/or export to (e.g. Goodreads CSV). The
  * client renders the import/export modals from this list rather than hardcoding formats, so adding
  * a server-side format adapter surfaces in the UI with no client change.
@@ -224,9 +133,6 @@ export const libraryFormatSchema = z.object({
   capabilities: z.object({ import: z.boolean(), export: z.boolean() }),
 });
 export type LibraryFormat = z.infer<typeof libraryFormatSchema>;
-
-export const libraryFormatsResponseSchema = z.array(libraryFormatSchema);
-export type LibraryFormatsResponse = z.infer<typeof libraryFormatsResponseSchema>;
 
 /**
  * Outcome of an import run. `imported` books were added, `skipped` matched a book already in the
@@ -263,6 +169,3 @@ export const importSourceSchema = z.object({
   usage: sourceUsageSchema.nullable(),
 });
 export type ImportSource = z.infer<typeof importSourceSchema>;
-
-export const importSourcesResponseSchema = z.array(importSourceSchema);
-export type ImportSourcesResponse = z.infer<typeof importSourcesResponseSchema>;

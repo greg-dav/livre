@@ -7,7 +7,7 @@ import { env } from './env';
 
 import './db';
 
-import { errorHandler } from './lib/route';
+import { errorHandler } from './lib/errorHandler';
 import { createAuthMiddleware } from './middleware/auth';
 import { UsersRepository } from './repositories/UsersRepository';
 import { ConfigRepository } from './repositories/ConfigRepository';

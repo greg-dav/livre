@@ -1,47 +1,24 @@
 import { Router, type RequestHandler } from 'express';
-import {
-  authResponseSchema,
-  instanceStatusSchema,
-  userSchema,
-  registerBodySchema,
-  loginBodySchema,
-} from '@livre/types';
-import { SchemaRouter } from '../lib/SchemaRouter';
+import { authContract } from '@livre/types';
+import { server, attachContract, userOf, ok, created } from '../lib/tsRest';
 import { type AuthService } from '../services/AuthService';
 
 export function createAuthRouter(service: AuthService, requireAuth: RequestHandler): Router {
-  const open = new SchemaRouter();
-  const authed = new SchemaRouter().use(requireAuth);
+  const router = server.router(authContract, {
+    status: async () => ok(service.getStatus()),
 
-  /** Return whether any user accounts exist, used to gate the setup vs login flow. */
-  open.get('/status', instanceStatusSchema, (respond) => {
-    respond(service.getStatus());
+    register: async ({ body }) => created(await service.register(body.username, body.password)),
+
+    login: async ({ body }) => ok(await service.login(body.username, body.password)),
+
+    // The only guarded route in this contract, so requireAuth is attached here rather than globally.
+    me: {
+      middleware: [requireAuth],
+      handler: async ({ req }) => ok(userOf(req)),
+    },
   });
 
-  /** Register a new user account and return a JWT. */
-  open.post(
-    '/register',
-    registerBodySchema,
-    authResponseSchema,
-    async ({ username, password }, respond) => {
-      respond(await service.register(username, password), 201);
-    }
-  );
-
-  /** Validate credentials and issue a JWT. */
-  open.post(
-    '/login',
-    loginBodySchema,
-    authResponseSchema,
-    async ({ username, password }, respond) => {
-      respond(await service.login(username, password));
-    }
-  );
-
-  /** Return the authenticated user's profile. */
-  authed.get('/me', userSchema, (respond, req) => {
-    respond(userSchema.parse(req.user));
-  });
-
-  return Router().use(open.router).use(authed.router);
+  const expressRouter = Router();
+  attachContract(expressRouter, authContract, router);
+  return expressRouter;
 }

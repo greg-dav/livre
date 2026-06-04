@@ -14,11 +14,12 @@ This is non-negotiable. Prototypes encode deliberate decisions the working code 
 
 - **Frontend**: React 19, Vite 5, TypeScript, styled-components v6
 - **Backend**: Node.js (Express), TypeScript via `tsx` in dev / `tsc` in prod
+- **API contracts**: ts-rest (`@ts-rest/core`, `@ts-rest/express`) — one Zod contract per domain types both the Express handlers and the client. Pinned to `3.53.0-rc.1` (the only line with Zod 4 support, via Standard Schema); the durable asset is our own Zod schemas, so the runtime is a swappable bet.
 - **Database**: SQLite via `better-sqlite3` — requires **Node 20 LTS** (incompatible with Node 26+)
 - **ORM**: Drizzle ORM — all repository data access goes through its query builder
 - **Monorepo**: npm workspaces — `client`, `server`, `shared`, `fe-libs/*`
 - **UI primitives**: Radix UI (installed in `@livre/primitives`)
-- **Shared types**: `@livre/types` (`shared/`) — Zod schemas and inferred TypeScript types consumed by both client and server
+- **Shared types**: `@livre/types` (`shared/`) — the **domain model** (`shared/src/domain/`) plus the **API contracts** (`shared/src/contracts/`), consumed by both client and server
 
 ## Package hierarchy
 
@@ -231,7 +232,7 @@ export const ShelfTabs = ...
 ### Layered structure
 
 ```
-routes/       ← thin HTTP layer; validates input/output shapes, delegates to services
+routes/       ← thin ts-rest handlers; parse/validation handled by the contract, delegate to services
 services/     ← business logic; no HTTP concerns, no SQL
 ports/        ← domain-owned interfaces (the contracts consumers depend on)
 adapters/     ← translate a foreign API into our domain types; implement ports
@@ -246,6 +247,17 @@ repositories/ ← all database access; Zod validation at the DB boundary
 Never let concerns bleed across layers — routes don't touch the DB, services don't know about `req`/`res`, services never import other services (use ports, registries, providers, stores, or repositories instead).
 
 **`clients/`** are pure HTTP adapters. They take config in their constructor, own the wire-format schema (private — never exported), and return types from `@livre/types`. If the external API changes, only the client changes.
+
+#### Route layer (ts-rest contracts)
+
+Routes are **ts-rest contract handlers**, not hand-rolled Express. A contract (`shared/src/contracts/<domain>.ts`) declares each route's `method`/`path`/`pathParams`/`query`/`body`/`responses` as Zod; ts-rest parses and 400s **before** the handler runs, so handlers only see typed, validated input and return a discriminated `{ status, body }`. Everything route-related lives in `server/src/lib/tsRest.ts`:
+
+- `server.router(contract, { ...handlers })` builds the handlers; `mountContract(contract, router, guard)` mounts them behind an auth guard at the domain prefix. A router that must interleave plain Express (the non-JSON `/library/export` + `/library/import`) builds its own `express.Router()`, registers those routes **first** (matching order), then calls `attachContract`.
+- Handlers return through the builders **`ok(body)` / `created(body)` / `notFound(msg)`** — never write `{ status, body }` literals inline.
+- Read the authenticated user with **`userOf(req)`** (ts-rest's request type isn't assignable to Express's, so the Express-typed guard helper won't take it). Auth stays Express middleware: `mountContract` applies the guard; a contract with one guarded route (`/me`) attaches `requireAuth` per-route via `{ middleware: [requireAuth], handler }`.
+- Validation failures are remapped to our `{ error }` envelope in **one** place (`attachContract`'s `requestValidationErrorHandler`); business errors still `throw createError(404, ...)` and flow through `lib/errorHandler.ts`.
+- **Contract paths are relative** (`/username`), mounted at the prefix (`/api/account`) so the guard stays scoped — never use ts-rest `pathPrefix` (it forces a root mount and leaks the guard to every request). ts-rest registers routes in **handler-key order**, so literal paths (`/library/tags`) must precede `/library/:libraryBookId`.
+- The client mirrors this: `client/src/lib/api.ts` wraps per-domain `initClient(contract, ...)` and keeps the same public `api.*` surface — never reintroduce hand-written `fetch` + path strings there.
 
 #### Ports & Adapters (anti-corruption boundary)
 
@@ -292,18 +304,24 @@ Classes receive dependencies via constructor; nothing self-instantiates. `server
 ```ts
 const usersRepository = new UsersRepository();
 const authService = new AuthService(usersRepository);
-app.use('/api/auth', createAuthRouter(authService));
+const { requireAuth } = createAuthMiddleware(usersRepository);
+app.use('/api/auth', createAuthRouter(authService, requireAuth));
 ```
 
-Route files export factory functions (`createAuthRouter(service)`) rather than pre-built routers.
+Route files export factory functions (`createAuthRouter(service, guard)`) rather than pre-built routers; the guard is passed in so the composition root owns auth wiring.
 
 ### File naming
 
-Class files in `server/` use **PascalCase matching the exported class**: `UsersRepository.ts`, `AuthService.ts`, `SchemaRouter.ts`. All other server files are lowercase (`route.ts`, `env.ts`, `index.ts`).
+Class files in `server/` use **PascalCase matching the exported class**: `UsersRepository.ts`, `AuthService.ts`, `BookCacheProvider.ts`. All other server files are lowercase (`tsRest.ts`, `errorHandler.ts`, `env.ts`, `index.ts`).
 
-### Schema placement
+### Schema placement (value-locality)
 
-Shared **wire contracts** — anything that crosses the client/server boundary or is consumed by more than one module — live in `shared/src/schemas` (`@livre/types`). A schema that is **private to one module** (a client's wire-format shape, a parser's row shape, a store's persisted record) stays in that module, unexported. Examples that are correct in-module: `googleVolumeSchema`/`olEntrySchema` (client wire shapes), `csvRecordsSchema` (parser), `usageRecordSchema` (store), `ddlRowSchema`. Don't promote a private schema to `shared/` until a second consumer actually needs it.
+A Zod schema lives **where its value is consumed**. This splits `@livre/types` cleanly:
+
+- **`shared/src/domain/`** — the domain model: entities, value objects, and enums that are composed into other schemas, validated in app code, or used as UI vocabulary (`bookMetadataSchema`, `shelfEntrySchema`, `userSchema`, `shelfStatusSchema`, …). These are reused across layers, so they're exported from the package index.
+- **`shared/src/contracts/`** — each route's params, query, **body, and response are defined inline in the contract**, composed from domain schemas. Their _values_ are consumed only by the contract, so they aren't exported; the contract exports just the **inferred DTO types** the app actually uses (`UpdateMetadataBody`, `LibraryBookDetail`, …). Response envelopes shared across more than one contract (`apiError`, `okResponse`, `authResponse`) live in `contracts/_shared.ts`.
+
+When adding a route, put its body/response schema **inline in the contract**, not in `domain/` — promote a shape to `domain/` only when a second module needs its value. A schema **private to one module** (a client's wire-format shape, a parser's row shape, a store's persisted record) still stays in that module, unexported — e.g. `googleVolumeSchema`/`olEntrySchema` (client wire shapes), `csvRecordsSchema` (parser), `usageRecordSchema` (store), `ddlRowSchema`.
 
 ### Database access (Drizzle ORM)
 
@@ -347,7 +365,7 @@ There is **no shared `books` table**. Do not add one.
 
 ### Provider-agnostic provenance
 
-Both `book_cache` and `library_books` carry `source` + `external_id` instead of any provider-specific column. Adding a new source = append to the `BookSource` enum in `@livre/types/schemas/books.ts` and the matching SQL `CHECK` constraint. Never persist a `google_books_id` (or any other provider-specific id) as a named column.
+Both `book_cache` and `library_books` carry `source` + `external_id` instead of any provider-specific column. Adding a new source = append to the `BookSource` enum in `@livre/types` (`shared/src/domain/bookRef.ts`) and the matching SQL `CHECK` constraint. Never persist a `google_books_id` (or any other provider-specific id) as a named column.
 
 On `library_books`, both `source` and `external_id` are **nullable** to support future manual entries. The partial unique index `idx_library_books_source` only enforces dedup when both are present.
 
@@ -382,7 +400,7 @@ The cache is decoupled from `library_books` — adding a book to a library _copi
 
 ### Shared Zod composition
 
-`@livre/types/schemas/books.ts` exposes a `bookMetadataSchema` that both `book_cache` and `library_books` shapes compose. Always extend this when adding new metadata fields — never duplicate the field list.
+`@livre/types` (`shared/src/domain/books.ts`) exposes a `bookMetadataSchema` that both `book_cache` and `library_books` shapes compose. Always extend this when adding new metadata fields — never duplicate the field list.
 
 ## Type safety
 

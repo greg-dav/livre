@@ -1,69 +1,21 @@
-export { userSchema, themeNameSchema } from './schemas/user';
-export type { User, ThemeName } from './schemas/user';
-export {
-  updateUsernameBodySchema,
-  updatePasswordBodySchema,
-  updateThemeBodySchema,
-} from './schemas/account';
-export type { UpdateUsernameBody, UpdatePasswordBody, UpdateThemeBody } from './schemas/account';
-export {
-  managedUserSchema,
-  usersListResponseSchema,
-  createUserBodySchema,
-  updateUserBodySchema,
-} from './schemas/users';
-export type {
-  ManagedUser,
-  UsersListResponse,
-  CreateUserBody,
-  UpdateUserBody,
-} from './schemas/users';
-export {
-  registerBodySchema,
-  loginBodySchema,
-  instanceStatusSchema,
-  authResponseSchema,
-} from './schemas/auth';
-export type { RegisterBody, LoginBody, InstanceStatus, AuthResponse } from './schemas/auth';
-export { apiErrorSchema, okResponseSchema } from './schemas/api';
-export type { ApiError, OkResponse } from './schemas/api';
+// ── Domain model (domain/) ────────────────────────────────────────────────────
+export { userSchema, themeNameSchema, managedUserSchema } from './domain/user';
+export type { User, ThemeName, ManagedUser } from './domain/user';
 export {
   bookSourceSchema,
+  bookRefSchema,
   bookGenreSchema,
   bookMetadataSchema,
-  bookRefSchema,
   bookVolumeSchema,
   libraryVolumeSchema,
-  bookSearchResultSchema,
-  bookSearchResponseSchema,
   searchScopeSchema,
   searchSortSchema,
   shelfFilterSchema,
-  searchResultSchema,
-  searchResponseSchema,
-  libraryBookDetailSchema,
-  updateTagsBodySchema,
-  updateTagsResponseSchema,
-  libraryTagsResponseSchema,
-  updateMetadataBodySchema,
-  updateMetadataResponseSchema,
-  updateRatingBodySchema,
-  updateRatingResponseSchema,
-  updateReviewBodySchema,
-  updateReviewResponseSchema,
-  updateLogEntryBodySchema,
-  updateLogEntryResponseSchema,
-  deleteLogEntryResponseSchema,
-  resetReadingLogResponseSchema,
-  removeFromLibraryResponseSchema,
-  deleteLibraryResponseSchema,
   libraryFormatSchema,
-  libraryFormatsResponseSchema,
   importResultSchema,
   sourceUsageSchema,
   importSourceSchema,
-  importSourcesResponseSchema,
-} from './schemas/books';
+} from './domain/books';
 export type {
   BookSource,
   BookGenre,
@@ -71,55 +23,46 @@ export type {
   BookVolume,
   LibraryVolume,
   BookSearchResult,
-  BookSearchResponse,
   SearchScope,
   SearchSort,
   ShelfFilter,
-  SearchResult,
-  SearchResponse,
-  LibraryBookDetail,
-  UpdateTagsBody,
-  UpdateMetadataBody,
-  UpdateRatingBody,
-  UpdateReviewBody,
-  UpdateLogEntryBody,
-  DeleteLibraryResponse,
   LibraryFormat,
-  LibraryFormatsResponse,
   ImportResult,
   SourceUsage,
   ImportSource,
-  ImportSourcesResponse,
-} from './schemas/books';
-export { updateApiKeyBodySchema, updateDailyLimitBodySchema } from './schemas/config';
-export type { UpdateApiKeyBody, UpdateDailyLimitBody } from './schemas/config';
+} from './domain/books';
 export {
   shelfStatusSchema,
   logEventTypeSchema,
   bookFormatSchema,
   shelfEntrySchema,
   shelfCountsSchema,
-  shelfResponseSchema,
-  createLogEventBodySchema,
-  createLogEventResponseSchema,
-  libraryResponseSchema,
   logEntrySchema,
-} from './schemas/shelves';
+} from './domain/reading';
+export type { ShelfStatus, LogEventType, BookFormat, ShelfEntry, LogEntry } from './domain/reading';
+export { timelineCycleSchema, timelineBookSchema } from './domain/timeline';
+export type { TimelineCycle, TimelineBook } from './domain/timeline';
+
+// ── Contracts + their shared envelopes and request/response DTO types ─────────
+export { apiErrorSchema } from './contracts/_shared';
+export type { AuthResponse } from './contracts/_shared';
+export { accountContract } from './contracts/account';
+export { authContract } from './contracts/auth';
+export { usersContract } from './contracts/users';
+export type { CreateUserBody, UpdateUserBody } from './contracts/users';
+export { logContract } from './contracts/log';
+export { shelvesContract } from './contracts/shelves';
+export type { ShelfResponse } from './contracts/shelves';
+export { configContract } from './contracts/config';
+export { booksContract } from './contracts/books';
 export type {
-  ShelfStatus,
-  LogEventType,
-  BookFormat,
-  ShelfEntry,
-  ShelfCounts,
-  ShelfResponse,
   CreateLogEventBody,
   CreateLogEventResponse,
+  UpdateMetadataBody,
+  UpdateLogEntryBody,
+  BookSearchResponse,
+  SearchResult,
+  SearchResponse,
   LibraryResponse,
-  LogEntry,
-} from './schemas/shelves';
-export {
-  timelineCycleSchema,
-  timelineBookSchema,
-  timelineResponseSchema,
-} from './schemas/timeline';
-export type { TimelineCycle, TimelineBook, TimelineResponse } from './schemas/timeline';
+  LibraryBookDetail,
+} from './contracts/books';

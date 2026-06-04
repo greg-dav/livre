@@ -1,34 +1,16 @@
-import { z } from 'zod';
+import { initClient, tsRestFetchApi, type ApiFetcherArgs } from '@ts-rest/core';
 import {
-  userSchema,
-  authResponseSchema,
-  instanceStatusSchema,
   apiErrorSchema,
-  bookVolumeSchema,
-  bookSearchResponseSchema,
-  searchResponseSchema,
-  createLogEventResponseSchema,
-  libraryBookDetailSchema,
-  shelfResponseSchema,
-  timelineResponseSchema,
-  libraryResponseSchema,
-  libraryTagsResponseSchema,
-  updateTagsResponseSchema,
-  updateMetadataResponseSchema,
-  updateRatingResponseSchema,
-  updateReviewResponseSchema,
-  updateLogEntryResponseSchema,
-  deleteLogEntryResponseSchema,
-  resetReadingLogResponseSchema,
-  removeFromLibraryResponseSchema,
-  deleteLibraryResponseSchema,
-  libraryFormatsResponseSchema,
   importResultSchema,
-  importSourcesResponseSchema,
-  okResponseSchema,
-  usersListResponseSchema,
-  managedUserSchema,
+  accountContract,
+  authContract,
+  usersContract,
+  logContract,
+  shelvesContract,
+  booksContract,
+  configContract,
   type BookSource,
+  type CreateLogEventBody,
   type UpdateMetadataBody,
   type LogEventType,
   type BookFormat,
@@ -45,45 +27,67 @@ export type { User, ManagedUser, ThemeName } from '@livre/types';
 
 const BASE = '/api';
 
-async function request<T>(path: string, schema: z.ZodType<T>, options?: RequestInit): Promise<T> {
+/**
+ * Shared fetcher for every ts-rest client: injects the bearer token and centralises the 401 →
+ * sign-out behaviour the app relied on from the old hand-written `request()` helper.
+ */
+const fetchWithAuth = async (args: ApiFetcherArgs) => {
   const token = localStorage.getItem('livre_token');
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
+  const res = await tsRestFetchApi({
+    ...args,
+    headers: { ...args.headers, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
-
   if (res.status === 401) {
     localStorage.removeItem('livre_token');
     window.location.replace('/login');
     throw new Error('Unauthorized');
   }
+  return res;
+};
 
-  if (!res.ok) {
-    const parsed = apiErrorSchema.safeParse(await res.json().catch(() => null));
-    throw new Error(parsed.success ? parsed.data.error : `HTTP ${res.status}`);
-  }
+// validateResponse keeps the runtime response checks the old hand-written `request()` did
+// (it parses the body against the contract's response schema and throws on a mismatch).
+const opts = { api: fetchWithAuth, validateResponse: true };
+const authClient = initClient(authContract, { ...opts, baseUrl: `${BASE}/auth` });
+const accountClient = initClient(accountContract, { ...opts, baseUrl: `${BASE}/account` });
+const usersClient = initClient(usersContract, { ...opts, baseUrl: `${BASE}/users` });
+const logClient = initClient(logContract, { ...opts, baseUrl: `${BASE}/log` });
+const shelvesClient = initClient(shelvesContract, { ...opts, baseUrl: `${BASE}/shelves` });
+const booksClient = initClient(booksContract, { ...opts, baseUrl: `${BASE}/books` });
+const configClient = initClient(configContract, { ...opts, baseUrl: `${BASE}/config` });
 
-  return schema.parse(await res.json());
+/**
+ * Unwraps a ts-rest response to its success body, preserving the old throw-on-error contract so
+ * call sites and React Query stay unchanged. Non-2xx bodies are read as our `{ error }` envelope.
+ */
+function ok<T extends { status: number; body: unknown }>(
+  res: T
+): Extract<T, { status: 200 | 201 }>['body'] {
+  if (res.status === 200 || res.status === 201) return res.body;
+  const parsed = apiErrorSchema.safeParse(res.body);
+  throw new Error(parsed.success ? parsed.data.error : `HTTP ${res.status}`);
 }
+
+/** Narrows a broad LogEventType + optional fields into the discriminated event body. */
+const logBody = (
+  event: LogEventType,
+  date?: string,
+  text?: string,
+  format?: BookFormat
+): CreateLogEventBody => {
+  if (event === 'note' || event === 'quote') return { event, date, text: text ?? '' };
+  if (event === 'format') return { event, date, format: format ?? 'physical' };
+  return { event, date };
+};
 
 export const api = {
   auth: {
-    status: () => request('/auth/status', instanceStatusSchema),
+    status: () => authClient.status().then(ok),
     register: (username: string, password: string) =>
-      request('/auth/register', authResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      }),
+      authClient.register({ body: { username, password } }).then(ok),
     login: (username: string, password: string) =>
-      request('/auth/login', authResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      }),
-    me: () => request('/auth/me', userSchema),
+      authClient.login({ body: { username, password } }).then(ok),
+    me: () => authClient.me().then(ok),
   },
   books: {
     search: (
@@ -94,41 +98,35 @@ export const api = {
         sort?: SearchSort;
         startIndex?: number;
       }
-    ) => {
-      const params = new URLSearchParams({ q });
-      if (options?.scope) params.set('scope', options.scope);
-      if (options?.shelf) params.set('shelf', options.shelf);
-      if (options?.sort) params.set('sort', options.sort);
-      if (options?.startIndex) params.set('startIndex', String(options.startIndex));
-      return request(`/books/search?${params}`, searchResponseSchema);
-    },
-    searchQuick: (q: string) =>
-      request(`/books/search/quick?q=${encodeURIComponent(q)}`, bookSearchResponseSchema),
-    byAuthor: (name: string, options?: { sort?: SearchSort; startIndex?: number }) => {
-      const params = new URLSearchParams();
-      if (options?.sort) params.set('sort', options.sort);
-      if (options?.startIndex) params.set('startIndex', String(options.startIndex));
-      const qs = params.toString();
-      return request(
-        `/books/search/author/${encodeURIComponent(name)}${qs ? `?${qs}` : ''}`,
-        searchResponseSchema
-      );
-    },
-    getByRef: (bookRef: string) =>
-      request(`/books/search/book/${encodeURIComponent(bookRef)}`, bookVolumeSchema),
-    library: () => request('/books/library', libraryResponseSchema),
-    libraryTags: () => request('/books/library/tags', libraryTagsResponseSchema),
+    ) =>
+      booksClient
+        .search({
+          query: {
+            q,
+            scope: options?.scope,
+            shelf: options?.shelf,
+            sort: options?.sort,
+            startIndex: options?.startIndex,
+          },
+        })
+        .then(ok),
+    searchQuick: (q: string) => booksClient.quickSearch({ query: { q } }).then(ok),
+    byAuthor: (name: string, options?: { sort?: SearchSort; startIndex?: number }) =>
+      booksClient
+        .authorBooks({
+          // ts-rest inserts path params verbatim, so encode the free-text author name ourselves to
+          // guard against special characters (e.g. a slash) that fetch wouldn't escape in a path.
+          params: { name: encodeURIComponent(name) },
+          query: { sort: options?.sort, startIndex: options?.startIndex },
+        })
+        .then(ok),
+    getByRef: (bookRef: string) => booksClient.getBook({ params: { bookRef } }).then(ok),
+    library: () => booksClient.getLibrary().then(ok),
+    libraryTags: () => booksClient.getTags().then(ok),
     libraryBook: (libraryBookId: number) =>
-      request(`/books/library/${libraryBookId}`, libraryBookDetailSchema),
+      booksClient.getLibraryBook({ params: { libraryBookId } }).then(ok),
     addToLibrary: (bookRef: string, event: LogEventType, date?: string) =>
-      request(
-        `/books/search/book/${encodeURIComponent(bookRef)}/add`,
-        createLogEventResponseSchema,
-        {
-          method: 'POST',
-          body: JSON.stringify({ event, date }),
-        }
-      ),
+      booksClient.addToLibrary({ params: { bookRef }, body: logBody(event, date) }).then(ok),
     logByLibraryBookId: (
       libraryBookId: number,
       event: LogEventType,
@@ -136,71 +134,42 @@ export const api = {
       text?: string,
       format?: BookFormat
     ) =>
-      request(`/books/library/${libraryBookId}/log`, createLogEventResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify({ event, date, text, format }),
-      }),
+      booksClient
+        .logEvent({ params: { libraryBookId }, body: logBody(event, date, text, format) })
+        .then(ok),
     updateTags: (libraryBookId: number, tags: string[]) =>
-      request(`/books/library/${libraryBookId}/tags`, updateTagsResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ tags }),
-      }),
+      booksClient.updateTags({ params: { libraryBookId }, body: { tags } }).then(ok),
     updateMetadata: (libraryBookId: number, fields: UpdateMetadataBody) =>
-      request(`/books/library/${libraryBookId}/metadata`, updateMetadataResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify(fields),
-      }),
+      booksClient.updateMetadata({ params: { libraryBookId }, body: fields }).then(ok),
     updateRating: (libraryBookId: number, rating: number | null) =>
-      request(`/books/library/${libraryBookId}/rating`, updateRatingResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ rating }),
-      }),
+      booksClient.updateRating({ params: { libraryBookId }, body: { rating } }).then(ok),
     updateReview: (libraryBookId: number, review: string) =>
-      request(`/books/library/${libraryBookId}/review`, updateReviewResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ review }),
-      }),
+      booksClient.updateReview({ params: { libraryBookId }, body: { review } }).then(ok),
     logFormatChange: (libraryBookId: number, format: BookFormat) =>
-      request(`/books/library/${libraryBookId}/log`, createLogEventResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify({ event: 'format', format }),
-      }),
+      booksClient
+        .logEvent({ params: { libraryBookId }, body: { event: 'format', format } })
+        .then(ok),
     updateLogEntry: (
       libraryBookId: number,
       logId: number,
       fields: { text?: string; date?: string }
-    ) =>
-      request(`/books/library/${libraryBookId}/log/${logId}`, updateLogEntryResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify(fields),
-      }),
+    ) => booksClient.updateLogEntry({ params: { libraryBookId, logId }, body: fields }).then(ok),
     deleteLogEntry: (libraryBookId: number, logId: number) =>
-      request(`/books/library/${libraryBookId}/log/${logId}`, deleteLogEntryResponseSchema, {
-        method: 'DELETE',
-      }),
+      booksClient.deleteLogEntry({ params: { libraryBookId, logId } }).then(ok),
     resetReadingLog: (libraryBookId: number) =>
-      request(`/books/library/${libraryBookId}/reset`, resetReadingLogResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify({}),
-      }),
+      booksClient.resetReadingLog({ params: { libraryBookId }, body: {} }).then(ok),
     removeFromLibrary: (libraryBookId: number) =>
-      request(`/books/library/${libraryBookId}`, removeFromLibraryResponseSchema, {
-        method: 'DELETE',
-      }),
-    deleteLibrary: () =>
-      request('/books/library', deleteLibraryResponseSchema, { method: 'DELETE' }),
-    // The available import/export formats, so the modals render from the server rather than a
-    // hardcoded list.
-    listFormats: () => request('/books/formats', libraryFormatsResponseSchema),
-    // File download bypasses the JSON request() helper: the response is a file attachment, so we
-    // hand back the raw blob and server-supplied filename for the caller to save.
+      booksClient.removeFromLibrary({ params: { libraryBookId } }).then(ok),
+    deleteLibrary: () => booksClient.deleteLibrary().then(ok),
+    listFormats: () => booksClient.getFormats().then(ok),
+    importSources: () => booksClient.getImportSources().then(ok),
+    // File download bypasses the JSON clients: the response is a file attachment, so we hand back the
+    // raw blob and server-supplied filename for the caller to save.
     exportLibrary: async (formatId: string): Promise<{ filename: string; blob: Blob }> => {
       const token = localStorage.getItem('livre_token');
       const res = await fetch(
         `${BASE}/books/library/export?format=${encodeURIComponent(formatId)}`,
-        {
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        }
+        { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
       );
       if (res.status === 401) {
         localStorage.removeItem('livre_token');
@@ -211,77 +180,57 @@ export const api = {
       const match = (res.headers.get('Content-Disposition') ?? '').match(/filename="?([^"]+)"?/);
       return { filename: match?.[1] ?? 'livre-library.csv', blob: await res.blob() };
     },
-    // Metadata sources for the import view, with today's per-instance Google usage.
-    importSources: () => request('/books/import-sources', importSourcesResponseSchema),
-    // The file's text is read in the browser and POSTed as the raw body; the server parses it. Uses
-    // the JSON request() helper for the response only, so 401 handling and error shapes are shared.
+    // The file's text is read in the browser and POSTed as the raw body to a non-JSON route, so this
+    // bypasses the ts-rest client too.
     importLibrary: async (formatId: string, file: File, source: BookSource) => {
       const content = await file.text();
       const params = new URLSearchParams({ format: formatId, source });
-      return request(`/books/library/import?${params}`, importResultSchema, {
+      const token = localStorage.getItem('livre_token');
+      const res = await fetch(`${BASE}/books/library/import?${params}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/csv' },
+        headers: {
+          'Content-Type': 'text/csv',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: content,
       });
+      if (res.status === 401) {
+        localStorage.removeItem('livre_token');
+        window.location.replace('/login');
+        throw new Error('Unauthorized');
+      }
+      if (!res.ok) {
+        const parsed = apiErrorSchema.safeParse(await res.json().catch(() => null));
+        throw new Error(parsed.success ? parsed.data.error : `HTTP ${res.status}`);
+      }
+      return importResultSchema.parse(await res.json());
     },
   },
   shelves: {
-    getByStatus: (status: ShelfStatus) =>
-      request(`/shelves/${encodeURIComponent(status)}`, shelfResponseSchema),
+    getByStatus: (status: ShelfStatus) => shelvesClient.getShelf({ params: { status } }).then(ok),
   },
   log: {
     timeline: (range?: { start: string; end: string }) =>
-      request(
-        range
-          ? `/log?start=${encodeURIComponent(range.start)}&end=${encodeURIComponent(range.end)}`
-          : '/log',
-        timelineResponseSchema
-      ),
+      logClient.timeline({ query: range ?? {} }).then(ok),
   },
   config: {
     updateSourceKey: (source: BookSource, apiKey: string) =>
-      request(`/config/sources/${source}/key`, okResponseSchema, {
-        method: 'PUT',
-        body: JSON.stringify({ apiKey }),
-      }),
+      configClient.updateApiKey({ params: { source }, body: { apiKey } }).then(ok),
     updateSourceLimit: (source: BookSource, limit: number) =>
-      request(`/config/sources/${source}/limit`, okResponseSchema, {
-        method: 'PUT',
-        body: JSON.stringify({ limit }),
-      }),
+      configClient.updateDailyLimit({ params: { source }, body: { limit } }).then(ok),
   },
   account: {
     updateUsername: (username: string) =>
-      request('/account/username', authResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ username }),
-      }),
+      accountClient.updateUsername({ body: { username } }).then(ok),
     updatePassword: (currentPassword: string, newPassword: string) =>
-      request('/account/password', authResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      }),
-    updateTheme: (theme: ThemeName) =>
-      request('/account/theme', authResponseSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ theme }),
-      }),
+      accountClient.updatePassword({ body: { currentPassword, newPassword } }).then(ok),
+    updateTheme: (theme: ThemeName) => accountClient.updateTheme({ body: { theme } }).then(ok),
   },
   users: {
-    list: () => request('/users', usersListResponseSchema),
-    create: (body: CreateUserBody) =>
-      request('/users', managedUserSchema, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      }),
+    list: () => usersClient.list().then(ok),
+    create: (body: CreateUserBody) => usersClient.create({ body }).then(ok),
     update: (id: number, body: UpdateUserBody) =>
-      request(`/users/${id}`, managedUserSchema, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      }),
-    remove: (id: number) =>
-      request(`/users/${id}`, okResponseSchema, {
-        method: 'DELETE',
-      }),
+      usersClient.update({ params: { id }, body }).then(ok),
+    remove: (id: number) => usersClient.remove({ params: { id } }).then(ok),
   },
 };

@@ -1,39 +1,21 @@
-import { Router } from 'express';
-import {
-  createUserBodySchema,
-  managedUserSchema,
-  okResponseSchema,
-  updateUserBodySchema,
-  usersListResponseSchema,
-} from '@livre/types';
-import { type RequestHandler } from 'express';
-import { SchemaRouter } from '../lib/SchemaRouter';
-import { requireUser, idParam } from '../lib/request';
+import { type Router, type RequestHandler } from 'express';
+import { usersContract } from '@livre/types';
+import { server, mountContract, userOf, ok, created } from '../lib/tsRest';
 import { type UsersService } from '../services/UsersService';
 
 export function createUsersRouter(service: UsersService, requireAdmin: RequestHandler): Router {
-  const admin = new SchemaRouter().use(requireAdmin);
+  const router = server.router(usersContract, {
+    list: async () => ok({ users: service.list() }),
 
-  /** List every account on the instance. */
-  admin.get('/', usersListResponseSchema, (respond) => {
-    respond({ users: service.list() });
+    create: async ({ body }) => created(await service.create(body)),
+
+    update: async ({ params, body }) => ok(await service.update(params.id, body)),
+
+    remove: async ({ params, req }) => {
+      service.remove(userOf(req).id, params.id);
+      return ok({ ok: true });
+    },
   });
 
-  /** Create a new account. */
-  admin.post('/', createUserBodySchema, managedUserSchema, async (body, respond) => {
-    respond(await service.create(body), 201);
-  });
-
-  /** Edit an existing account (username, password, and/or admin flag). */
-  admin.patch('/:id', updateUserBodySchema, managedUserSchema, async (body, respond, req) => {
-    respond(await service.update(idParam(req, 'id'), body));
-  });
-
-  /** Remove an account. */
-  admin.delete('/:id', okResponseSchema, (respond, req) => {
-    service.remove(requireUser(req).id, idParam(req, 'id'));
-    respond({ ok: true });
-  });
-
-  return admin.router;
+  return mountContract(usersContract, router, requireAdmin);
 }

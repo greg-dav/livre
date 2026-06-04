@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@livre/types": "^0.1.0",
+    "@ts-rest/core": "^3.53.0-rc.1",
+    "@ts-rest/express": "^3.53.0-rc.1",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.1.2",
     "cors": "^2.8.5",

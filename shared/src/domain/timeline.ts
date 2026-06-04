@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { bookRefSchema } from './bookRef';
-import { logEntrySchema } from './shelves';
+import { logEntrySchema } from './reading';
 
 /**
  * A single reading cycle — one continuous read of a book, derived from the event log. A book read
@@ -33,6 +33,3 @@ export const timelineBookSchema = z.object({
   cycles: z.array(timelineCycleSchema),
 });
 export type TimelineBook = z.infer<typeof timelineBookSchema>;
-
-export const timelineResponseSchema = z.array(timelineBookSchema);
-export type TimelineResponse = z.infer<typeof timelineResponseSchema>;

@@ -14,6 +14,7 @@
     "@livre/ui": "*",
     "@radix-ui/react-form": "^0.1.8",
     "@tanstack/react-query": "^5.100.11",
+    "@ts-rest/core": "^3.53.0-rc.1",
     "d3-scale": "^4.0.2",
     "d3-time": "^3.1.0",
     "lodash": "^4.17.21",

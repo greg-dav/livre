@@ -1,45 +1,18 @@
-import { Router, type RequestHandler } from 'express';
-import {
-  authResponseSchema,
-  updatePasswordBodySchema,
-  updateThemeBodySchema,
-  updateUsernameBodySchema,
-} from '@livre/types';
-import { SchemaRouter } from '../lib/SchemaRouter';
-import { requireUser } from '../lib/request';
+import { type Router, type RequestHandler } from 'express';
+import { accountContract } from '@livre/types';
+import { server, mountContract, userOf, ok } from '../lib/tsRest';
 import { type AccountService } from '../services/AccountService';
 
 export function createAccountRouter(service: AccountService, requireAuth: RequestHandler): Router {
-  const authed = new SchemaRouter().use(requireAuth);
+  const router = server.router(accountContract, {
+    updateUsername: async ({ body, req }) =>
+      ok(service.updateUsername(userOf(req).id, body.username)),
 
-  /** Change the authenticated user's username; re-issues the JWT to reflect the new name. */
-  authed.patch(
-    '/username',
-    updateUsernameBodySchema,
-    authResponseSchema,
-    ({ username }, respond, req) => {
-      respond(service.updateUsername(requireUser(req).id, username));
-    }
-  );
+    updatePassword: async ({ body, req }) =>
+      ok(await service.updatePassword(userOf(req).id, body.currentPassword, body.newPassword)),
 
-  /**
-   * Change the authenticated user's password after verifying their current one. Returns a fresh
-   * token: the change revokes all of the user's other sessions, so the acting client needs the new
-   * token to stay signed in.
-   */
-  authed.patch(
-    '/password',
-    updatePasswordBodySchema,
-    authResponseSchema,
-    async ({ currentPassword, newPassword }, respond, req) => {
-      respond(await service.updatePassword(requireUser(req).id, currentPassword, newPassword));
-    }
-  );
-
-  /** Persist the authenticated user's theme; re-issues the JWT to reflect the new theme. */
-  authed.patch('/theme', updateThemeBodySchema, authResponseSchema, ({ theme }, respond, req) => {
-    respond(service.updateTheme(requireUser(req).id, theme));
+    updateTheme: async ({ body, req }) => ok(service.updateTheme(userOf(req).id, body.theme)),
   });
 
-  return authed.router;
+  return mountContract(accountContract, router, requireAuth);
 }

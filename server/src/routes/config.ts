@@ -1,13 +1,7 @@
 import { type Router, type RequestHandler } from 'express';
-import {
-  updateApiKeyBodySchema,
-  updateDailyLimitBodySchema,
-  okResponseSchema,
-  bookSourceSchema,
-  type BookSource,
-} from '@livre/types';
+import { configContract, bookSourceSchema, type BookSource } from '@livre/types';
 import createError from 'http-errors';
-import { SchemaRouter } from '../lib/SchemaRouter';
+import { server, mountContract, ok } from '../lib/tsRest';
 import { ConfigRepository } from '../repositories/ConfigRepository';
 import { type ConfigurableSource } from '../ports/bookSource';
 
@@ -21,11 +15,7 @@ export const createConfigRouter = (
   configurableSources: Map<BookSource, ConfigurableSource>,
   requireAdmin: RequestHandler
 ): Router => {
-  const admin = new SchemaRouter().use(requireAdmin);
-
-  const resolveSource = (
-    raw: unknown
-  ): { source: BookSource; configurable: ConfigurableSource } => {
+  const resolveSource = (raw: string): { source: BookSource; configurable: ConfigurableSource } => {
     const parsed = bookSourceSchema.safeParse(raw);
     if (!parsed.success) throw createError(404, 'Unknown source');
     const configurable = configurableSources.get(parsed.data);
@@ -33,30 +23,20 @@ export const createConfigRouter = (
     return { source: parsed.data, configurable };
   };
 
-  /** Update and validate a source's API key (validated against the live API before storing). */
-  admin.put(
-    '/sources/:source/key',
-    updateApiKeyBodySchema,
-    okResponseSchema,
-    async ({ apiKey }, respond, req) => {
-      const { source, configurable } = resolveSource(req.params.source);
-      await configurable.validate(apiKey);
-      configRepository.set(source, ConfigRepository.API_KEY, apiKey);
-      respond({ ok: true });
-    }
-  );
+  const router = server.router(configContract, {
+    updateApiKey: async ({ params, body }) => {
+      const { source, configurable } = resolveSource(params.source);
+      await configurable.validate(body.apiKey);
+      configRepository.set(source, ConfigRepository.API_KEY, body.apiKey);
+      return ok({ ok: true });
+    },
 
-  /** Set the per-instance daily cap on a source's import lookups. */
-  admin.put(
-    '/sources/:source/limit',
-    updateDailyLimitBodySchema,
-    okResponseSchema,
-    ({ limit }, respond, req) => {
-      const { source } = resolveSource(req.params.source);
-      configRepository.set(source, ConfigRepository.DAILY_LIMIT, String(limit));
-      respond({ ok: true });
-    }
-  );
+    updateDailyLimit: async ({ params, body }) => {
+      const { source } = resolveSource(params.source);
+      configRepository.set(source, ConfigRepository.DAILY_LIMIT, String(body.limit));
+      return ok({ ok: true });
+    },
+  });
 
-  return admin.router;
+  return mountContract(configContract, router, requireAdmin);
 };
