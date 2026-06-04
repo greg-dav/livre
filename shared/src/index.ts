@@ -51,18 +51,17 @@ export { authContract } from './contracts/auth';
 export { usersContract } from './contracts/users';
 export type { CreateUserBody, UpdateUserBody } from './contracts/users';
 export { logContract } from './contracts/log';
-export { shelvesContract } from './contracts/shelves';
-export type { ShelfResponse } from './contracts/shelves';
 export { configContract } from './contracts/config';
-export { booksContract } from './contracts/books';
+export { searchContract } from './contracts/search';
+export type { BookSearchResponse, SearchResult, SearchResponse } from './contracts/search';
+export { libraryContract } from './contracts/library';
 export type {
+  AddToLibraryBody,
   CreateLogEventBody,
   CreateLogEventResponse,
   UpdateMetadataBody,
   UpdateLogEntryBody,
-  BookSearchResponse,
-  SearchResult,
-  SearchResponse,
   LibraryResponse,
   LibraryBookDetail,
-} from './contracts/books';
+  ShelfResponse,
+} from './contracts/library';

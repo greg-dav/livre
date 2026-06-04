@@ -48,14 +48,14 @@ export const BookSearch = () => {
 
   const { data: searchData, isFetching } = useQuery({
     queryKey: ['books', 'quick-search', debouncedQuery],
-    queryFn: () => api.books.searchQuick(debouncedQuery),
+    queryFn: () => api.search.searchQuick(debouncedQuery),
     enabled: debouncedQuery.length > 1,
     staleTime: 60_000,
   });
 
   const { data: libraryData } = useQuery({
     queryKey: ['library'],
-    queryFn: () => api.books.library(),
+    queryFn: () => api.library.list(),
     staleTime: Infinity,
   });
 

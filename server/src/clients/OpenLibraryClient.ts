@@ -216,7 +216,7 @@ export class OpenLibraryClient {
     opts: { startIndex?: number; sort?: SearchSort; maxResults?: number } = {}
   ): Promise<SourcedBookSearchResponse> {
     const limit = Math.min(opts.maxResults ?? OpenLibraryClient.DEFAULT_PAGE_SIZE, 100);
-    // search.json pages 1-based; BooksService advances startIndex by whole pages, so it stays aligned.
+    // search.json pages 1-based; SearchService advances startIndex by whole pages, so it stays aligned.
     const page = Math.floor((opts.startIndex ?? 0) / limit) + 1;
     const params = new URLSearchParams({
       [scopeParam(scope)]: query.trim(),

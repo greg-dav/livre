@@ -64,17 +64,17 @@ export const LibraryBookDetail = () => {
 
   const { data } = useQuery({
     queryKey: ['library', 'detail', libraryBookId],
-    queryFn: () => api.books.libraryBook(libraryBookId),
+    queryFn: () => api.library.book(libraryBookId),
     enabled: !!libraryBookId,
   });
 
   const { data: tagSuggestions } = useQuery({
     queryKey: ['library', 'tags'],
-    queryFn: () => api.books.libraryTags(),
+    queryFn: () => api.library.tags(),
   });
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: (event: LogEventType) => api.books.logByLibraryBookId(libraryBookId, event),
+    mutationFn: (event: LogEventType) => api.library.log(libraryBookId, event),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
@@ -82,13 +82,13 @@ export const LibraryBookDetail = () => {
       // invalidateQueries above marks it stale, so prefetchQuery sees a miss and fetches immediately.
       queryClient.prefetchQuery({
         queryKey: ['shelves', 'reading'],
-        queryFn: () => api.shelves.getByStatus('reading'),
+        queryFn: () => api.library.shelf('reading'),
       });
     },
   });
 
   const { mutate: saveTags } = useMutation({
-    mutationFn: (tags: string[]) => api.books.updateTags(libraryBookId, tags),
+    mutationFn: (tags: string[]) => api.library.updateTags(libraryBookId, tags),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
       queryClient.invalidateQueries({ queryKey: ['library', 'tags'] });
@@ -97,7 +97,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: saveTitle } = useMutation({
-    mutationFn: (title: string) => api.books.updateMetadata(libraryBookId, { title }),
+    mutationFn: (title: string) => api.library.updateMetadata(libraryBookId, { title }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -105,7 +105,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: saveDescription } = useMutation({
-    mutationFn: (description: string) => api.books.updateMetadata(libraryBookId, { description }),
+    mutationFn: (description: string) => api.library.updateMetadata(libraryBookId, { description }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
     },
@@ -113,7 +113,7 @@ export const LibraryBookDetail = () => {
 
   const { mutate: saveCover } = useMutation({
     mutationFn: (url: string) =>
-      api.books.updateMetadata(libraryBookId, { thumbnail: url, largeThumbnail: url }),
+      api.library.updateMetadata(libraryBookId, { thumbnail: url, largeThumbnail: url }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -124,33 +124,33 @@ export const LibraryBookDetail = () => {
     queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
 
   const { mutate: savePublisher } = useMutation({
-    mutationFn: (publisher: string) => api.books.updateMetadata(libraryBookId, { publisher }),
+    mutationFn: (publisher: string) => api.library.updateMetadata(libraryBookId, { publisher }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: savePageCount } = useMutation({
-    mutationFn: (pageCount: number) => api.books.updateMetadata(libraryBookId, { pageCount }),
+    mutationFn: (pageCount: number) => api.library.updateMetadata(libraryBookId, { pageCount }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: savePublishedDate } = useMutation({
     mutationFn: (publishedDate: string) =>
-      api.books.updateMetadata(libraryBookId, { publishedDate }),
+      api.library.updateMetadata(libraryBookId, { publishedDate }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: saveLanguage } = useMutation({
-    mutationFn: (language: string) => api.books.updateMetadata(libraryBookId, { language }),
+    mutationFn: (language: string) => api.library.updateMetadata(libraryBookId, { language }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: saveIsbn } = useMutation({
-    mutationFn: (isbn: string) => api.books.updateMetadata(libraryBookId, { isbn }),
+    mutationFn: (isbn: string) => api.library.updateMetadata(libraryBookId, { isbn }),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: saveMetadata } = useMutation({
-    mutationFn: (fields: UpdateMetadataBody) => api.books.updateMetadata(libraryBookId, fields),
+    mutationFn: (fields: UpdateMetadataBody) => api.library.updateMetadata(libraryBookId, fields),
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -158,7 +158,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: saveRating } = useMutation({
-    mutationFn: (rating: number) => api.books.updateRating(libraryBookId, rating || null),
+    mutationFn: (rating: number) => api.library.updateRating(libraryBookId, rating || null),
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -166,12 +166,12 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: saveReview } = useMutation({
-    mutationFn: (review: string) => api.books.updateReview(libraryBookId, review),
+    mutationFn: (review: string) => api.library.updateReview(libraryBookId, review),
     onSuccess: invalidateDetail,
   });
 
   const { mutate: saveFormat } = useMutation({
-    mutationFn: (format: BookFormat) => api.books.logFormatChange(libraryBookId, format),
+    mutationFn: (format: BookFormat) => api.library.logFormatChange(libraryBookId, format),
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -179,12 +179,12 @@ export const LibraryBookDetail = () => {
   });
 
   const addNote = (text: string, type: 'note' | 'quote') => {
-    api.books.logByLibraryBookId(libraryBookId, type, undefined, text).then(invalidateDetail);
+    api.library.log(libraryBookId, type, undefined, text).then(invalidateDetail);
   };
 
   const { mutate: updateLogEntry } = useMutation({
     mutationFn: ({ logId, fields }: { logId: number; fields: { text?: string; date?: string } }) =>
-      api.books.updateLogEntry(libraryBookId, logId, fields),
+      api.library.updateLogEntry(libraryBookId, logId, fields),
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -192,7 +192,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: deleteLogEntry } = useMutation({
-    mutationFn: (logId: number) => api.books.deleteLogEntry(libraryBookId, logId),
+    mutationFn: (logId: number) => api.library.deleteLogEntry(libraryBookId, logId),
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
@@ -200,7 +200,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: resetReadingLog, isPending: isResetting } = useMutation({
-    mutationFn: () => api.books.resetReadingLog(libraryBookId),
+    mutationFn: () => api.library.resetReadingLog(libraryBookId),
     onSuccess: () => {
       setConfirming(null);
       invalidateDetail();
@@ -209,7 +209,7 @@ export const LibraryBookDetail = () => {
   });
 
   const { mutate: removeFromLibrary, isPending: isRemoving } = useMutation({
-    mutationFn: () => api.books.removeFromLibrary(libraryBookId),
+    mutationFn: () => api.library.removeFromLibrary(libraryBookId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['library', 'tags'] });

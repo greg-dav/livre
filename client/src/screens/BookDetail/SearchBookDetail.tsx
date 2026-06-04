@@ -26,7 +26,7 @@ export const SearchBookDetail = () => {
 
   const { data: book } = useQuery({
     queryKey: ['books', 'detail', bookRef],
-    queryFn: () => api.books.getByRef(bookRef!),
+    queryFn: () => api.search.getByRef(bookRef!),
     enabled: !!bookRef,
   });
 
@@ -37,11 +37,11 @@ export const SearchBookDetail = () => {
   }, [library, bookRef, navigate]);
 
   const { mutate: save, isPending: isSaving } = useMutation({
-    mutationFn: (event: LogEventType) => api.books.addToLibrary(bookRef!, event),
+    mutationFn: (event: LogEventType) => api.library.add(bookRef!, event),
     onSuccess: async (data) => {
       await queryClient.prefetchQuery({
         queryKey: ['library', 'detail', data.libraryBookId],
-        queryFn: () => api.books.libraryBook(data.libraryBookId),
+        queryFn: () => api.library.book(data.libraryBookId),
       });
       navigate(`/library/${data.libraryBookId}`, { state: { justAcquired: true }, replace: true });
       queryClient.invalidateQueries({ queryKey: ['library'] });

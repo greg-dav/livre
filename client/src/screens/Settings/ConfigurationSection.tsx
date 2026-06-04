@@ -22,7 +22,7 @@ export const ConfigurationSection = () => {
 
   const importSourcesQuery = useQuery({
     queryKey: ['import-sources'],
-    queryFn: () => api.books.importSources(),
+    queryFn: () => api.library.importSources(),
   });
   const currentLimit = importSourcesQuery.data?.find((o) => o.id === 'GOOGLE_BOOKS')?.usage?.limit;
   const [limit, setLimit] = useState<string | null>(null);

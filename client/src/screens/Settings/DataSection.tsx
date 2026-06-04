@@ -114,7 +114,10 @@ const ImportSourceField = (props: {
  */
 export const DataSection = () => {
   const queryClient = useQueryClient();
-  const formatsQuery = useQuery({ queryKey: ['formats'], queryFn: () => api.books.listFormats() });
+  const formatsQuery = useQuery({
+    queryKey: ['formats'],
+    queryFn: () => api.library.listFormats(),
+  });
   const formats = formatsQuery.data ?? [];
 
   const [exportOpen, setExportOpen] = useState(false);
@@ -131,7 +134,7 @@ export const DataSection = () => {
 
   const importSourcesQuery = useQuery({
     queryKey: ['import-sources'],
-    queryFn: () => api.books.importSources(),
+    queryFn: () => api.library.importSources(),
   });
   const importSources = importSourcesQuery.data ?? [];
   const [sourceId, setSourceId] = useState<BookSource | null>(null);
@@ -142,7 +145,7 @@ export const DataSection = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const exportMutation = useMutation({
-    mutationFn: (formatId: string) => api.books.exportLibrary(formatId),
+    mutationFn: (formatId: string) => api.library.exportLibrary(formatId),
     onSuccess: ({ filename, blob }) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -163,7 +166,7 @@ export const DataSection = () => {
       formatId: string;
       file: File;
       source: BookSource;
-    }) => api.books.importLibrary(formatId, file, source),
+    }) => api.library.importLibrary(formatId, file, source),
     onSuccess: () => {
       // New books and reading-log events landed; refetch so the library, shelves, and timeline show
       // them. Refetch import sources too so the Google meter reflects the lookups this import spent.
@@ -181,7 +184,7 @@ export const DataSection = () => {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: () => api.books.deleteLibrary(),
+    mutationFn: () => api.library.deleteLibrary(),
     onSuccess: () => {
       // Everything reading-related is now empty; refetch so the library, shelves, and timeline clear.
       queryClient.invalidateQueries({ queryKey: ['library'] });

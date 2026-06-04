@@ -68,7 +68,7 @@ export const useIsbnEdit = (
     setPhase('looking');
     setLookupError(null);
     try {
-      const result = await api.books.search(`isbn:${digits}`);
+      const result = await api.search.search(`isbn:${digits}`);
       if (result.results.length > 0) {
         setFoundBook(result.results[0]);
         setPhase('found');

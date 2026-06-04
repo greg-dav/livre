@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import express, { type Router, type RequestHandler } from 'express';
-import { booksContract, bookSourceSchema, importResultSchema } from '@livre/types';
+import { libraryContract, bookSourceSchema, importResultSchema } from '@livre/types';
 import createError from 'http-errors';
 import { server, attachContract, userOf, ok, notFound } from '../lib/tsRest';
 import { decodeBookRef } from '../lib/bookRef';
-import { type BooksService } from '../services/BooksService';
+import { type LibraryService } from '../services/LibraryService';
 import { type LibraryTransferService } from '../services/LibraryTransferService';
 
 const decodeRef = (
@@ -17,17 +17,17 @@ const decodeRef = (
   }
 };
 
-export function createBooksRouter(
-  service: BooksService,
+export function createLibraryRouter(
+  service: LibraryService,
   transfer: LibraryTransferService,
   requireAuth: RequestHandler
 ): Router {
   const expressRouter = express.Router();
   expressRouter.use(requireAuth);
 
-  // Non-JSON routes stay as plain Express, registered before the contract so "/library/export"
-  // isn't captured by the "/library/:libraryBookId" matcher.
-  expressRouter.get('/library/export', (req, res) => {
+  // Non-JSON routes stay as plain Express, registered before the contract so "/export" and
+  // "/import" aren't captured by the "/:libraryBookId" matcher.
+  expressRouter.get('/export', (req, res) => {
     const format = z.string().min(1).safeParse(req.query.format).data ?? 'goodreads';
     const { content, mimeType, filename } = transfer.export(userOf(req).id, format);
     res.setHeader('Content-Type', `${mimeType}; charset=utf-8`);
@@ -36,7 +36,7 @@ export function createBooksRouter(
   });
 
   expressRouter.post(
-    '/library/import',
+    '/import',
     express.text({ type: () => true, limit: '5mb' }),
     async (req, res, next) => {
       try {
@@ -52,31 +52,9 @@ export function createBooksRouter(
     }
   );
 
-  const router = server.router(booksContract, {
-    search: async ({ query, req }) =>
-      ok(
-        await service.search(
-          userOf(req).id,
-          query.q,
-          query.scope,
-          query.shelf,
-          query.sort,
-          query.startIndex
-        )
-      ),
-
-    quickSearch: async ({ query }) => ok(await service.quickSearch(query.q)),
-
-    authorBooks: async ({ params, query, req }) =>
-      ok(await service.getAuthorBooks(userOf(req).id, params.name, query.sort, query.startIndex)),
-
-    getBook: async ({ params }) => {
-      const { source, externalId } = decodeRef(params.bookRef);
-      return ok(await service.getById(source, externalId));
-    },
-
-    addToLibrary: async ({ params, body, req }) => {
-      const { source, externalId } = decodeRef(params.bookRef);
+  const router = server.router(libraryContract, {
+    add: async ({ body, req }) => {
+      const { source, externalId } = decodeRef(body.bookRef);
       return ok(
         await service.addToLibrary(userOf(req).id, source, externalId, body.event, body.date)
       );
@@ -84,14 +62,16 @@ export function createBooksRouter(
 
     getLibrary: async ({ req }) => ok(service.getLibrary(userOf(req).id)),
 
+    deleteLibrary: async ({ req }) =>
+      ok({ ok: true, deleted: service.deleteLibrary(userOf(req).id) }),
+
     getTags: async ({ req }) => ok(service.getTags(userOf(req).id)),
+
+    getShelf: async ({ params, req }) => ok(service.getShelf(userOf(req).id, params.status)),
 
     getFormats: async () => ok(transfer.listFormats()),
 
     getImportSources: async () => ok(transfer.listImportSources()),
-
-    deleteLibrary: async ({ req }) =>
-      ok({ ok: true, deleted: service.deleteLibrary(userOf(req).id) }),
 
     getLibraryBook: async ({ params, req }) => {
       const detail = service.getLibraryBook(userOf(req).id, params.libraryBookId);
@@ -158,6 +138,6 @@ export function createBooksRouter(
     },
   });
 
-  attachContract(expressRouter, booksContract, router);
+  attachContract(expressRouter, libraryContract, router);
   return expressRouter;
 }

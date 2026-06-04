@@ -24,18 +24,20 @@ import { GoogleBooksImportLookup } from './strategies/GoogleBooksImportLookup';
 import { BookSourceRegistry } from './registries/BookSourceRegistry';
 import { FormatRegistry } from './registries/FormatRegistry';
 import { BookCacheProvider } from './providers/BookCacheProvider';
+import { BookLookupProvider } from './providers/BookLookupProvider';
 import { AuthService } from './services/AuthService';
 import { AccountService } from './services/AccountService';
 import { UsersService } from './services/UsersService';
-import { BooksService } from './services/BooksService';
+import { SearchService } from './services/SearchService';
+import { LibraryService } from './services/LibraryService';
 import { LibraryTransferService } from './services/LibraryTransferService';
 import { LogService } from './services/LogService';
 import { GoodreadsFormat } from './formats/GoodreadsFormat';
 import { createAuthRouter } from './routes/auth';
 import { createAccountRouter } from './routes/account';
 import { createUsersRouter } from './routes/users';
-import { createBooksRouter } from './routes/books';
-import { createShelvesRouter } from './routes/shelves';
+import { createSearchRouter } from './routes/search';
+import { createLibraryRouter } from './routes/library';
 import { createLogRouter } from './routes/log';
 import { createConfigRouter } from './routes/config';
 
@@ -60,12 +62,17 @@ const bookSourceRegistry = new BookSourceRegistry(
   ]
 );
 const bookCacheProvider = new BookCacheProvider(bookCacheRepository);
+const bookLookupProvider = new BookLookupProvider(bookSourceRegistry, bookCacheProvider);
 const authService = new AuthService(usersRepository, setupRepository);
 const accountService = new AccountService(usersRepository);
 const usersService = new UsersService(usersRepository);
-const booksService = new BooksService(
+const searchService = new SearchService(
   bookSourceRegistry,
-  bookCacheProvider,
+  bookLookupProvider,
+  libraryBooksRepository
+);
+const libraryService = new LibraryService(
+  bookLookupProvider,
   libraryBooksRepository,
   readingLogRepository
 );
@@ -99,11 +106,11 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/auth', authLimiter, createAuthRouter(authService, requireAuth));
+app.use('/api/auth', authLimiter, createAuthRouter(authService));
 app.use('/api/account', authLimiter, createAccountRouter(accountService, requireAuth));
 app.use('/api/users', createUsersRouter(usersService, requireAdmin));
-app.use('/api/books', createBooksRouter(booksService, libraryTransferService, requireAuth));
-app.use('/api/shelves', createShelvesRouter(booksService, requireAuth));
+app.use('/api/search', createSearchRouter(searchService, requireAuth));
+app.use('/api/library', createLibraryRouter(libraryService, libraryTransferService, requireAuth));
 app.use('/api/log', createLogRouter(logService, requireAuth));
 app.use(
   '/api/config',

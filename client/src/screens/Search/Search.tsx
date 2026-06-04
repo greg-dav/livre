@@ -77,7 +77,7 @@ export const Search = () => {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ['books', 'search', scope, queryTerm, shelfParam ?? 'all', sort],
     queryFn: ({ pageParam }) =>
-      api.books.search(queryTerm, {
+      api.search.search(queryTerm, {
         scope,
         shelf: shelfParam,
         sort,

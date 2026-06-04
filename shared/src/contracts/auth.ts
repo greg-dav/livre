@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { apiErrorSchema, authResponseSchema } from './_shared';
-import { userSchema } from '../domain/user';
 
 const c = initContract();
 
@@ -21,8 +20,9 @@ const loginBody = z.object({
 const instanceStatus = z.object({ hasUsers: z.boolean() });
 
 /**
- * Authentication. `status`/`register`/`login` are open; `me` is guarded (the server attaches
- * requireAuth to that route only). Mounted at /api/auth.
+ * Authentication. Every route is open — `status`/`register`/`login` all run before a session
+ * exists. The signed-in user's record (`me`) lives on the guarded account contract, so this router
+ * carries no auth and stays homogeneous. Mounted at /api/auth.
  */
 export const authContract = c.router(
   {
@@ -42,11 +42,6 @@ export const authContract = c.router(
       path: '/login',
       body: loginBody,
       responses: { 200: authResponseSchema },
-    },
-    me: {
-      method: 'GET',
-      path: '/me',
-      responses: { 200: userSchema },
     },
   },
   { commonResponses: { 400: apiErrorSchema, 401: apiErrorSchema } }

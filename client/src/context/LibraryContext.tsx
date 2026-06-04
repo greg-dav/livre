@@ -22,7 +22,7 @@ interface LibraryProviderProps {
 export const LibraryProvider = ({ children }: LibraryProviderProps) => {
   const { data: library } = useQuery({
     queryKey: ['library'],
-    queryFn: () => api.books.library(),
+    queryFn: () => api.library.list(),
     staleTime: Infinity,
   });
 

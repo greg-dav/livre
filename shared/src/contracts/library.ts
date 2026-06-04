@@ -3,41 +3,25 @@ import { z } from 'zod';
 import { apiErrorSchema, okResponseSchema } from './_shared';
 import { bookRefSchema } from '../domain/bookRef';
 import {
-  bookVolumeSchema,
   libraryVolumeSchema,
   bookMetadataSchema,
-  searchScopeSchema,
-  searchSortSchema,
-  shelfFilterSchema,
   libraryFormatSchema,
   importSourceSchema,
 } from '../domain/books';
 import {
   shelfEntrySchema,
   shelfStatusSchema,
+  shelfCountsSchema,
   logEntrySchema,
   bookFormatSchema,
 } from '../domain/reading';
 
 const c = initContract();
 
-// ── Params & queries ────────────────────────────────────────────────────────
+// ── Params ──────────────────────────────────────────────────────────────────
 const libraryBookIdParams = z.object({ libraryBookId: z.coerce.number().int().positive() });
 const logEntryParams = libraryBookIdParams.extend({ logId: z.coerce.number().int().positive() });
-const bookRefParams = z.object({ bookRef: bookRefSchema });
-
-const facetedQuery = z.object({
-  scope: searchScopeSchema.default('anything'),
-  shelf: shelfFilterSchema.optional(),
-  sort: searchSortSchema.default('relevance'),
-  startIndex: z.coerce.number().int().min(0).default(0),
-});
-const searchQuery = facetedQuery.extend({ q: z.string().min(1, 'Query is required') });
-const quickSearchQuery = z.object({ q: z.string().min(1, 'Query is required') });
-const authorQuery = z.object({
-  sort: searchSortSchema.default('relevance'),
-  startIndex: z.coerce.number().int().min(0).default(0),
-});
+const shelfParams = z.object({ status: shelfStatusSchema });
 
 // ── Request bodies ──────────────────────────────────────────────────────────
 const createLogEventBody = z.union([
@@ -49,6 +33,12 @@ const createLogEventBody = z.union([
   z.object({ event: z.literal('format'), date: z.string().optional(), format: bookFormatSchema }),
 ]);
 export type CreateLogEventBody = z.infer<typeof createLogEventBody>;
+
+// Adding a discovered book to the library: the opaque bookRef identifies the source book, and the
+// log-event fields seed the book's first reading-log entry. The route decodes bookRef before
+// delegating, so book identity never leaks a source past the API boundary.
+const addToLibraryBody = z.intersection(z.object({ bookRef: bookRefSchema }), createLogEventBody);
+export type AddToLibraryBody = z.infer<typeof addToLibraryBody>;
 
 const updateTagsBody = z.object({ tags: z.array(z.string()) });
 
@@ -93,32 +83,16 @@ const updateLogEntryBody = z.object({
 export type UpdateLogEntryBody = z.infer<typeof updateLogEntryBody>;
 
 // ── Response envelopes ──────────────────────────────────────────────────────
-const bookSearchResponse = z.object({
-  results: z.array(bookVolumeSchema),
-  total: z.number(),
-});
-export type BookSearchResponse = z.infer<typeof bookSearchResponse>;
-
-const searchResult = bookVolumeSchema.extend({
-  libraryBookId: z.number().nullable(),
-  libraryStatus: shelfStatusSchema.nullable(),
-});
-export type SearchResult = z.infer<typeof searchResult>;
-
-const searchResponse = z.object({
-  results: z.array(searchResult),
-  total: z.number(),
-  shelfCounts: z.object({ in: z.number(), out: z.number() }),
-  // Cursor for the next page, or null when the source has no more results. Advances by the raw page
-  // size (not the filtered result count) so shelf-filtered pagination still walks the full source.
-  nextStartIndex: z.number().nullable(),
-});
-export type SearchResponse = z.infer<typeof searchResponse>;
-
 const libraryResponse = z.array(shelfEntrySchema);
 export type LibraryResponse = z.infer<typeof libraryResponse>;
 
 const libraryTagsResponse = z.array(z.string());
+
+const shelfResponse = z.object({
+  entries: z.array(shelfEntrySchema),
+  counts: shelfCountsSchema,
+});
+export type ShelfResponse = z.infer<typeof shelfResponse>;
 
 const libraryBookDetail = z.object({
   entry: shelfEntrySchema,
@@ -141,59 +115,44 @@ const importSourcesResponse = z.array(importSourceSchema);
 const notFound = { 404: apiErrorSchema } as const;
 
 /**
- * The books API: discovery (search/author/book by opaque bookRef), the user's library collection,
- * and per-book mutations (metadata, tags, rating, review, reading-log events). Mounted behind
- * requireAuth. The non-JSON export/import routes live outside this contract as plain Express, since
- * their bodies are a file download and raw CSV rather than the JSON envelope ts-rest enforces.
+ * The user's owned library: the collection itself (list, tags, shelves, transfer formats), adding a
+ * discovered book, per-book metadata/tags/rating/review edits, and the reading-log events nested
+ * under each book. Mounted behind requireAuth at `/api/library`. The non-JSON export/import routes
+ * live outside this contract as plain Express, since their bodies are a file download and raw CSV
+ * rather than the JSON envelope ts-rest enforces.
  *
- * Key order is significant: ts-rest registers routes in this order, so literal paths
- * (`/library/tags`) must precede the `/library/:libraryBookId` matcher that would otherwise capture
- * them.
+ * Key order is significant: ts-rest registers routes in this order, so single-segment literal paths
+ * (`/tags`, `/formats`, `/import-sources`) must precede the `/:libraryBookId` matcher that would
+ * otherwise capture them.
  */
-export const booksContract = c.router(
+export const libraryContract = c.router(
   {
-    search: {
-      method: 'GET',
-      path: '/search',
-      query: searchQuery,
-      responses: { 200: searchResponse },
-    },
-    quickSearch: {
-      method: 'GET',
-      path: '/search/quick',
-      query: quickSearchQuery,
-      responses: { 200: bookSearchResponse },
-    },
-    authorBooks: {
-      method: 'GET',
-      path: '/search/author/:name',
-      pathParams: z.object({ name: z.string().min(1) }),
-      query: authorQuery,
-      responses: { 200: searchResponse },
-    },
-    getBook: {
-      method: 'GET',
-      path: '/search/book/:bookRef',
-      pathParams: bookRefParams,
-      responses: { 200: bookVolumeSchema },
-    },
-    addToLibrary: {
+    add: {
       method: 'POST',
-      path: '/search/book/:bookRef/add',
-      pathParams: bookRefParams,
-      body: createLogEventBody,
+      path: '/',
+      body: addToLibraryBody,
       responses: { 200: createLogEventResponse },
     },
-
     getLibrary: {
       method: 'GET',
-      path: '/library',
+      path: '/',
       responses: { 200: libraryResponse },
+    },
+    deleteLibrary: {
+      method: 'DELETE',
+      path: '/',
+      responses: { 200: deleteLibraryResponse },
     },
     getTags: {
       method: 'GET',
-      path: '/library/tags',
+      path: '/tags',
       responses: { 200: libraryTagsResponse },
+    },
+    getShelf: {
+      method: 'GET',
+      path: '/shelf/:status',
+      pathParams: shelfParams,
+      responses: { 200: shelfResponse },
     },
     getFormats: {
       method: 'GET',
@@ -205,76 +164,71 @@ export const booksContract = c.router(
       path: '/import-sources',
       responses: { 200: importSourcesResponse },
     },
-    deleteLibrary: {
-      method: 'DELETE',
-      path: '/library',
-      responses: { 200: deleteLibraryResponse },
-    },
 
     getLibraryBook: {
       method: 'GET',
-      path: '/library/:libraryBookId',
+      path: '/:libraryBookId',
       pathParams: libraryBookIdParams,
       responses: { 200: libraryBookDetail, ...notFound },
     },
     updateTags: {
       method: 'PATCH',
-      path: '/library/:libraryBookId/tags',
+      path: '/:libraryBookId/tags',
       pathParams: libraryBookIdParams,
       body: updateTagsBody,
       responses: { 200: okResponseSchema, ...notFound },
     },
     updateMetadata: {
       method: 'PATCH',
-      path: '/library/:libraryBookId/metadata',
+      path: '/:libraryBookId/metadata',
       pathParams: libraryBookIdParams,
       body: updateMetadataBody,
       responses: { 200: okResponseSchema, ...notFound },
     },
     logEvent: {
       method: 'POST',
-      path: '/library/:libraryBookId/log',
+      path: '/:libraryBookId/log',
       pathParams: libraryBookIdParams,
       body: createLogEventBody,
       responses: { 200: createLogEventResponse, ...notFound },
     },
     updateRating: {
       method: 'PATCH',
-      path: '/library/:libraryBookId/rating',
+      path: '/:libraryBookId/rating',
       pathParams: libraryBookIdParams,
       body: updateRatingBody,
       responses: { 200: okResponseSchema, ...notFound },
     },
     updateReview: {
       method: 'PATCH',
-      path: '/library/:libraryBookId/review',
+      path: '/:libraryBookId/review',
       pathParams: libraryBookIdParams,
       body: updateReviewBody,
       responses: { 200: okResponseSchema, ...notFound },
     },
     updateLogEntry: {
       method: 'PATCH',
-      path: '/library/:libraryBookId/log/:logId',
+      path: '/:libraryBookId/log/:logId',
       pathParams: logEntryParams,
       body: updateLogEntryBody,
       responses: { 200: okResponseSchema, ...notFound },
     },
     deleteLogEntry: {
       method: 'DELETE',
-      path: '/library/:libraryBookId/log/:logId',
+      path: '/:libraryBookId/log/:logId',
       pathParams: logEntryParams,
       responses: { 200: okResponseSchema, ...notFound },
     },
     resetReadingLog: {
       method: 'POST',
-      path: '/library/:libraryBookId/reset',
+      path: '/:libraryBookId/reset',
       pathParams: libraryBookIdParams,
       body: z.object({}).strict(),
       responses: { 200: okResponseSchema, ...notFound },
     },
     removeFromLibrary: {
       method: 'DELETE',
-      path: '/library/:libraryBookId',
+      path: '/:libraryBookId',
       pathParams: libraryBookIdParams,
       responses: { 200: okResponseSchema, ...notFound },
     },

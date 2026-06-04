@@ -31,7 +31,7 @@ const MAX_ERRORS = 50;
  * import-lookup strategy of the chosen source, so it never learns whether that source batches by
  * ISBN, is metered, or defers. Per the repo's layering rules it composes repositories and registries
  * directly rather than calling other services — the create-and-seed-log flow overlaps
- * BooksService.addToLibrary but is duplicated here because import seeds multiple events at historical
+ * LibraryService.addToLibrary but is duplicated here because import seeds multiple events at historical
  * dates rather than one event at "now".
  */
 export class LibraryTransferService {

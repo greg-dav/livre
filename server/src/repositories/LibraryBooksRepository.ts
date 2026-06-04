@@ -247,7 +247,7 @@ export class LibraryBooksRepository {
   }
 
   /**
-   * Single-query detail lookup. Returns the (entry, book) pair; the BooksService composes the
+   * Single-query detail lookup. Returns the (entry, book) pair; the LibraryService composes the
    * reading log onto this from ReadingLogRepository. Returns null only if the book doesn't exist or
    * doesn't belong to the user. Manual entries (no source/externalId) render fine via the
    * nullable-bookRef LibraryVolume shape — they just can't be re-fetched from a provider.

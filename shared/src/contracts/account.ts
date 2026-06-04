@@ -1,7 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { apiErrorSchema, authResponseSchema } from './_shared';
-import { themeNameSchema } from '../domain/user';
+import { themeNameSchema, userSchema } from '../domain/user';
 
 const c = initContract();
 
@@ -20,11 +20,19 @@ const updatePasswordBody = z.object({
 const updateThemeBody = z.object({ theme: themeNameSchema });
 
 /**
- * Account routes for the signed-in user. Each mutation re-issues the JWT so the client picks up the
- * new username/theme (or a rotated token after a password change). Mounted behind requireAuth.
+ * Account routes for the signed-in user: read the current user (`me`) and the profile mutations.
+ * Each mutation re-issues the JWT so the client picks up the new username/theme (or a rotated token
+ * after a password change). The whole contract is mounted behind requireAuth, so every route here
+ * is guarded — `me` lives here rather than on the open auth contract to keep both routers
+ * homogeneous.
  */
 export const accountContract = c.router(
   {
+    me: {
+      method: 'GET',
+      path: '/me',
+      responses: { 200: userSchema },
+    },
     updateUsername: {
       method: 'PATCH',
       path: '/username',

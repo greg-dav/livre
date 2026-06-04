@@ -58,12 +58,12 @@ export const Library = () => {
 
   const { data: readingData } = useQuery({
     queryKey: ['shelves', 'reading'],
-    queryFn: () => api.shelves.getByStatus('reading'),
+    queryFn: () => api.library.shelf('reading'),
   });
 
   const { data } = useQuery({
     queryKey: ['shelves', activeShelf],
-    queryFn: () => api.shelves.getByStatus(activeShelf),
+    queryFn: () => api.library.shelf(activeShelf),
     placeholderData: keepPreviousData,
   });
 
@@ -76,7 +76,7 @@ export const Library = () => {
       libraryBookId: number;
       type: 'note' | 'quote';
       text: string;
-    }) => api.books.logByLibraryBookId(libraryBookId, type, undefined, text),
+    }) => api.library.log(libraryBookId, type, undefined, text),
     onSuccess: (_data, { libraryBookId }) => {
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
     },

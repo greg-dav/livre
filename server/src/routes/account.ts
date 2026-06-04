@@ -5,6 +5,8 @@ import { type AccountService } from '../services/AccountService';
 
 export function createAccountRouter(service: AccountService, requireAuth: RequestHandler): Router {
   const router = server.router(accountContract, {
+    me: async ({ req }) => ok(userOf(req)),
+
     updateUsername: async ({ body, req }) =>
       ok(service.updateUsername(userOf(req).id, body.username)),
 

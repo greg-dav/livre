@@ -21,7 +21,7 @@ export const Author = () => {
 
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ['books', 'author', name, sort],
-    queryFn: ({ pageParam }) => api.books.byAuthor(name ?? '', { sort, startIndex: pageParam }),
+    queryFn: ({ pageParam }) => api.search.byAuthor(name ?? '', { sort, startIndex: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextStartIndex ?? undefined,
     enabled: !!name,

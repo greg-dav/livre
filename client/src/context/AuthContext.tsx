@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(false);
       return;
     }
-    api.auth
+    api.account
       .me()
       .then((u) => setUser(u))
       .catch(() => localStorage.removeItem('livre_token'))

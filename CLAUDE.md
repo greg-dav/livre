@@ -254,7 +254,7 @@ Routes are **ts-rest contract handlers**, not hand-rolled Express. A contract (`
 
 - `server.router(contract, { ...handlers })` builds the handlers; `mountContract(contract, router, guard)` mounts them behind an auth guard at the domain prefix. A router that must interleave plain Express (the non-JSON `/library/export` + `/library/import`) builds its own `express.Router()`, registers those routes **first** (matching order), then calls `attachContract`.
 - Handlers return through the builders **`ok(body)` / `created(body)` / `notFound(msg)`** — never write `{ status, body }` literals inline.
-- Read the authenticated user with **`userOf(req)`** (ts-rest's request type isn't assignable to Express's, so the Express-typed guard helper won't take it). Auth stays Express middleware: `mountContract` applies the guard; a contract with one guarded route (`/me`) attaches `requireAuth` per-route via `{ middleware: [requireAuth], handler }`.
+- Read the authenticated user with **`userOf(req)`** (ts-rest's request type isn't assignable to Express's, so the Express-typed guard helper won't take it). Auth stays Express middleware applied per-router, never per-route: a contract is either fully open (`auth`: `status`/`register`/`login`, mounted via `attachContract` with no guard) or fully guarded (`mountContract` applies `requireAuth` to the whole router). Don't mix authed and unauthed routes in one contract — the signed-in user's record (`me`) lives on the guarded `account` contract precisely so `auth` stays open and homogeneous.
 - Validation failures are remapped to our `{ error }` envelope in **one** place (`attachContract`'s `requestValidationErrorHandler`); business errors still `throw createError(404, ...)` and flow through `lib/errorHandler.ts`.
 - **Contract paths are relative** (`/username`), mounted at the prefix (`/api/account`) so the guard stays scoped — never use ts-rest `pathPrefix` (it forces a root mount and leaks the guard to every request). ts-rest registers routes in **handler-key order**, so literal paths (`/library/tags`) must precede `/library/:libraryBookId`.
 - The client mirrors this: `client/src/lib/api.ts` wraps per-domain `initClient(contract, ...)` and keeps the same public `api.*` surface — never reintroduce hand-written `fetch` + path strings there.
@@ -388,7 +388,7 @@ The client is **deliberately blind** to which provider a book came from. URLs, q
 
 ### `BookCacheProvider`
 
-`BooksService` never touches `BookCacheRepository` directly. All TTL logic lives in `BookCacheProvider`:
+No service touches `BookCacheRepository` directly — `BookLookupProvider` owns the cache-aware by-id fetch (read-through + write-back) that `SearchService` and `LibraryService` share. All TTL logic lives in `BookCacheProvider`:
 
 ```ts
 bookCache.get(source, externalId)         // returns null on miss OR expiry
