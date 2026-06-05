@@ -69,6 +69,22 @@ const Content = styled(Radix.Content)<{ $flush?: boolean }>(({ theme, $flush }) 
   '&:focus': {
     outline: 'none',
   },
+
+  // On mobile every dialog docks to the bottom as a full-width sheet — one override converts
+  // Dialog, BareDialog, and ScrollDialog alike. Rounded only along the top edge where it meets the
+  // scrim; taller cap since there's no centring headroom to preserve.
+  [theme.media.mobile]: {
+    top: 'auto',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    transform: 'none',
+    width: '100%',
+    maxWidth: '100%',
+    maxHeight: '92vh',
+    borderRadius: `${theme.radius.lg} ${theme.radius.lg} 0 0`,
+    paddingBottom: $flush ? 0 : `calc(${theme.spacing(6)} + env(safe-area-inset-bottom))`,
+  },
 }));
 
 // Wrapper (not styled(Text)) so the supporting copy clears the title without coupling to Text's CSS.
@@ -104,6 +120,10 @@ const ScrollFooter = styled('div')(({ theme }) => ({
   gap: theme.spacing(2),
   padding: `${theme.spacing(4)} ${theme.spacing(6)}`,
   borderTop: `1px solid ${theme.borderSoft}`,
+  // Clear the home indicator when the sheet is docked to the bottom on mobile.
+  [theme.media.mobile]: {
+    paddingBottom: `calc(${theme.spacing(4)} + env(safe-area-inset-bottom))`,
+  },
 }));
 
 // Column that holds body + footer; rendered as a <form> when onSubmit is supplied, else a <div>.

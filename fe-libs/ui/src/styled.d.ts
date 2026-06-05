@@ -28,5 +28,7 @@ declare module 'styled-components' {
       lg: string;
       full: string;
     };
+    breakpoints: { mobile: number };
+    media: { mobile: string };
   }
 }

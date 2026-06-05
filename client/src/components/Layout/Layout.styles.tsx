@@ -29,6 +29,9 @@ export const Header = styled('header')(({ theme }) => ({
   padding: `0 ${theme.spacing(7)}`,
   borderBottom: `1px solid ${theme.borderSoft}`,
   background: theme.bg,
+  [theme.media.mobile]: {
+    padding: `0 ${theme.spacing(4)}`,
+  },
 }));
 
 export const HeaderLeft = styled('div')(({ theme }) => ({
@@ -45,11 +48,15 @@ export const HeaderDivider = styled('span')(({ theme }) => ({
   flexShrink: 0,
 }));
 
-export const SearchSlot = styled('div')({
+export const SearchSlot = styled('div')(({ theme }) => ({
   width: '300px',
   maxWidth: '100%',
   display: 'flex',
-});
+  // No header search on mobile — the Search nav tab is the entry point.
+  [theme.media.mobile]: {
+    display: 'none',
+  },
+}));
 
 export const HeaderRight = styled('div')({
   display: 'flex',
@@ -66,12 +73,20 @@ export const HeaderTitle = styled('div')({
 });
 
 // Scroll lives on the body, not the window — the shell itself is fixed-height. Full-width screens
-// (the Library split) manage their own internal panel scrolling, so the body just clips.
-export const Body = styled('div')<{ $fullWidth?: boolean }>(({ $fullWidth }) =>
-  $fullWidth
-    ? { flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }
-    : { flex: 1, minHeight: 0, overflowY: 'auto' }
-);
+// (the Library split) manage their own internal panel scrolling, so the body just clips. On mobile
+// that inverts: the body becomes one scrolling column for every screen, with bottom clearance for
+// the fixed BottomNav.
+export const Body = styled('div')<{ $fullWidth?: boolean }>(({ theme, $fullWidth }) => ({
+  flex: 1,
+  minHeight: 0,
+  ...($fullWidth ? { display: 'flex', overflow: 'hidden' } : { overflowY: 'auto' }),
+  [theme.media.mobile]: {
+    display: 'block',
+    overflowX: 'hidden',
+    overflowY: 'auto',
+    paddingBottom: `calc(${theme.spacing(16)} + env(safe-area-inset-bottom))`,
+  },
+}));
 
 export const Content = styled('main')<{ $focusMode?: boolean }>(({ theme, $focusMode }) => ({
   maxWidth: $focusMode ? '1240px' : '1320px',
@@ -81,6 +96,10 @@ export const Content = styled('main')<{ $focusMode?: boolean }>(({ theme, $focus
   flexDirection: 'column',
   gap: theme.spacing(8),
   transition: 'max-width 0.25s ease',
+  [theme.media.mobile]: {
+    padding: `${theme.spacing(5)} ${theme.spacing(4)}`,
+    gap: theme.spacing(6),
+  },
 }));
 
 export const BackButton = styled('button')(({ theme }) => ({

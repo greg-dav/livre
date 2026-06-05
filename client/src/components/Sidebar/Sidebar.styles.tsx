@@ -12,6 +12,10 @@ export const Nav = styled('nav')(({ theme }) => ({
   padding: `${theme.spacing(4.5)} 0`,
   background: theme.bgElevated,
   borderRight: `1px solid ${theme.borderSoft}`,
+  // The mobile bar (BottomNav) replaces the rail below the phone breakpoint.
+  [theme.media.mobile]: {
+    display: 'none',
+  },
 }));
 
 export const WordmarkRail = styled('div')(({ theme }) => ({

@@ -25,6 +25,11 @@ export const FilterDock = styled('div')(({ theme }) => ({
   bottom: theme.spacing(6),
   right: theme.spacing(6),
   zIndex: 20,
+  // Lift clear of the fixed BottomNav on mobile.
+  [theme.media.mobile]: {
+    bottom: `calc(${theme.spacing(18)} + env(safe-area-inset-bottom))`,
+    right: theme.spacing(4),
+  },
 }));
 
 export const ChipHead = styled('button')(({ theme }) => ({
@@ -82,11 +87,16 @@ export const GanttScroll = styled('div')(({ theme }) => ({
   background: theme.bg,
 }));
 
-export const GanttGrid = styled('div')<{ $timelineWidth: number }>(({ $timelineWidth }) => ({
+export const GanttGrid = styled('div')<{ $timelineWidth: number }>(({ theme, $timelineWidth }) => ({
   display: 'grid',
   gridTemplateColumns: `${SIDEBAR_PANEL_WIDTH}px ${$timelineWidth}px`,
   gridTemplateRows: 'auto 1fr',
   minHeight: '100%',
+  // Narrow the sticky book column on phones so more of the chart is visible; bar positions are
+  // absolute within the chart column and unaffected by this width.
+  [theme.media.mobile]: {
+    gridTemplateColumns: `144px ${$timelineWidth}px`,
+  },
 }));
 
 // Top-left BOOK header — pinned on both axes so it covers the corner during any scroll.

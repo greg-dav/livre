@@ -86,4 +86,9 @@ export const BookGrid = styled('section')(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
   gap: `${theme.spacing(7)} ${theme.spacing(5)}`,
+  // Pin to two columns on phones — the 155px min would otherwise drop to one column on narrow screens.
+  [theme.media.mobile]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: `${theme.spacing(6)} ${theme.spacing(4)}`,
+  },
 }));

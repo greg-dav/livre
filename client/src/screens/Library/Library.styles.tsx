@@ -1,12 +1,16 @@
 import styled from 'styled-components';
 import { SIDEBAR_PANEL_WIDTH } from '../../lib/layout';
 
-export const Split = styled('div')({
+export const Split = styled('div')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   minHeight: 0,
   display: 'flex',
-});
+  // On mobile the split stacks into one page-scrolling column (the Body owns the scroll).
+  [theme.media.mobile]: {
+    display: 'block',
+  },
+}));
 
 export const LeftPanel = styled('div')(({ theme }) => ({
   width: `${SIDEBAR_PANEL_WIDTH}px`,
@@ -18,6 +22,14 @@ export const LeftPanel = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(3),
+  // Full width above the shelf browser; the side border becomes a divider between the stacked panels.
+  [theme.media.mobile]: {
+    width: 'auto',
+    overflowY: 'visible',
+    borderRight: 'none',
+    borderBottom: `1px solid ${theme.borderSoft}`,
+    padding: `${theme.spacing(5)} ${theme.spacing(4)}`,
+  },
 }));
 
 export const LeftPanelHeader = styled('div')<{ $spaced?: boolean }>(({ theme, $spaced }) => ({
@@ -40,6 +52,10 @@ export const RightPanel = styled('div')(({ theme }) => ({
   minWidth: 0,
   overflowY: 'auto',
   padding: `${theme.spacing(6)} ${theme.spacing(9)} ${theme.spacing(20)}`,
+  [theme.media.mobile]: {
+    overflowY: 'visible',
+    padding: `${theme.spacing(5)} ${theme.spacing(4)} ${theme.spacing(6)}`,
+  },
 }));
 
 export const ShelfHeading = styled('div')(({ theme }) => ({
@@ -47,6 +63,9 @@ export const ShelfHeading = styled('div')(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'space-between',
   marginBottom: theme.spacing(7),
+  [theme.media.mobile]: {
+    marginBottom: theme.spacing(5),
+  },
 }));
 
 export const ShelfHeadingLeft = styled('div')(({ theme }) => ({

@@ -3,6 +3,7 @@ export { ManualEntryDialog } from './ManualEntryDialog/ManualEntryDialog';
 export { ImportLibraryDialog } from './ImportLibraryDialog/ImportLibraryDialog';
 export { Layout } from './Layout/Layout';
 export { Sidebar } from './Sidebar/Sidebar';
+export { BottomNav } from './BottomNav/BottomNav';
 export { CurrentlyReadingCard } from './CurrentlyReadingCard/CurrentlyReadingCard';
 export { ShelfTabs } from './ShelfTabs/ShelfTabs';
 export type { ShelfStatus } from './ShelfTabs/ShelfTabs';

@@ -1,12 +1,16 @@
 import styled from 'styled-components';
 import { SIDEBAR_PANEL_WIDTH } from '../../lib/layout';
 
-export const Split = styled('div')({
+export const Split = styled('div')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   minHeight: 0,
   display: 'flex',
-});
+  // Stack the refinement rail above the results on mobile (one page-scrolling column).
+  [theme.media.mobile]: {
+    display: 'block',
+  },
+}));
 
 // Left refinement rail — mirrors the Library facet panel (elevated surface, right divider).
 export const LeftRail = styled('aside')(({ theme }) => ({
@@ -19,6 +23,13 @@ export const LeftRail = styled('aside')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(2),
   background: theme.bg,
+  [theme.media.mobile]: {
+    width: 'auto',
+    overflowY: 'visible',
+    borderRight: 'none',
+    borderBottom: `1px solid ${theme.borderSoft}`,
+    padding: `${theme.spacing(5)} ${theme.spacing(4)}`,
+  },
 }));
 
 export const PanelHeader = styled('div')<{ $spaced?: boolean }>(({ theme, $spaced }) => ({
@@ -84,11 +95,14 @@ export const FacetCount = styled('span')({
   opacity: 0.7,
 });
 
-export const RightCol = styled('div')({
+export const RightCol = styled('div')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   overflowY: 'auto',
-});
+  [theme.media.mobile]: {
+    overflowY: 'visible',
+  },
+}));
 
 export const QueryBar = styled('div')(({ theme }) => ({
   position: 'sticky',
@@ -97,6 +111,11 @@ export const QueryBar = styled('div')(({ theme }) => ({
   background: theme.bg,
   borderBottom: `1px solid ${theme.borderSoft}`,
   padding: `${theme.spacing(4.5)} ${theme.spacing(9)}`,
+  [theme.media.mobile]: {
+    // Not sticky on mobile — the page scrolls as one column, so a sticky bar would float oddly.
+    position: 'static',
+    padding: `${theme.spacing(4)} ${theme.spacing(4)}`,
+  },
 }));
 
 export const Field = styled('div')(({ theme }) => ({
@@ -155,6 +174,9 @@ export const ManualHintButton = styled('button')(({ theme }) => ({
 
 export const Results = styled('div')(({ theme }) => ({
   padding: `${theme.spacing(6)} ${theme.spacing(9)} ${theme.spacing(20)}`,
+  [theme.media.mobile]: {
+    padding: `${theme.spacing(5)} ${theme.spacing(4)} ${theme.spacing(6)}`,
+  },
 }));
 
 // Fixed height so the row doesn't grow when the query state swaps the plain prompt for the taller

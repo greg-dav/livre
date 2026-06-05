@@ -11,6 +11,11 @@ export const LayoutGrid = styled('div')<{ $focusMode?: boolean }>(({ theme, $foc
   gridTemplateColumns: $focusMode ? '1fr' : '1fr 380px',
   gap: $focusMode ? 0 : theme.spacing(14),
   alignItems: 'start',
+  // Single column on mobile — the journal card flows below the book info.
+  [theme.media.mobile]: {
+    gridTemplateColumns: '1fr',
+    gap: $focusMode ? 0 : theme.spacing(8),
+  },
 }));
 
 /*
@@ -84,6 +89,10 @@ export const Hero = styled('div')(({ theme }) => ({
   gap: theme.spacing(10),
   alignItems: 'flex-start',
   marginTop: theme.spacing(6),
+  [theme.media.mobile]: {
+    gap: theme.spacing(5),
+    marginTop: theme.spacing(2),
+  },
 }));
 
 // Resting drop shadow that gives the cover physical presence — book on a shelf rather than image

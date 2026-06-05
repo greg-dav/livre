@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Text } from '@livre/primitives';
 import { Sidebar } from '../Sidebar/Sidebar';
+import { BottomNav } from '../BottomNav/BottomNav';
 import { BookSearch } from '../BookSearch/BookSearch';
 import {
   Page,
@@ -74,6 +75,7 @@ export const Layout = ({ children, title, fullWidth, focusMode }: LayoutProps) =
           {fullWidth ? children : <Content $focusMode={focusMode}>{children}</Content>}
         </Body>
       </Main>
+      <BottomNav />
     </Page>
   );
 };

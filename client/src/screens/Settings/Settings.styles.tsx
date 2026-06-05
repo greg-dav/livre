@@ -1,11 +1,14 @@
 import styled from 'styled-components';
 
-export const Split = styled('div')({
+export const Split = styled('div')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   minHeight: 0,
   display: 'flex',
-});
+  [theme.media.mobile]: {
+    display: 'block',
+  },
+}));
 
 export const NavPanel = styled('nav')(({ theme }) => ({
   width: '272px',
@@ -17,6 +20,13 @@ export const NavPanel = styled('nav')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(1),
+  [theme.media.mobile]: {
+    width: 'auto',
+    overflowY: 'visible',
+    borderRight: 'none',
+    borderBottom: `1px solid ${theme.borderSoft}`,
+    padding: `${theme.spacing(5)} ${theme.spacing(4)}`,
+  },
 }));
 
 export const NavHeader = styled('div')(({ theme }) => ({
@@ -64,6 +74,30 @@ export const ContentPanel = styled('div')(({ theme }) => ({
   minWidth: 0,
   overflowY: 'auto',
   padding: `${theme.spacing(10)} ${theme.spacing(12)} ${theme.spacing(20)}`,
+  [theme.media.mobile]: {
+    overflowY: 'visible',
+    padding: `${theme.spacing(6)} ${theme.spacing(4)} ${theme.spacing(8)}`,
+  },
+}));
+
+// Sign-out is reached from the desktop Sidebar rail; on mobile the rail is gone, so it relocates to
+// the foot of the Settings nav. Hidden above the breakpoint to avoid duplicating the rail action.
+export const SignOutItem = styled('button')(({ theme }) => ({
+  display: 'none',
+  [theme.media.mobile]: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(3),
+    width: '100%',
+    marginTop: theme.spacing(3),
+    padding: `${theme.spacing(2.5)} ${theme.spacing(3)}`,
+    borderRadius: '9px',
+    border: 'none',
+    textAlign: 'left',
+    cursor: 'pointer',
+    background: 'none',
+    color: theme.destructive,
+  },
 }));
 
 export const ContentInner = styled('div')({

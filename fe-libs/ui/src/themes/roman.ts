@@ -1,4 +1,5 @@
 import type { DefaultTheme } from 'styled-components';
+import { MOBILE_BREAKPOINT } from '../breakpoints';
 
 const shared = {
   fontDisplay: "'Cormorant Garamond', Georgia, serif",
@@ -12,6 +13,8 @@ const shared = {
     lg: '12px',
     full: '999px',
   },
+  breakpoints: { mobile: MOBILE_BREAKPOINT },
+  media: { mobile: `@media (max-width: ${MOBILE_BREAKPOINT}px)` },
 };
 
 /*
