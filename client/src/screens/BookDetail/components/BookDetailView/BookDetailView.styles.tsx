@@ -84,12 +84,32 @@ export const ExitFocusButton = styled('button')(({ theme }) => ({
   '&:hover': { borderColor: theme.textMuted },
 }));
 
+// Mobile-only quick-access button that opens the reading journal as a sheet dialog. Rendered (gated
+// by isMobile) where the inline journal would otherwise sit, so the journal is one tap away.
+export const JournalSheetTrigger = styled('button')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: theme.spacing(2),
+  width: '100%',
+  padding: `${theme.spacing(3)} ${theme.spacing(4)}`,
+  border: `1px solid ${theme.accent}`,
+  borderRadius: theme.radius.md,
+  background: theme.accentSoft,
+  color: theme.accent,
+  cursor: 'pointer',
+}));
+
 export const Hero = styled('div')(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(10),
   alignItems: 'flex-start',
   marginTop: theme.spacing(6),
+  // Stack on mobile: the cover is centered above a full-width meta column so the large title, byline,
+  // and format selector all have the full content width instead of being squeezed beside the cover.
   [theme.media.mobile]: {
+    flexDirection: 'column',
+    alignItems: 'center',
     gap: theme.spacing(5),
     marginTop: theme.spacing(2),
   },
@@ -203,6 +223,13 @@ export const HeroMeta = styled('div')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(2),
   paddingTop: theme.spacing(1),
+  // Let the column shrink and wrap its contents rather than overflowing the viewport on mobile.
+  minWidth: 0,
+  // The centered Hero would otherwise center this column too; stretch it back to full width so the
+  // title, byline, and actions stay left-aligned.
+  [theme.media.mobile]: {
+    alignSelf: 'stretch',
+  },
 }));
 
 export const AuthorList = styled('div')(({ theme }) => ({

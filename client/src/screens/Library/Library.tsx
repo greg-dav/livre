@@ -5,17 +5,15 @@ import sortBy from 'lodash/sortBy';
 import union from 'lodash/union';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { BookCard, BookGrid, Button, Icon, Loader, Text } from '@livre/primitives';
+import { BookCard, BookGrid, Button, Facet, Icon, Loader, Text } from '@livre/primitives';
 import {
   Layout,
   SortMenu,
   CurrentlyReadingCard,
   ShelfTabs,
-  TagFacet,
   ManualEntryDialog,
   ImportLibraryDialog,
   type ShelfStatus,
-  type TagFacetOption,
 } from '../../components';
 import { api } from '../../lib/api';
 import {
@@ -97,7 +95,7 @@ export const Library = () => {
 
   // Tag options scope to the active shelf; selected tags absent from it stay listed (count 0) so
   // they remain deselectable. Counts and dimming recompute as the shelf changes.
-  const tagOptions = useMemo<TagFacetOption[]>(() => {
+  const tagOptions = useMemo<{ tag: string; count: number }[]>(() => {
     const counts = countBy(flatMap(shelfEntries, 'tags'));
     const tags = union(Object.keys(counts), [...selectedTags]);
     return sortBy(
@@ -169,12 +167,19 @@ export const Library = () => {
                 </Text>
                 <LeftPanelDivider />
               </LeftPanelHeader>
-              <TagFacet
-                options={tagOptions}
-                selected={selectedTags}
-                onToggle={toggleTag}
-                onClear={clearTags}
-              />
+              <Facet.List $bleed>
+                {tagOptions.map(({ tag, count }) => (
+                  <Facet.Item
+                    key={tag}
+                    label={tag}
+                    count={count}
+                    active={selectedTags.has(tag)}
+                    disabled={count === 0 && !selectedTags.has(tag)}
+                    onSelect={() => toggleTag(tag)}
+                  />
+                ))}
+                {selectedTags.size > 0 && <Facet.Clear onClick={clearTags}>Clear tags</Facet.Clear>}
+              </Facet.List>
             </>
           )}
         </LeftPanel>

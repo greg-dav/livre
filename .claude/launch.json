@@ -6,12 +6,6 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "-w", "client"],
       "port": 5173
-    },
-    {
-      "name": "prototypes",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "prototypes", "-p", "5174", "--no-clipboard"],
-      "port": 5174
     }
   ]
 }

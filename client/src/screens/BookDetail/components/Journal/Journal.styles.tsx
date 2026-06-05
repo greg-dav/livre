@@ -23,6 +23,17 @@ export const Panel = styled('aside')<{ $justAcquired?: boolean; $focusMode?: boo
       padding: 0,
       marginTop: 0,
     }),
+    // On mobile the journal only renders inside the sheet dialog, which supplies the card chrome and
+    // scrolling — flatten the panel so it fills the sheet cleanly with no nested border/padding.
+    [theme.media.mobile]: {
+      maxHeight: 'none',
+      overflow: 'visible',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: 0,
+      padding: 0,
+      marginTop: 0,
+    },
   })
 );
 
@@ -180,6 +191,9 @@ export const RightColHead = styled('div')(({ theme }) => ({
 
 export const ReviewEditor = styled('div')(({ theme }) => ({
   minHeight: '320px',
+  // The 320px is sized for the desktop full-page focus view; in the mobile sheet it would dominate,
+  // so keep it compact there.
+  [theme.media.mobile]: { minHeight: '120px' },
   padding: '14px 18px',
   background: theme.bgElevated,
   border: `1px solid ${theme.border}`,

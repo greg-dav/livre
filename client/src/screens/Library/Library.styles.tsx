@@ -64,6 +64,8 @@ export const ShelfHeading = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
   marginBottom: theme.spacing(7),
   [theme.media.mobile]: {
+    flexWrap: 'wrap',
+    gap: theme.spacing(2),
     marginBottom: theme.spacing(5),
   },
 }));

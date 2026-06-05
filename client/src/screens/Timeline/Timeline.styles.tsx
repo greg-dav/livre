@@ -25,9 +25,10 @@ export const FilterDock = styled('div')(({ theme }) => ({
   bottom: theme.spacing(6),
   right: theme.spacing(6),
   zIndex: 20,
-  // Lift clear of the fixed BottomNav on mobile.
+  // The gantt area already sits above the fixed BottomNav (the Body reserves bottom padding for it),
+  // so the dock only needs a small offset here — adding the full bar height again floated it too high.
   [theme.media.mobile]: {
-    bottom: `calc(${theme.spacing(18)} + env(safe-area-inset-bottom))`,
+    bottom: theme.spacing(4),
     right: theme.spacing(4),
   },
 }));

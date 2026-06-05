@@ -6,9 +6,7 @@ Livre is an open-source, self-hosted reading tracker. Three tenets: **Privacy, O
 
 ## Design ground truth
 
-**If a prototype exists under `prototypes/` for the screen or component you're touching, it is the design ground truth — always.** Open the relevant prototype file and reference it directly before any design work: typography sizes, weights, line-heights, colors, spacing, radii, layout, hover states, transitions, edge cases. Compare side-by-side and match. Don't approximate from memory or from the running app — both will drift.
-
-This is non-negotiable. Prototypes encode deliberate decisions the working code may not have caught up to yet. Skipping the comparison leads to slow drift back to defaults and erodes everything the prototype was meant to fix. When in doubt, the prototype wins — propose a change to it before deviating in the working code.
+**The running app is the design source of truth.** The old `prototypes/` folder has been retired — the working code has caught up to and surpassed it, so design decisions now live in the components and theme tokens themselves. Before any design work, read the actual component, its `.styles.tsx` sibling, and the theme tokens (`@livre/ui`); match the patterns already established there rather than approximating from memory. When a screen needs a deliberate visual exploration, prototype it in isolation, converge, fold it into the real components, then discard the throwaway.
 
 ## Tech stack
 

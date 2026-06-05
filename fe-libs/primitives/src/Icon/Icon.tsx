@@ -2,6 +2,7 @@ import {
   Book,
   Check,
   ChevronDown,
+  ChevronLeft,
   CornerDownLeft,
   Database,
   Download,
@@ -50,6 +51,7 @@ const ICONS = {
   data: Database,
   check: Check,
   'chevron-down': ChevronDown,
+  'chevron-left': ChevronLeft,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

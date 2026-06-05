@@ -6,6 +6,7 @@ import { type LogEventType, type UpdateMetadataBody, type BookFormat } from '@li
 import { api } from '../../lib/api';
 import { pushRecentBook } from '../../lib/recentBooks';
 import { Layout } from '../../components';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { ReadingSince, ReadingSinceDot } from './components/BookDetailView/BookDetailView.styles';
 import { STATUS_LABELS, SELECTABLE_EVENTS, formatReadingSince } from './utils/BookDetail.utils';
 import { parseDateLocal } from '../../lib/dateInput';
@@ -61,6 +62,11 @@ export const LibraryBookDetail = () => {
   const [focusMode, setFocusMode] = useState(false);
   const [confirming, setConfirming] = useState<ConfirmKey | null>(null);
   const onToggleFocus = () => setFocusMode((f) => !f);
+
+  // Mobile has no focus mode — the journal opens as a sheet dialog instead. Force focus off and let
+  // the sheet supply the heading (hideHead) so the panel doesn't double up its title.
+  const isMobile = useIsMobile();
+  const journalFocus = focusMode && !isMobile;
 
   const { data } = useQuery({
     queryKey: ['library', 'detail', libraryBookId],
@@ -291,7 +297,7 @@ export const LibraryBookDetail = () => {
       inLibrary
       editable
       justAcquired={justAcquired}
-      focusMode={focusMode}
+      focusMode={journalFocus}
       onExitFocus={onToggleFocus}
       focusStripMeta={focusStripMeta}
       currentFormat={currentFormat}
@@ -313,8 +319,9 @@ export const LibraryBookDetail = () => {
           entry={entry}
           log={data.log}
           justAcquired={justAcquired}
-          focusMode={focusMode}
-          onToggleFocus={onToggleFocus}
+          focusMode={journalFocus}
+          onToggleFocus={isMobile ? undefined : onToggleFocus}
+          sheet={isMobile}
           onRatingChange={saveRating}
           onReviewChange={saveReview}
           onNoteAdd={addNote}

@@ -20,12 +20,19 @@ export const NavPanel = styled('nav')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(1),
+  // On mobile the section list becomes a horizontal chip-tab scroller above the content.
   [theme.media.mobile]: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: 'auto',
+    overflowX: 'auto',
     overflowY: 'visible',
+    gap: theme.spacing(2),
     borderRight: 'none',
     borderBottom: `1px solid ${theme.borderSoft}`,
-    padding: `${theme.spacing(5)} ${theme.spacing(4)}`,
+    padding: `${theme.spacing(3)} ${theme.spacing(4)}`,
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': { display: 'none' },
   },
 }));
 
@@ -35,6 +42,10 @@ export const NavHeader = styled('div')(({ theme }) => ({
   gap: theme.spacing(2.5),
   marginBottom: theme.spacing(3),
   padding: `0 ${theme.spacing(2)}`,
+  // Section labels are redundant once the nav is a horizontal chip row under the page title.
+  [theme.media.mobile]: {
+    display: 'none',
+  },
 }));
 
 // A second-level header that opens a grouped run of nav items (e.g. the admin-only sections), set
@@ -67,6 +78,16 @@ export const NavItem = styled('button')<{ $active?: boolean }>(({ theme, $active
     background: theme.accentSoft,
     color: $active ? theme.accent : theme.text,
   },
+  // Pill chip on mobile so the full-width rows read as a horizontal tab strip.
+  [theme.media.mobile]: {
+    flexShrink: 0,
+    width: 'auto',
+    borderRadius: theme.radius.full,
+    border: `1px solid ${$active ? theme.accent : theme.border}`,
+    background: $active ? theme.accentSoft : theme.bgElevated,
+    padding: `7px ${theme.spacing(3)}`,
+    whiteSpace: 'nowrap',
+  },
 }));
 
 export const ContentPanel = styled('div')(({ theme }) => ({
@@ -80,20 +101,19 @@ export const ContentPanel = styled('div')(({ theme }) => ({
   },
 }));
 
-// Sign-out is reached from the desktop Sidebar rail; on mobile the rail is gone, so it relocates to
-// the foot of the Settings nav. Hidden above the breakpoint to avoid duplicating the rail action.
+// Sign-out is reached from the desktop Sidebar rail; on mobile the rail is gone, so it surfaces at
+// the foot of the Account section only (not every settings screen). Hidden above the breakpoint to
+// avoid duplicating the rail action. The divider sets it apart from the form blocks above.
 export const SignOutItem = styled('button')(({ theme }) => ({
   display: 'none',
   [theme.media.mobile]: {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing(3),
+    justifyContent: 'center',
+    gap: theme.spacing(2),
     width: '100%',
-    marginTop: theme.spacing(3),
-    padding: `${theme.spacing(2.5)} ${theme.spacing(3)}`,
-    borderRadius: '9px',
-    border: 'none',
-    textAlign: 'left',
+    paddingTop: theme.spacing(5),
+    borderTop: `1px solid ${theme.borderSoft}`,
     cursor: 'pointer',
     background: 'none',
     color: theme.destructive,
@@ -118,6 +138,10 @@ export const SectionHeader = styled('div')(({ theme }) => ({
   alignItems: 'flex-start',
   justifyContent: 'space-between',
   gap: theme.spacing(4),
+  [theme.media.mobile]: {
+    flexWrap: 'wrap',
+    gap: theme.spacing(3),
+  },
 }));
 
 export const SectionHeading = styled('div')(({ theme }) => ({

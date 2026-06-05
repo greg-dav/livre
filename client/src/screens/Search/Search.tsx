@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { BookCard, BookGrid, Icon, Loader, Text } from '@livre/primitives';
+import { BookCard, BookGrid, Facet, Icon, Loader, Text } from '@livre/primitives';
 import { type SearchResult } from '@livre/types';
 import { api } from '../../lib/api';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -25,11 +25,8 @@ import {
   LeftRail,
   PanelHeader,
   PanelDivider,
-  FacetRow,
-  FacetTick,
-  FacetName,
-  FacetCount,
   RightCol,
+  MobileFacets,
   QueryBar,
   Field,
   FieldInput,
@@ -102,28 +99,27 @@ export const Search = () => {
   const count = results.length;
   const hasQuery = queryTerm.length > 1;
 
-  const renderShelfFacet = (key: ShelfFilter) => (
-    <FacetRow
+  // The same facet items render in the desktop rail and the mobile chip scroller, so the markup
+  // lives in one place; only the layout container differs by breakpoint.
+  const scopeItems = searchScopeSchema.options.map((s) => (
+    <Facet.Item
+      key={s}
+      label={SCOPE_LABELS[s]}
+      active={scope === s}
+      radio
+      onSelect={() => setScope(s)}
+    />
+  ));
+  const shelfItems = shelfFilterSchema.options.map((key: ShelfFilter) => (
+    <Facet.Item
       key={key}
-      $active={shelf.has(key)}
-      $disabled={shelfCounts[key] === 0 && !shelf.has(key)}
-      onClick={() => toggleShelf(key)}
-    >
-      <FacetTick $active={shelf.has(key)}>
-        {shelf.has(key) && <Icon icon="check" size={10} />}
-      </FacetTick>
-      <FacetName>
-        <Text className="facet-name" variant="ui-tight">
-          {SHELF_LABELS[key]}
-        </Text>
-      </FacetName>
-      <FacetCount>
-        <Text variant="ui-xs" color="muted">
-          {shelfCounts[key]}
-        </Text>
-      </FacetCount>
-    </FacetRow>
-  );
+      label={SHELF_LABELS[key]}
+      count={shelfCounts[key]}
+      active={shelf.has(key)}
+      disabled={shelfCounts[key] === 0 && !shelf.has(key)}
+      onSelect={() => toggleShelf(key)}
+    />
+  ));
 
   return (
     <Layout fullWidth title="Search">
@@ -135,18 +131,7 @@ export const Search = () => {
             </Text>
             <PanelDivider />
           </PanelHeader>
-          {searchScopeSchema.options.map((s) => (
-            <FacetRow key={s} $active={scope === s} $radio onClick={() => setScope(s)}>
-              <FacetTick $active={scope === s} $radio>
-                {scope === s && <Icon icon="check" size={9} />}
-              </FacetTick>
-              <FacetName>
-                <Text className="facet-name" variant="ui-tight">
-                  {SCOPE_LABELS[s]}
-                </Text>
-              </FacetName>
-            </FacetRow>
-          ))}
+          <Facet.List>{scopeItems}</Facet.List>
 
           <PanelHeader $spaced>
             <Text variant="label" color="accent">
@@ -154,7 +139,7 @@ export const Search = () => {
             </Text>
             <PanelDivider />
           </PanelHeader>
-          {shelfFilterSchema.options.map(renderShelfFacet)}
+          <Facet.List>{shelfItems}</Facet.List>
         </LeftRail>
 
         <RightCol>
@@ -180,6 +165,14 @@ export const Search = () => {
               </ManualHintButton>
             </ManualHint>
           </QueryBar>
+
+          <MobileFacets>
+            <Facet.List>
+              {scopeItems}
+              <Facet.Separator />
+              {shelfItems}
+            </Facet.List>
+          </MobileFacets>
 
           <Results>
             <Toolbar>

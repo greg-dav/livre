@@ -23,12 +23,19 @@ export const LeftRail = styled('aside')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(2),
   background: theme.bg,
+  // On mobile the rail is replaced by the MobileFacets chip scroller above the results.
   [theme.media.mobile]: {
-    width: 'auto',
-    overflowY: 'visible',
-    borderRight: 'none',
-    borderBottom: `1px solid ${theme.borderSoft}`,
-    padding: `${theme.spacing(5)} ${theme.spacing(4)}`,
+    display: 'none',
+  },
+}));
+
+// Mobile-only wrapper that hosts the shared Facet.List (which renders as a horizontal chip scroller
+// below the breakpoint) in place of the desktop rail. Sits just under the query bar.
+export const MobileFacets = styled('div')(({ theme }) => ({
+  display: 'none',
+  [theme.media.mobile]: {
+    display: 'block',
+    paddingTop: theme.spacing(3),
   },
 }));
 
@@ -46,54 +53,6 @@ export const PanelDivider = styled('hr')(({ theme }) => ({
   borderTop: `1px solid ${theme.borderSoft}`,
   margin: 0,
 }));
-
-export const FacetRow = styled('div')<{ $active: boolean; $radio?: boolean; $disabled?: boolean }>(
-  ({ theme, $active, $disabled }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(2.5),
-    padding: `7px ${theme.spacing(2.25)}`,
-    borderRadius: theme.radius.md,
-    cursor: 'pointer',
-    transition: 'background 0.13s',
-    background: $active ? theme.accentSoft : 'transparent',
-    ...($disabled && { opacity: 0.36, pointerEvents: 'none' }),
-    '&:hover': { background: theme.accentSoft },
-    '& .facet-name': {
-      color: $active ? theme.accent : theme.textMuted,
-      transition: 'color 0.13s',
-    },
-    '&:hover .facet-name': { color: $active ? theme.accent : theme.text },
-  })
-);
-
-export const FacetTick = styled('span')<{ $active: boolean; $radio?: boolean }>(
-  ({ theme, $active, $radio }) => ({
-    width: '14px',
-    height: '14px',
-    borderRadius: $radio ? '50%' : theme.radius.sm,
-    border: `1.5px solid ${$active ? theme.accent : theme.border}`,
-    background: $active ? theme.accent : 'transparent',
-    color: theme.textOnColor,
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.13s',
-  })
-);
-
-export const FacetName = styled('span')({
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-});
-
-export const FacetCount = styled('span')({
-  display: 'flex',
-  alignItems: 'center',
-  opacity: 0.7,
-});
 
 export const RightCol = styled('div')(({ theme }) => ({
   flex: 1,
@@ -160,6 +119,13 @@ export const ManualHint = styled('div')(({ theme }) => ({
   gap: theme.spacing(2),
   marginTop: theme.spacing(3),
   paddingLeft: theme.spacing(0.5),
+  // On a phone the prompt + button collide when wrapped inline; stack them so the action sits cleanly
+  // on its own line beneath the question.
+  [theme.media.mobile]: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: theme.spacing(1.5),
+  },
 }));
 
 export const ManualHintButton = styled('button')(({ theme }) => ({
@@ -169,6 +135,7 @@ export const ManualHintButton = styled('button')(({ theme }) => ({
   cursor: 'pointer',
   color: theme.accent,
   transition: 'opacity 0.15s',
+  flexShrink: 0,
   '&:hover': { opacity: 0.75 },
 }));
 

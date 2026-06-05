@@ -4,6 +4,17 @@ export const TabRow = styled('div')(({ theme }) => ({
   display: 'flex',
   borderBottom: `1px solid ${theme.borderSoft}`,
   marginBottom: theme.spacing(8),
+  // The three labelled tabs + badges overflow a phone width, so scroll them horizontally — and bleed
+  // the track edge-to-edge by cancelling the page inset, so the underline and tabs run to the screen
+  // edges rather than sitting in a boxed-in strip.
+  [theme.media.mobile]: {
+    overflowX: 'auto',
+    marginBottom: theme.spacing(6),
+    marginInline: `-${theme.spacing(4)}`,
+    paddingInline: theme.spacing(4),
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': { display: 'none' },
+  },
 }));
 
 export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) => ({
@@ -17,6 +28,11 @@ export const Tab = styled('button')<{ $active: boolean }>(({ theme, $active }) =
   background: 'transparent',
   cursor: 'pointer',
   transition: 'border-color 0.15s',
+  [theme.media.mobile]: {
+    flexShrink: 0,
+    padding: '10px 14px 12px',
+    whiteSpace: 'nowrap',
+  },
 
   '& > span:first-child': {
     transition: 'color 0.15s',

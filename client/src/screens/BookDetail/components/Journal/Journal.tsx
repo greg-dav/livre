@@ -35,6 +35,10 @@ interface JournalProps {
   justAcquired?: boolean;
   focusMode?: boolean;
   onToggleFocus?: () => void;
+  // When the journal is hosted in the mobile sheet dialog: the dialog supplies the heading (so the
+  // panel's own head is suppressed), there's no focus mode, and the review edits inline right here
+  // (no "expand to write" detour).
+  sheet?: boolean;
   onRatingChange?: (rating: number) => void;
   onReviewChange?: (review: string) => void;
   onNoteAdd?: (text: string, type: 'note' | 'quote') => void;
@@ -56,6 +60,7 @@ export const Journal = ({
   justAcquired,
   focusMode,
   onToggleFocus,
+  sheet,
   onRatingChange,
   onReviewChange,
   onNoteAdd,
@@ -93,7 +98,7 @@ export const Journal = ({
         <Text variant="label" color="muted">
           Review
         </Text>
-        {!focusMode && (
+        {!focusMode && !sheet && (
           <ExpandInline type="button" onClick={onToggleFocus}>
             <Text variant="label" color="accent">
               Expand to write →
@@ -101,7 +106,7 @@ export const Journal = ({
           </ExpandInline>
         )}
       </ReviewHead>
-      {focusMode ? (
+      {focusMode || sheet ? (
         <Text variant="body1" as="div">
           <ReviewEditor
             ref={reviewEdit.editorRef}
@@ -127,8 +132,12 @@ export const Journal = ({
     </ReviewSection>
   );
 
+  // "Retrospective" only fits books you've actually closed out; reading and want-to-read get the
+  // neutral, forward-looking prompt instead.
   const composerPlaceholder =
-    entry.status === 'reading' ? 'Capture a thought…' : 'Leave a retrospective note…';
+    entry.status === 'read' || entry.status === 'dnf'
+      ? 'Leave a retrospective note…'
+      : 'Capture a thought…';
 
   const composer = (
     <Composer>
@@ -190,20 +199,22 @@ export const Journal = ({
 
   return (
     <Panel $justAcquired={justAcquired} $focusMode={focusMode}>
-      <Head>
-        <Text variant={focusMode ? 'h3' : 'h4'} as="h2">
-          Journal
-        </Text>
-        {focusMode ? (
-          <CollapseButton type="button" onClick={onToggleFocus}>
-            <Text variant="label">↙ Collapse</Text>
-          </CollapseButton>
-        ) : (
-          <FocusButton type="button" onClick={onToggleFocus}>
-            <Text variant="label">⤢ Focus</Text>
-          </FocusButton>
-        )}
-      </Head>
+      {!sheet && (
+        <Head>
+          <Text variant={focusMode ? 'h3' : 'h4'} as="h2">
+            Journal
+          </Text>
+          {focusMode ? (
+            <CollapseButton type="button" onClick={onToggleFocus}>
+              <Text variant="label">↙ Collapse</Text>
+            </CollapseButton>
+          ) : (
+            <FocusButton type="button" onClick={onToggleFocus}>
+              <Text variant="label">⤢ Focus</Text>
+            </FocusButton>
+          )}
+        </Head>
+      )}
 
       {focusMode ? (
         <JournalGrid>

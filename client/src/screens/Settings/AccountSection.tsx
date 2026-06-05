@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Input, Text } from '@livre/primitives';
+import { Button, Icon, Input, Text } from '@livre/primitives';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
 import { errorMessage } from '../../lib/errorMessage';
 import { Section } from './Section';
-import { Block, BlockHead, Field, Actions, Feedback } from './Settings.styles';
+import { Block, BlockHead, Field, Actions, Feedback, SignOutItem } from './Settings.styles';
 
 /**
  * Self-service account settings for the signed-in reader: change username and password. A username
@@ -13,7 +13,7 @@ import { Block, BlockHead, Field, Actions, Feedback } from './Settings.styles';
  * auth context to keep the session valid.
  */
 export const AccountSection = () => {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth();
   const [username, setUsername] = useState(user?.username ?? '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -134,6 +134,14 @@ export const AccountSection = () => {
           )}
         </Feedback>
       </Block>
+
+      {/* Sign-out lives on the desktop nav rail; on mobile that rail is gone, so it surfaces here. */}
+      <SignOutItem onClick={logout} aria-label="Sign out">
+        <Icon icon="logout" />
+        <Text variant="ui-sm" color="destructive">
+          Sign out
+        </Text>
+      </SignOutItem>
     </Section>
   );
 };

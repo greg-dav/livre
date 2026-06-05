@@ -30,6 +30,9 @@ export const Header = styled('header')(({ theme }) => ({
   borderBottom: `1px solid ${theme.borderSoft}`,
   background: theme.bg,
   [theme.media.mobile]: {
+    // Search slot + trailing track are hidden on mobile, so the header is a single full-width track
+    // — the contextual bar (or title) gets the whole row instead of being boxed into the left third.
+    gridTemplateColumns: '1fr',
     padding: `0 ${theme.spacing(4)}`,
   },
 }));
@@ -46,6 +49,10 @@ export const HeaderDivider = styled('span')(({ theme }) => ({
   height: theme.spacing(5),
   background: theme.borderSoft,
   flexShrink: 0,
+  // The title it separates is hidden on mobile detail pages, so the divider would dangle — drop it.
+  [theme.media.mobile]: {
+    display: 'none',
+  },
 }));
 
 export const SearchSlot = styled('div')(({ theme }) => ({
@@ -58,19 +65,28 @@ export const SearchSlot = styled('div')(({ theme }) => ({
   },
 }));
 
-export const HeaderRight = styled('div')({
+export const HeaderRight = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
-});
+  // Empty on mobile — drop it so the single-track header gives all its width to the left content.
+  [theme.media.mobile]: {
+    display: 'none',
+  },
+}));
 
 // A long title truncates with an ellipsis rather than wrapping or shoving the search off-centre.
-export const HeaderTitle = styled('div')({
-  minWidth: 0,
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-  textOverflow: 'ellipsis',
-});
+// On detail pages (non-root) the title is hidden on mobile — it's already shown large in the hero,
+// and the back button needs the full header width — while root pages keep their title.
+export const HeaderTitle = styled('div')<{ $hideOnMobile?: boolean }>(
+  ({ theme, $hideOnMobile }) => ({
+    minWidth: 0,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    ...($hideOnMobile && { [theme.media.mobile]: { display: 'none' } }),
+  })
+);
 
 // Scroll lives on the body, not the window — the shell itself is fixed-height. Full-width screens
 // (the Library split) manage their own internal panel scrolling, so the body just clips. On mobile
@@ -123,4 +139,65 @@ export const BackButton = styled('button')(({ theme }) => ({
   '&:hover span': {
     color: theme.text,
   },
+  // On mobile the verbose "Back to …" is replaced by the compact MobileContext bar below.
+  [theme.media.mobile]: {
+    display: 'none',
+  },
 }));
+
+// Mobile-only contextual header for detail pages: a slim back chevron, an optional cover thumbnail,
+// and the title + subtitle (author). Replaces the desktop "Back to …" + title, giving the modern
+// app feel; the browser's edge-swipe still works as a bonus on top of the visible control.
+export const MobileContext = styled('div')(({ theme }) => ({
+  display: 'none',
+  [theme.media.mobile]: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(2.5),
+    minWidth: 0,
+  },
+}));
+
+export const ContextBack = styled('button')(({ theme }) => ({
+  flexShrink: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(1),
+  margin: `${theme.spacing(-1)} 0`,
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  color: theme.textMuted,
+  '&:active': { color: theme.text },
+}));
+
+export const ContextCover = styled('div')(({ theme }) => ({
+  flexShrink: 0,
+  width: theme.spacing(6),
+  height: theme.spacing(9),
+  borderRadius: '2px 3px 3px 2px',
+  boxShadow: '1px 1px 4px rgba(0,0,0,0.22)',
+  background: theme.bgSunken,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}));
+
+export const ContextText = styled('div')({
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  // Pull the subtitle up to close the line-box leading between the two stacked labels.
+  '& > * + *': {
+    marginTop: '-3px',
+  },
+});
+
+// Single truncating line — overflow clips on this block while the Text inside keeps its own styling.
+export const ContextLine = styled('span')({
+  display: 'block',
+  minWidth: 0,
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+});

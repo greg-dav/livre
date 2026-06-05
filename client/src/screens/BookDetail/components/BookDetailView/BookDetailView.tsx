@@ -9,9 +9,19 @@ import { useDateEdit } from '../../hooks/useDateEdit';
 import { useLanguageEdit } from '../../hooks/useLanguageEdit';
 import { useIsbnEdit } from '../../hooks/useIsbnEdit';
 import type { ReactNode } from 'react';
-import { Text, Lightbox, Dialog, Input, Button, EditableField } from '@livre/primitives';
+import {
+  Text,
+  Lightbox,
+  Dialog,
+  ScrollDialog,
+  Icon,
+  Input,
+  Button,
+  EditableField,
+} from '@livre/primitives';
 import { type LibraryVolume, type UpdateMetadataBody, type BookFormat } from '@livre/types';
 import { Layout } from '../../../../components';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 import { FormatSelector } from '../FormatSelector/FormatSelector';
 import {
   LayoutGrid,
@@ -21,6 +31,7 @@ import {
   FocusStripInfo,
   FocusStripSep,
   ExitFocusButton,
+  JournalSheetTrigger,
   Hero,
   CoverWrapper,
   CoverEditOverlay,
@@ -124,6 +135,7 @@ export const BookDetailView = ({
   currentFormat,
   onFormatChange,
 }: BookDetailViewProps) => {
+  const isMobile = useIsMobile();
   const [coverIndex, setCoverIndex] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -259,6 +271,22 @@ export const BookDetailView = ({
           {statusIndicator}
         </HeroMeta>
       </Hero>
+
+      {isMobile && journal && (
+        <ScrollDialog
+          title="Journal"
+          trigger={
+            <JournalSheetTrigger type="button" aria-label="Open journal">
+              <Icon icon="log" size={16} />
+              <Text variant="label" color="accent">
+                Open journal
+              </Text>
+            </JournalSheetTrigger>
+          }
+        >
+          {journal}
+        </ScrollDialog>
+      )}
 
       {(book.description || descriptionEditable) && (
         <>
@@ -484,8 +512,13 @@ export const BookDetailView = ({
     ) : null;
 
   return (
-    <Layout title={book.title} focusMode={focusMode}>
-      {journal ? (
+    <Layout
+      title={book.title}
+      subtitle={dedupeAuthors(book.authors).join(', ')}
+      coverUrl={coverSrc}
+      focusMode={focusMode}
+    >
+      {journal && !isMobile ? (
         <>
           {focusStrip}
           <LayoutGrid $focusMode={focusMode}>
@@ -494,6 +527,8 @@ export const BookDetailView = ({
           </LayoutGrid>
         </>
       ) : (
+        // Mobile (and search detail, which has no journal) renders the single content column; on
+        // mobile the journal is reached through the sheet trigger embedded in `content`.
         content
       )}
     </Layout>

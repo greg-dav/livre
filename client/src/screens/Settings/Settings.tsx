@@ -16,7 +16,6 @@ import {
   NavItem,
   ContentPanel,
   ContentInner,
-  SignOutItem,
 } from './Settings.styles';
 
 type SectionId = 'account' | 'data' | 'users' | 'appearance' | 'config';
@@ -55,7 +54,7 @@ const SECTIONS: SectionDef[] = [
  * for non-admins entirely, so the rail never offers something the server would reject.
  */
 export const Settings = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const personalSections = SECTIONS.filter((s) => !s.adminOnly);
   const adminSections = user?.is_admin ? SECTIONS.filter((s) => s.adminOnly) : [];
   const visible = [...personalSections, ...adminSections];
@@ -97,12 +96,6 @@ export const Settings = () => {
               {adminSections.map(renderItem)}
             </>
           )}
-          <SignOutItem onClick={logout} aria-label="Sign out">
-            <Icon icon="logout" />
-            <Text variant="ui-sm" color="destructive">
-              Sign out
-            </Text>
-          </SignOutItem>
         </NavPanel>
         <ContentPanel>
           <ContentInner>{current.render()}</ContentInner>
