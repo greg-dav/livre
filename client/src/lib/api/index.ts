@@ -1,4 +1,5 @@
 import { auth } from './auth';
+import { demo } from './demo';
 import { search } from './search';
 import { library } from './library';
 import { log } from './log';
@@ -16,6 +17,7 @@ export type { User, ManagedUser, ThemeName } from '@livre/types';
  */
 export const api = {
   auth,
+  demo,
   search,
   library,
   log,

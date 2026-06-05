@@ -47,6 +47,7 @@ export type { TimelineCycle, TimelineBook } from './domain/timeline';
 export { apiErrorSchema } from './contracts/_shared';
 export type { AuthResponse } from './contracts/_shared';
 export { accountContract } from './contracts/account';
+export { demoContract } from './contracts/demo';
 export { authContract } from './contracts/auth';
 export { usersContract } from './contracts/users';
 export type { CreateUserBody, UpdateUserBody } from './contracts/users';

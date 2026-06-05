@@ -2,6 +2,7 @@ export { BookSearch } from './BookSearch/BookSearch';
 export { ManualEntryDialog } from './ManualEntryDialog/ManualEntryDialog';
 export { ImportLibraryDialog } from './ImportLibraryDialog/ImportLibraryDialog';
 export { Layout } from './Layout/Layout';
+export { DemoBanner } from './DemoBanner/DemoBanner';
 export { Sidebar } from './Sidebar/Sidebar';
 export { BottomNav } from './BottomNav/BottomNav';
 export { CurrentlyReadingCard } from './CurrentlyReadingCard/CurrentlyReadingCard';

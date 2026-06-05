@@ -2,6 +2,12 @@ import { and, count, eq, ne, sql } from 'drizzle-orm';
 import { managedUserSchema, type ManagedUser, type ThemeName } from '@livre/types';
 import { db } from '../db';
 import { users } from '../db/schema';
+import { DEMO_USERNAME } from '../lib/demoFixture';
+
+// The reserved demo user is an internal sandbox account, not a real account: it's hidden from the
+// admin user list and the registration-gating count so it can never close registration or surface
+// the instance owner's roster to a demo visitor.
+const notDemo = ne(users.username, DEMO_USERNAME);
 
 type CreateUserData = {
   username: string;
@@ -20,7 +26,7 @@ export class UsersRepository {
   };
 
   count(): number {
-    return db.select({ total: count() }).from(users).get()?.total ?? 0;
+    return db.select({ total: count() }).from(users).where(notDemo).get()?.total ?? 0;
   }
 
   findByUsername(username: string) {
@@ -35,6 +41,7 @@ export class UsersRepository {
     const rows = db
       .select(UsersRepository.managedColumns)
       .from(users)
+      .where(notDemo)
       .orderBy(users.createdAt)
       .all();
     return rows.map((row) => managedUserSchema.parse(row));

@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LibraryProvider } from './context/LibraryContext';
 import { LibrarySessionProvider } from './context/LibrarySessionContext';
 import { SearchProvider } from './context/SearchContext';
+import { DemoBanner } from './components';
 import {
   Library,
   Login,
@@ -34,6 +35,7 @@ const AuthGuard = () => {
       <LibrarySessionProvider>
         <SearchProvider>
           <Outlet />
+          <DemoBanner />
         </SearchProvider>
       </LibrarySessionProvider>
     </LibraryProvider>

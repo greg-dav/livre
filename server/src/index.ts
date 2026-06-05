@@ -32,8 +32,10 @@ import { SearchService } from './services/SearchService';
 import { LibraryService } from './services/LibraryService';
 import { LibraryTransferService } from './services/LibraryTransferService';
 import { LogService } from './services/LogService';
+import { DemoService } from './services/DemoService';
 import { GoodreadsFormat } from './formats/GoodreadsFormat';
 import { createAuthRouter } from './routes/auth';
+import { createDemoRouter } from './routes/demo';
 import { createAccountRouter } from './routes/account';
 import { createUsersRouter } from './routes/users';
 import { createSearchRouter } from './routes/search';
@@ -85,6 +87,7 @@ const libraryTransferService = new LibraryTransferService(
   bookSourceRegistry
 );
 const logService = new LogService(libraryBooksRepository, readingLogRepository);
+const demoService = new DemoService(usersRepository, libraryBooksRepository, readingLogRepository);
 const { requireAuth, requireAdmin } = createAuthMiddleware(usersRepository);
 
 // Sweep expired book_cache entries on boot and every 24h thereafter.
@@ -135,6 +138,7 @@ app.use('/api/users', createUsersRouter(usersService, requireAdmin));
 app.use('/api/search', createSearchRouter(searchService, requireAuth));
 app.use('/api/library', createLibraryRouter(libraryService, libraryTransferService, requireAuth));
 app.use('/api/log', createLogRouter(logService, requireAuth));
+app.use('/api/demo', createDemoRouter(demoService, requireAuth));
 app.use('/api/config', createConfigRouter(configRepository, bookSourceRegistry, requireAdmin));
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

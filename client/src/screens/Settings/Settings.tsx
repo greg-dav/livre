@@ -7,6 +7,7 @@ import { DataSection } from './DataSection';
 import { UsersSection } from './UsersSection';
 import { AppearanceSection } from './AppearanceSection';
 import { ConfigurationSection } from './ConfigurationSection';
+import { DemoSection } from './DemoSection';
 import {
   Split,
   NavPanel,
@@ -18,7 +19,7 @@ import {
   ContentInner,
 } from './Settings.styles';
 
-type SectionId = 'account' | 'data' | 'users' | 'appearance' | 'config';
+type SectionId = 'account' | 'data' | 'users' | 'appearance' | 'config' | 'demo';
 
 interface SectionDef {
   id: SectionId;
@@ -45,6 +46,7 @@ const SECTIONS: SectionDef[] = [
     adminOnly: true,
     render: () => <ConfigurationSection />,
   },
+  { id: 'demo', label: 'Demo', icon: 'enter', adminOnly: true, render: () => <DemoSection /> },
 ];
 
 /**

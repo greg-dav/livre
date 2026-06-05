@@ -340,6 +340,17 @@ export class LibraryBooksRepository {
     return db.delete(libraryBooks).where(eq(libraryBooks.userId, userId)).run().changes;
   }
 
+  /** How many books the user owns — cheap check used to decide whether the demo library is seeded. */
+  countByUser(userId: number): number {
+    return (
+      db
+        .select({ total: sql<number>`count(*)` })
+        .from(libraryBooks)
+        .where(eq(libraryBooks.userId, userId))
+        .get()?.total ?? 0
+    );
+  }
+
   updateMetadata(libraryBookId: number, fields: import('@livre/types').UpdateMetadataBody): void {
     const set: Record<string, unknown> = {};
     if (fields.title !== undefined) set.title = fields.title;
