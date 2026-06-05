@@ -341,6 +341,18 @@ Wrap multi-statement mutations that must be atomic in `db.transaction(...)`; pas
 
 The **one** place raw better-sqlite3 is expected is `db/index.ts`, which uses it directly to bootstrap the schema and run migrations before Drizzle is wired up. Application code never touches better-sqlite3 directly.
 
+### Migrations
+
+There is no migration framework and no schema-version table — `db/index.ts` runs `schema.sql` (all `CREATE TABLE IF NOT EXISTS`) and then a sequence of **idempotent, order-independent** migration steps, each gated on a `pragma_table_info` check that detects whether it has already run.
+
+Adding or changing a column means editing **three** places, or the build and the migration path diverge:
+
+1. `db/schema.sql` — the source of truth the fresh-install path runs.
+2. `db/schema.ts` — the Drizzle mirror the query builder types against.
+3. `db/index.ts` — an idempotent `ALTER`/rebuild so existing databases pick up the change.
+
+SQLite can't widen a `CHECK` constraint in place, so widening an enum (e.g. adding a `BookSource`) requires a **table rebuild** — copy → drop → rename — with `PRAGMA foreign_keys = OFF` around it so dependent rows survive (row ids are preserved). Follow the existing `library_books`/`reading_log` rebuilds as the pattern. Keep every step safe to run twice.
+
 ## Book data model
 
 The data model splits _transient API cache_ from _user-owned library records_ and keeps both **provider-agnostic** so a future source (Open Library, manual entry, …) drops in without migrations.
@@ -362,6 +374,13 @@ reading_log    — per-library_book events; FK → library_books.id
 - Two users saving the same book = two independent rows.
 
 There is **no shared `books` table**. Do not add one.
+
+### Core invariants
+
+Two runtime invariants govern the library/log and, if violated, silently corrupt a user's data. Hold them in any code that writes to `library_books` or `reading_log`:
+
+- **Shelf status is derived, never stored.** A book's status (`want`/`reading`/`read`/`dnf`) is computed from its _latest_ reading-log event (`LATEST_STATUS_EVENT_ID` in `LibraryBooksRepository`). Never add a `status` column or cache the value — the log is the single source of truth.
+- **A library book must always have ≥1 reading-log event.** Shelf and detail queries inner-join the log, so a book with an empty log disappears from every shelf and from its own detail view. Any path that can empty the log (`resetReadingLog`, a bulk delete, deleting the last entry) must re-seed a `shelved` event **in the same transaction**. Seeding the log to land a book on a chosen shelf (`shelved` head + the terminal `started`/`finished`/`dnf`) is the established pattern — see `LibraryService` and `LibraryTransferService.seedLog`.
 
 ### Provider-agnostic provenance
 
@@ -416,6 +435,25 @@ const user = jwt.verify(token, secret) as User;
 
 Environment variables are validated at startup in `server/src/env.ts` and exported as a typed `env` object — never read `process.env` directly elsewhere.
 
+## Security baseline
+
+The threat model is a self-hosted instance reachable on a home network or behind a tunnel — not a hardened SaaS, but not trusted-LAN-only either. Hold these:
+
+- **Ownership is checked in app code, not the DB.** There is no row-level scoping in SQLite, so every library/log mutation must verify ownership before writing — `libraryBooksRepo.exists(userId, libraryBookId)` (and `readingLogRepo.belongsToLibraryBook(logId, libraryBookId)` for log rows). A new authed route that touches user data without this check is an IDOR.
+- **Revoke sessions on sensitive change.** Any change to a user's password or role must `bumpTokenVersion` so outstanding JWTs stop working immediately (see `AccountService`/`UsersService`). The token carries a `tv` claim that `requireAuth` re-checks every request.
+- **`helmet`'s CSP must allow the assets the app actually loads** — the Google Fonts hosts and the external book-cover hosts (`books.google.com`, `covers.openlibrary.org`). The dev server bypasses helmet, so **verify CSP-affected UI (fonts, covers) against a production build**, never just `npm run dev`.
+- **Neutralize CSV formula injection when serializing user text** (titles, reviews) to export — cells beginning with `=`, `+`, `-`, or `@` must be defused. See `goodreadsCsv.ts`.
+- **Validate user-supplied URLs** (e.g. a manual entry's `coverUrl`) as `http(s)` rather than accepting a bare string.
+
 ## Node version
 
 Use **Node 20 LTS** (`nvm use 20`). `better-sqlite3` uses native V8 APIs removed in Node 26 and will fail to build there.
+
+## Testing
+
+Server tests run under **Vitest** (`npm test -w server`), with each test beside its unit as `*.test.ts` (e.g. `lib/cycles.test.ts`). Favor testing:
+
+- **Pure logic** — cycle derivation, import dedup, status mapping, signature/normalization helpers.
+- **The service layer** — ownership checks, transaction boundaries, and especially the two Core invariants above. Services compose mockable repositories and ports by design, so they test without a live DB or HTTP.
+
+Keep HTTP and SQL concerns out of unit tests — the layering exists precisely so business logic is testable in isolation. The contract layer already validates request/response shapes at runtime, so tests should target behavior, not wire format.
