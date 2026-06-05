@@ -21,6 +21,44 @@ export const FacetList = styled('div')<{ $bleed?: boolean }>(({ theme, $bleed })
   },
 }));
 
+// Full-width search field that filters the facet list. It flows inside the parent's padding (rather
+// than bleeding edge-to-edge like the chip scroller), so it stays aligned with the section heading.
+export const FacetSearchField = styled('div')(({ theme }) => ({
+  position: 'relative',
+  width: '100%',
+  marginBottom: theme.spacing(1.5),
+}));
+
+export const FacetSearchInput = styled('input')(({ theme }) => ({
+  position: 'relative',
+  width: '100%',
+  padding: `7px ${theme.spacing(2.25)}`,
+  border: `1px solid ${theme.border}`,
+  borderRadius: theme.radius.md,
+  background: 'transparent',
+  color: theme.text,
+  font: 'inherit',
+  outline: 'none',
+  transition: 'border-color 0.13s',
+  '&:focus': { borderColor: theme.accent },
+  '&::placeholder': { color: theme.textMuted },
+}));
+
+// Inline completion painted under the input: the typed prefix is transparent so it aligns exactly
+// under the real text, leaving only the suffix visible. Padding/border must mirror the input.
+export const FacetSearchGhost = styled('span')(({ theme }) => ({
+  position: 'absolute',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  padding: `7px ${theme.spacing(2.25)}`,
+  border: '1px solid transparent',
+  whiteSpace: 'pre',
+  pointerEvents: 'none',
+  color: theme.textMuted,
+  '& > span': { color: 'transparent' },
+}));
+
 export const FacetRow = styled('button')<{
   $active: boolean;
   $radio?: boolean;

@@ -43,6 +43,9 @@ const LIBRARY_SORT_LABELS: Record<LibrarySort, string> = {
   oldest: 'Oldest',
 };
 
+// Above this many tags the facet list gets a search field; below it, scanning the list is faster.
+const TAG_SEARCH_THRESHOLD = 8;
+
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -57,6 +60,7 @@ export const Library = () => {
   const queryClient = useQueryClient();
   const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [tagQuery, setTagQuery] = useState('');
   const [sort, setSort] = useState<LibrarySort>('newest');
   const [manualOpen, setManualOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -103,6 +107,14 @@ export const Library = () => {
       'tag'
     );
   }, [shelfEntries, selectedTags]);
+
+  // The search field filters the rendered list by substring; tab-completion (handled in Facet.Search)
+  // works against the same labels. Only shown once the list is long enough to be worth searching.
+  const visibleTagOptions = useMemo(() => {
+    const q = tagQuery.trim().toLowerCase();
+    if (q === '') return tagOptions;
+    return tagOptions.filter(({ tag }) => tag.toLowerCase().includes(q));
+  }, [tagOptions, tagQuery]);
 
   const visibleEntries = useMemo(() => {
     const matched =
@@ -167,8 +179,19 @@ export const Library = () => {
                 </Text>
                 <LeftPanelDivider />
               </LeftPanelHeader>
+              {tagOptions.length >= TAG_SEARCH_THRESHOLD && (
+                <Facet.Search
+                  value={tagQuery}
+                  onChange={setTagQuery}
+                  suggestions={tagOptions.map(({ tag }) => tag)}
+                  onSelect={(tag) => {
+                    toggleTag(tag);
+                    setTagQuery('');
+                  }}
+                />
+              )}
               <Facet.List $bleed>
-                {tagOptions.map(({ tag, count }) => (
+                {visibleTagOptions.map(({ tag, count }) => (
                   <Facet.Item
                     key={tag}
                     label={tag}
