@@ -5,8 +5,10 @@ services:
       - '3000:3000'
     volumes:
       - livre_data:/data
+    # JWT_SECRET is optional: if unset, a secret is generated and persisted to the livre_data
+    # volume on first run. Set it (in the environment or a .env file) only to pin a shared secret.
     environment:
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - JWT_SECRET=${JWT_SECRET:-}
     restart: unless-stopped
 
 volumes:

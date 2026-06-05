@@ -5,6 +5,7 @@ server/public/
 *.db-wal
 .env
 .env.local
+.jwt_secret
 .claude/settings.local.json
 dist/
 *.tsbuildinfo
