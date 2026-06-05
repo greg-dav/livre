@@ -341,15 +341,15 @@ The **one** place raw better-sqlite3 is expected is `db/index.ts`, which uses it
 
 ### Migrations
 
-There is no migration framework and no schema-version table — `db/index.ts` runs `schema.sql` (all `CREATE TABLE IF NOT EXISTS`) and then a sequence of **idempotent, order-independent** migration steps, each gated on a `pragma_table_info` check that detects whether it has already run.
+There is no migration framework and no schema-version table. As of the alpha baseline, `schema.sql` (all `CREATE TABLE IF NOT EXISTS`) is the single source of truth — every pre-alpha migration was squashed into it (recoverable at the `pre-alpha-baseline` git tag), so `db/index.ts` just runs `schema.sql` and wires up Drizzle.
 
-Adding or changing a column means editing **three** places, or the build and the migration path diverge:
+A **post-baseline** schema change (one that must reach a database already provisioned from the alpha baseline) means editing **three** places, or the build and the migration path diverge:
 
 1. `db/schema.sql` — the source of truth the fresh-install path runs.
 2. `db/schema.ts` — the Drizzle mirror the query builder types against.
-3. `db/index.ts` — an idempotent `ALTER`/rebuild so existing databases pick up the change.
+3. `db/index.ts` — append an **idempotent, order-independent** migration step after the `schema.sql` exec, gated on a `pragma_table_info` check so it detects whether it has already run.
 
-SQLite can't widen a `CHECK` constraint in place, so widening an enum (e.g. adding a `BookSource`) requires a **table rebuild** — copy → drop → rename — with `PRAGMA foreign_keys = OFF` around it so dependent rows survive (row ids are preserved). Follow the existing `library_books`/`reading_log` rebuilds as the pattern. Keep every step safe to run twice.
+SQLite can't widen a `CHECK` constraint in place, so widening an enum (e.g. adding a `BookSource`) requires a **table rebuild** — copy → drop → rename — with `PRAGMA foreign_keys = OFF` around it so dependent rows survive (row ids are preserved). The squashed pre-alpha `library_books`/`reading_log` rebuilds (in git history at the baseline tag) are the pattern. Keep every step safe to run twice.
 
 ## Book data model
 
