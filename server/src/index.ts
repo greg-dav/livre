@@ -92,7 +92,29 @@ bookCacheProvider.startPeriodicSweep();
 
 const app = express();
 
-app.use(helmet());
+// helmet's default CSP is 'self'-only, which blocks the assets the app legitimately loads: Google
+// Fonts (stylesheet + font files) and external book covers (Google Books, Open Library). styled-
+// components and React inline styles need 'unsafe-inline' for style-src. This header only takes
+// effect on the production build, where Express serves the SPA — the Vite dev server bypasses it,
+// so CSP-affected UI must be checked against a prod build.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        'font-src': ["'self'", 'https://fonts.gstatic.com'],
+        'img-src': [
+          "'self'",
+          'data:',
+          'https://books.google.com',
+          'https://books.googleusercontent.com',
+          'https://covers.openlibrary.org',
+        ],
+      },
+    },
+  })
+);
 
 if (env.NODE_ENV !== 'production') {
   app.use(cors({ origin: 'http://localhost:5173' }));

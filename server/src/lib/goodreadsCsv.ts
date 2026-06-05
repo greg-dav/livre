@@ -101,30 +101,36 @@ const toDateCell = (date: string | null): string => {
 const escapeCell = (value: string): string =>
   /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 
+// Spreadsheet apps execute a cell whose text begins with = + - @ (or a leading tab/CR) as a formula,
+// so user-controlled strings could smuggle in a payload that runs on open. Prefix a single quote to
+// force the cell to be read as literal text. Not applied to the forced-text ISBN cells (="...")
+// whose leading = is the structural part of Goodreads' own format.
+const defuse = (value: string): string => (/^[=+\-@\t\r]/.test(value) ? `'${value}` : value);
+
 const rowFor = (book: ExportBook): string[] => {
   const [first, ...rest] = book.authors;
   const [isbn10, isbn13] = isbnCells(book.isbn);
   const shelves = shelvesFor(book);
   return [
     String(book.id),
-    book.title,
-    first ?? '',
-    first ? toLastFirst(first) : '',
-    rest.join(', '),
+    defuse(book.title),
+    defuse(first ?? ''),
+    defuse(first ? toLastFirst(first) : ''),
+    defuse(rest.join(', ')),
     isbn10,
     isbn13,
     ratingCell(book.rating),
-    book.publisher ?? '',
+    defuse(book.publisher ?? ''),
     '',
     book.pageCount == null ? '' : String(book.pageCount),
     yearOf(book.publishedDate),
     '',
     toDateCell(book.dateRead),
     toDateCell(book.addedDate),
-    shelves.join(', '),
-    shelves.map((shelf, i) => `${shelf} (#${i + 1})`).join(', '),
+    defuse(shelves.join(', ')),
+    defuse(shelves.map((shelf, i) => `${shelf} (#${i + 1})`).join(', ')),
     EXCLUSIVE_SHELF[book.status],
-    book.review ?? '',
+    defuse(book.review ?? ''),
     '',
     '',
     String(book.readCount),

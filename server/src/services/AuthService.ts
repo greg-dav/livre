@@ -17,11 +17,18 @@ export class AuthService {
   }
 
   async register(username: string, password: string): Promise<AuthResponse> {
+    // Registration is a one-shot: it exists only to bootstrap the first (admin) account on a fresh
+    // install. Once any user exists the instance is closed — there are no invite or self-signup
+    // flows, so an open endpoint would let anyone who can reach a privacy-first instance create an
+    // account. The client already hides the form post-setup; this is the server-side enforcement.
+    if (this.users.count() > 0) {
+      throw createError(403, 'Registration is closed');
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
 
     try {
-      const isAdmin = this.users.count() === 0;
-      const user = this.setup.execute({ username, passwordHash, isAdmin });
+      const user = this.setup.execute({ username, passwordHash, isAdmin: true });
       return { token: signToken(user, 0), user };
     } catch (err) {
       if (isUniqueViolation(err)) throw createError(409, 'Username already taken');
