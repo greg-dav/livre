@@ -1,5 +1,5 @@
 import { type BookSource, type SearchScope } from '@livre/types';
-import { GoogleBooksClient } from '../clients/GoogleBooksClient';
+import { GoogleBooksClient, RateLimitError } from '../clients/GoogleBooksClient';
 import { type GoogleBooksClientProvider } from '../providers/GoogleBooksClientProvider';
 import { type GoogleBooksUsageStore } from '../stores/GoogleBooksUsageStore';
 import {
@@ -49,16 +49,26 @@ export class GoogleBooksAdapter implements SearchableBookSource, ConfigurableSou
     return this.tracked(client.getById(id));
   }
 
-  // Charges one unit the moment a request is dispatched (the promise already exists by the time we
-  // get it), so failures count too — a 429 or rejected validation still hit the API. The no-key case
-  // throws in clients.get() before this runs, so it isn't charged.
-  private tracked<T>(request: Promise<T>): Promise<T> {
-    this.usage.consume(1);
-    return request;
+  // Charge one unit per request Google served: a 404/5xx counts (it reached the API), a 429 doesn't —
+  // Google never charges rate-limited requests against the daily quota, so neither do we.
+  private async tracked<T>(request: Promise<T>): Promise<T> {
+    try {
+      const result = await request;
+      this.usage.consume(1);
+      return result;
+    } catch (e) {
+      if (!(e instanceof RateLimitError)) this.usage.consume(1);
+      throw e;
+    }
   }
 
   async validate(apiKey: string): Promise<void> {
     await this.tracked(GoogleBooksClient.validateApiKey(apiKey));
+  }
+
+  // Reset usage only when the key actually changed — a rotated key starts a fresh daily quota.
+  applyApiKey(apiKey: string): void {
+    if (this.clients.setApiKey(apiKey)) this.usage.reset();
   }
 
   /** Whether an API key is configured — i.e. whether this source can be offered at all. */

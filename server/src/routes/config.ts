@@ -38,9 +38,9 @@ export const createConfigRouter = (
     },
 
     updateApiKey: async ({ params, body }) => {
-      const { source, configurable } = resolveSource(params.source);
+      const { configurable } = resolveSource(params.source);
       await configurable.validate(body.apiKey);
-      configRepository.set(source, ConfigRepository.API_KEY, body.apiKey);
+      configurable.applyApiKey(body.apiKey);
       return ok({ ok: true });
     },
 

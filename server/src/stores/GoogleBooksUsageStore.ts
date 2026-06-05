@@ -62,4 +62,10 @@ export class GoogleBooksUsageStore {
     const record: UsageRecord = { date: this.today(), count: this.count() + n };
     this.config.set('GOOGLE_BOOKS', ConfigRepository.USAGE, JSON.stringify(record));
   }
+
+  /** Zero today's count — call when the API key changes, since a new key starts with a fresh quota. */
+  reset(): void {
+    const record: UsageRecord = { date: this.today(), count: 0 };
+    this.config.set('GOOGLE_BOOKS', ConfigRepository.USAGE, JSON.stringify(record));
+  }
 }

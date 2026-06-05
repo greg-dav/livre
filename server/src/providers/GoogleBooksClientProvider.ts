@@ -17,6 +17,13 @@ export class GoogleBooksClientProvider {
     return !!this.config.get('GOOGLE_BOOKS', ConfigRepository.API_KEY);
   }
 
+  /** Persist the key, returning whether it changed so the adapter knows when to reset key-tied state. */
+  setApiKey(apiKey: string): boolean {
+    const changed = this.config.get('GOOGLE_BOOKS', ConfigRepository.API_KEY) !== apiKey;
+    this.config.set('GOOGLE_BOOKS', ConfigRepository.API_KEY, apiKey);
+    return changed;
+  }
+
   /** A client bound to the configured key, or throw 503 when none is set. */
   get(): GoogleBooksClient {
     const apiKey = this.config.get('GOOGLE_BOOKS', ConfigRepository.API_KEY);

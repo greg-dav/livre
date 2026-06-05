@@ -36,6 +36,28 @@ const googleBooksResponseSchema = z.object({
 
 type GoogleVolume = z.infer<typeof googleVolumeSchema>;
 
+// undici (Node's global fetch) has no default request timeout, so a stalled socket would hang the
+// caller forever — fatal for the sequential import loop, which awaits one request per row.
+const REQUEST_TIMEOUT_MS = 10_000;
+
+/**
+ * A request Google rejected for exceeding the per-user rate limit (HTTP 429). Distinct from a served
+ * error because Google does NOT charge a 429 against the daily quota — callers must neither count it
+ * nor treat it as a hard failure (the row is deferrable and a re-run will retry it).
+ */
+export class RateLimitError extends Error {
+  constructor() {
+    super('Google Books rate limit exceeded');
+    this.name = 'RateLimitError';
+  }
+}
+
+async function timedFetch(url: string): Promise<Response> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  if (res.status === 429) throw new RateLimitError();
+  return res;
+}
+
 const BISAC_ROOT_TO_GENRE: Record<string, BookGenre> = {
   'ANTIQUES & COLLECTIBLES': 'antiques-collectibles',
   ARCHITECTURE: 'architecture',
@@ -211,7 +233,7 @@ function mapVolume(v: GoogleVolume): SourcedBook {
 
 export class GoogleBooksClient {
   static async validateApiKey(key: string): Promise<void> {
-    const res = await fetch(
+    const res = await timedFetch(
       `https://www.googleapis.com/books/v1/volumes?q=test&maxResults=1&key=${key}`
     );
     if (!res.ok) throw createError(400, 'Invalid Google Books API key');
@@ -231,7 +253,7 @@ export class GoogleBooksClient {
     // 40 is the Google Books ceiling for a single page.
     const maxResults = Math.min(opts.maxResults ?? 40, 40);
     const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(scopedQuery(query, scope))}&startIndex=${startIndex}&maxResults=${maxResults}&orderBy=${orderBy}&key=${this.apiKey}`;
-    const res = await fetch(url);
+    const res = await timedFetch(url);
     if (!res.ok) throw createError(502, 'Google Books API error');
 
     const { totalItems, items = [] } = googleBooksResponseSchema.parse(await res.json());
@@ -247,7 +269,7 @@ export class GoogleBooksClient {
 
   async getById(id: string): Promise<SourcedBook> {
     const url = `https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}?key=${this.apiKey}`;
-    const res = await fetch(url);
+    const res = await timedFetch(url);
     if (res.status === 404) throw createError(404, 'Book not found');
     if (!res.ok) throw createError(502, 'Google Books API error');
     return mapVolume(googleVolumeSchema.parse(await res.json()));

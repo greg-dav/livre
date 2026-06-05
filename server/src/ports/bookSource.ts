@@ -40,6 +40,12 @@ export interface SearchableBookSource extends BookSourceProvider {
  */
 export interface ConfigurableSource {
   validate(apiKey: string): Promise<void>;
+  /**
+   * Persist a validated API key. The source owns this rather than the config router writing the key
+   * directly, so it can reset any per-instance state tied to the old key (e.g. a metered source's
+   * usage counter — a rotated key starts a fresh quota).
+   */
+  applyApiKey(apiKey: string): void;
   isConfigured(): boolean;
 }
 
