@@ -46,6 +46,8 @@ export const SearchBookDetail = () => {
       navigate(`/library/${data.libraryBookId}`, { state: { justAcquired: true }, replace: true });
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: ['log'] });
     },
   });
 

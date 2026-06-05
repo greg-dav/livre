@@ -155,6 +155,7 @@ export const ImportLibraryDialog = (props: ImportLibraryDialogProps) => {
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['log'] });
       queryClient.invalidateQueries({ queryKey: ['import-sources'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
     },
   });
 

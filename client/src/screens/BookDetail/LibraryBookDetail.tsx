@@ -84,6 +84,7 @@ export const LibraryBookDetail = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['library', 'detail', libraryBookId] });
+      queryClient.invalidateQueries({ queryKey: ['log'] });
       // Warm the reading shelf in the background so Library's sidebar is already correct on mount.
       // invalidateQueries above marks it stale, so prefetchQuery sees a miss and fetches immediately.
       queryClient.prefetchQuery({
@@ -202,6 +203,7 @@ export const LibraryBookDetail = () => {
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
+      queryClient.invalidateQueries({ queryKey: ['log'] });
     },
   });
 
@@ -210,6 +212,7 @@ export const LibraryBookDetail = () => {
     onSuccess: () => {
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
+      queryClient.invalidateQueries({ queryKey: ['log'] });
     },
   });
 
@@ -219,14 +222,17 @@ export const LibraryBookDetail = () => {
       setConfirming(null);
       invalidateDetail();
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
+      queryClient.invalidateQueries({ queryKey: ['log'] });
     },
   });
 
   const { mutate: removeFromLibrary, isPending: isRemoving } = useMutation({
     mutationFn: () => api.library.removeFromLibrary(libraryBookId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
-      queryClient.invalidateQueries({ queryKey: ['library', 'tags'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: ['log'] });
       navigate('/library');
     },
   });

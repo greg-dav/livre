@@ -87,10 +87,10 @@ export const DataSection = () => {
   const deleteMutation = useMutation({
     mutationFn: () => api.library.deleteLibrary(),
     onSuccess: () => {
-      // Everything reading-related is now empty; refetch so the library, shelves, and timeline clear.
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['shelves'] });
       queryClient.invalidateQueries({ queryKey: ['log'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
       setConfirmOpen(false);
     },
   });

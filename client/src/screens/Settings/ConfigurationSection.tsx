@@ -19,7 +19,12 @@ export const ConfigurationSection = () => {
 
   const mutation = useMutation({
     mutationFn: () => api.config.updateSourceKey('GOOGLE_BOOKS', apiKey),
-    onSuccess: () => setApiKey(''),
+    onSuccess: () => {
+      setApiKey('');
+      queryClient.invalidateQueries({ queryKey: ['import-sources'] });
+      queryClient.invalidateQueries({ queryKey: ['preferred-source'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+    },
   });
 
   const importSourcesQuery = useQuery({
@@ -60,7 +65,10 @@ export const ConfigurationSection = () => {
     onError: (_err, _source, context) => {
       if (context?.previous) queryClient.setQueryData(['preferred-source'], context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['preferred-source'] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['preferred-source'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+    },
   });
 
   return (
