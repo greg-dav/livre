@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LibraryProvider } from './context/LibraryContext';
+import { LibrarySessionProvider } from './context/LibrarySessionContext';
 import { SearchProvider } from './context/SearchContext';
 import {
   Library,
@@ -30,9 +31,11 @@ const AuthGuard = () => {
   if (!user) return <Navigate to="/login" replace />;
   return (
     <LibraryProvider>
-      <SearchProvider>
-        <Outlet />
-      </SearchProvider>
+      <LibrarySessionProvider>
+        <SearchProvider>
+          <Outlet />
+        </SearchProvider>
+      </LibrarySessionProvider>
     </LibraryProvider>
   );
 };

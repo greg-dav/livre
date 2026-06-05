@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import countBy from 'lodash/countBy';
 import flatMap from 'lodash/flatMap';
 import sortBy from 'lodash/sortBy';
@@ -16,6 +16,7 @@ import {
   type ShelfStatus,
 } from '../../components';
 import { api } from '../../lib/api';
+import { useLibrarySession } from '../../context/LibrarySessionContext';
 import {
   Split,
   LeftPanel,
@@ -46,6 +47,19 @@ const LIBRARY_SORT_LABELS: Record<LibrarySort, string> = {
 // Above this many tags the facet list gets a search field; below it, scanning the list is faster.
 const TAG_SEARCH_THRESHOLD = 8;
 
+// The shelf browser scrolls in different elements per breakpoint — the RightPanel on desktop, the
+// page Body on mobile. Walk up from the grid to whichever ancestor actually owns the overflow so
+// scroll save/restore targets the same node regardless of layout.
+const resolveScroller = (start: HTMLElement | null): HTMLElement | null => {
+  for (let node = start; node; node = node.parentElement) {
+    const overflowY = getComputedStyle(node).overflowY;
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+  }
+  return null;
+};
+
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -58,12 +72,13 @@ const formatDate = (iso: string) =>
 export const Library = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeShelf, setActiveShelf] = useState<ShelfStatus>('read');
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const { activeShelf, setActiveShelf, selectedTags, toggleTag, clearTags, scrollRef } =
+    useLibrarySession();
   const [tagQuery, setTagQuery] = useState('');
   const [sort, setSort] = useState<LibrarySort>('newest');
   const [manualOpen, setManualOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const gridAnchorRef = useRef<HTMLDivElement>(null);
 
   const { data: readingData } = useQuery({
     queryKey: ['shelves', 'reading'],
@@ -125,15 +140,26 @@ export const Library = () => {
     return sort === 'newest' ? byAdded.reverse() : byAdded;
   }, [shelfEntries, selectedTags, sort]);
 
-  const toggleTag = (tag: string) =>
-    setSelectedTags((prev) => {
-      const next = new Set(prev);
-      if (next.has(tag)) next.delete(tag);
-      else next.add(tag);
-      return next;
-    });
+  // Restore the saved offset once the grid has painted, and re-apply it whenever the view changes —
+  // the session zeroes the saved value on a shelf/tag change, so a new selection lands at the top
+  // while an unchanged view returning from a detail page resumes exactly where it left off.
+  const dataReady = !!data;
+  useLayoutEffect(() => {
+    const scroller = resolveScroller(gridAnchorRef.current);
+    if (scroller) scroller.scrollTop = scrollRef.current;
+  }, [dataReady, activeShelf, selectedTags, scrollRef]);
 
-  const clearTags = () => setSelectedTags(new Set());
+  // Track the live offset into the session ref so the next remount can restore it. A ref, not state,
+  // so this fires on every scroll frame without re-rendering.
+  useEffect(() => {
+    const scroller = resolveScroller(gridAnchorRef.current);
+    if (!scroller) return;
+    const onScroll = () => {
+      scrollRef.current = scroller.scrollTop;
+    };
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', onScroll);
+  }, [dataReady, scrollRef]);
 
   const filtered = selectedTags.size > 0;
   const count = visibleEntries.length;
@@ -206,7 +232,7 @@ export const Library = () => {
             </>
           )}
         </LeftPanel>
-        <RightPanel>
+        <RightPanel ref={gridAnchorRef}>
           <ShelfTabs active={activeShelf} counts={tabCounts} onChange={setActiveShelf} />
           <ShelfHeading>
             <ShelfHeadingLeft>
