@@ -20,6 +20,52 @@ Livre is a self-hosted application for managing your digital bookshelf.
 
 **📸 [See the screenshots →](docs/screenshots.md)** — library, book detail, reading timeline, and search.
 
+## Quick start (Docker)
+
+Drop this into a `docker-compose.yml`:
+
+```yaml
+services:
+  livre:
+    image: ghcr.io/greg-dav/livre:alpha
+    ports:
+      - '3000:3000'
+    volumes:
+      - livre_data:/data
+    restart: unless-stopped
+
+volumes:
+  livre_data:
+```
+
+Then `docker compose up -d`. The app runs out of the box at <http://localhost:3000>.
+
+## Manual setup (development)
+
+Requires **Node 20 LTS** (`better-sqlite3` uses native APIs removed in newer Node).
+
+```bash
+nvm use 20
+npm install
+npm run dev
+```
+
+Then open <http://localhost:5173>. The Vite dev server proxies `/api` to the backend on `:3001`.
+
+## Tech stack
+
+- **Client** — React 19, Vite, TypeScript, styled-components
+- **Server** — Node.js (Express), TypeScript
+- **Database** — SQLite via better-sqlite3, Drizzle ORM
+- **API** — ts-rest contracts shared between client and server (Zod)
+- **Monorepo** — npm workspaces (`client`, `server`, `shared`, `fe-libs/*`)
+
+## Status
+
+**Alpha.** Livre is usable and self-hostable today, but the schema and APIs may still change between releases.
+
+Where it's headed — custom lists & collections, reading insights over the log, and integrations (KOReader, Calibre). See the full **[roadmap →](docs/ROADMAP.md)**.
+
 ## Why Another Reading Tracker? — A Brief Manifesto
 
 Obviously Goodreads is terrible, for innumerable reasons. We need not get into them.
@@ -48,81 +94,9 @@ If we do it right, Livre should feel like writing down log entries in a physical
 - **Book search** — Open Library by default, Google Books when configured, other sources once built ;)
 - **Goodreads import / export** — bring your library in, take it out anytime (CSV)
 
-## Quick start (Docker)
-
-The fastest way to run Livre — no clone required. Drop this into a `docker-compose.yml`:
-
-```yaml
-services:
-  livre:
-    image: ghcr.io/greg-dav/livre:alpha
-    ports:
-      - '3000:3000'
-    volumes:
-      - livre_data:/data
-    restart: unless-stopped
-
-volumes:
-  livre_data:
-```
-
-Then `docker compose up -d` and open <http://localhost:3000>. Your library lives in the `livre_data` volume — that's the only thing to back up.
-
-## Manual setup (development)
-
-Requires **Node 20 LTS** (`better-sqlite3` uses native APIs removed in newer Node).
-
-```bash
-nvm use 20
-npm install            # installs all workspaces
-
-cp .env.example .env   # optional — sensible defaults work out of the box
-npm run dev            # types watcher + client (:5173) + server (:3001)
-```
-
-Then open <http://localhost:5173>. The Vite dev server proxies `/api` to the backend on `:3001`.
-
-## First run
-
-<!-- TODO: prose around the steps -->
-
-Livre has no accounts system and no cloud — the **first account you create on your instance is yours**, and it lives only in your database.
-
-1. Open the app and create your account.
-2. Start adding books via search, or import an existing library.
-
-### Importing from Goodreads
-
-<!-- TODO: confirm exact Settings path/labels against the running app before finalizing -->
-
-1. In Goodreads, export your library to CSV (My Books → Import/Export → Export Library).
-2. In Livre, open Settings → Import and upload the CSV.
-<!-- TODO: screenshot of import dialog (light + dark) -->
-
-## Tech stack
-
-- **Client** — React 19, Vite, TypeScript, styled-components
-- **Server** — Node.js (Express), TypeScript
-- **Database** — SQLite via better-sqlite3, Drizzle ORM
-- **API** — ts-rest contracts shared between client and server (Zod)
-- **Monorepo** — npm workspaces (`client`, `server`, `shared`, `fe-libs/*`)
-
-## Status
-
-**Alpha.** Livre is usable and self-hostable today, but the schema and APIs may still change between releases.
-
-Where it's headed — custom lists & collections, reading insights over the log, and integrations (KOReader, Calibre). See the full **[roadmap →](docs/ROADMAP.md)**.
-
 ## Contributing
 
-Contributions are welcome. See [CLAUDE.md](CLAUDE.md) for architecture and conventions.
-
-```bash
-npm run lint           # eslint
-npm run format         # prettier --write
-npm test -w server     # vitest (server unit tests)
-npm run build          # production build (types + client)
-```
+Contributions are welcome. I need to get around to writing some actual contribution docs, but in the meantime feel free to check out [CLAUDE.md](CLAUDE.md) for architecture and conventions.
 
 ## License
 
