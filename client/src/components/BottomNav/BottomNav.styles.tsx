@@ -13,11 +13,12 @@ export const Bar = styled('nav')(({ theme }) => ({
     bottom: 0,
     zIndex: 100,
     alignItems: 'stretch',
-    // Grow the bar by the iOS home-indicator inset and pad by it, so the tab row keeps its full
-    // height above the indicator instead of being squeezed into it. Matches the Body's bottom
+    // Grow the bar by the iOS home-indicator inset so its background reaches the physical edge, and
+    // let the full-height Tabs centre their icons across it — the icons sit balanced in the bar and
+    // clear the indicator, instead of floating in the top above a dead padded gap. No paddingBottom:
+    // padding would shrink the centring box and push the icons up. Matches the Body's bottom
     // clearance; the inset is 0 where there is no home indicator.
     height: `calc(${theme.spacing(16)} + env(safe-area-inset-bottom))`,
-    paddingBottom: 'env(safe-area-inset-bottom)',
     background: theme.bgElevated,
     borderTop: `1px solid ${theme.borderSoft}`,
   },
