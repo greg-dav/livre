@@ -37,7 +37,13 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
     WebkitFontSmoothing: 'antialiased',
   },
   body: {
-    backgroundColor: theme.bg,
+    // bgElevated, not bg, on purpose. The body background is never visible behind app content —
+    // the Page shell covers the whole viewport with its own theme.bg, and the in-flow Header paints
+    // the top safe-area inset. The one place the body shows through is the iOS home-indicator strip
+    // below the *fixed* BottomNav: a fixed bottom:0 bar anchors to the top of that inset and its
+    // padding grows upward, so the bar's bgElevated never reaches the strip. Painting the body
+    // bgElevated makes that strip match the nav instead of showing the lighter page cream.
+    backgroundColor: theme.bgElevated,
     color: theme.text,
     fontFamily: theme.fontUi,
     minHeight: '100dvh',
