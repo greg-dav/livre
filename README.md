@@ -20,28 +20,53 @@ Livre is a self-hosted application for managing your digital bookshelf.
 
 **📸 [See the screenshots →](docs/screenshots.md)** — library, book detail, reading timeline, and search.
 
-## Features
+## Why Another Reading Tracker? — A Brief Manifesto
 
-<!-- TODO: tighten copy (prose); bullets reflect what ships -->
+Obviously Goodreads is terrible, for innumerable reasons. We need not get into them.
+
+There are corporate alternatives (StoryGraph) and a few decent open-source options (BookWyrm, LazyLibrarian), but none of these quite captured the product philosophy I was searching for: one that embraced privacy, openness, and simplicity. I won't bash StoryGraph — I've never used it, but I didn't want to pay for another service, or give my data to another corporation. I also feel no need to disparage the works of other talented engineers who have taken it upon themselves to realize products that are entirely free for public use. The self-hosted options that exist, though, are not for me.
+
+It always sort of seems like the entrance of one of these tenents (Privacy, Openness, Simplicity) results in the absence of another, like a triangle without a third side. What a sad biangle.
+
+Anyway, Livre exists to bridge the gap.
+
+It's private, with all your data hosted on your machine (or a trusted friend's). No telemetry, no tracking. (For the record, we don't have social yet, but we plan to do it right, with privacy at the forefront.)
+
+It's fully open, allowing readers to pull in book data from OpenLibrary, Google Books, or even paid APIs. Once you add a book to your library, it's yours to do what you wish with: everything is editable.
+
+Livre is simple. Every design decision is scrutinized, from the UI to the system architecture. Every element exists for a reason; there are no product dead ends.
+
+If we do it right, Livre should feel like writing down log entries in a physical book. I've done this, and I like it, but shouldn't technology offer us a delightful alternative?
+
+— G
+
+## Features — The Brief Manifesto, Made Briefer
 
 - **Shelves** — want to read, reading, read, did-not-finish; status derived from your reading log
-- **Ratings & reviews** — rate and review in your own private copy of each book
-- **Reading timeline** — track reading sessions across cycles
-- **Book search** — Open Library by default, Google Books when configured
+- **Ratings & reviews** — rate and review in your own private copy of each book; add notes, quotes, and custom tags
+- **Reading timeline** — view reading progress in a gantt-style timeline
+- **Book search** — Open Library by default, Google Books when configured, other sources once built ;)
 - **Goodreads import / export** — bring your library in, take it out anytime (CSV)
-- **Light & dark themes**
 
 ## Quick start (Docker)
 
-The fastest way to run Livre. Requires Docker.
+The fastest way to run Livre — no clone required. Drop this into a `docker-compose.yml`:
 
-```bash
-docker compose up -d
+```yaml
+services:
+  livre:
+    image: ghcr.io/greg-dav/livre:alpha
+    ports:
+      - '3000:3000'
+    volumes:
+      - livre_data:/data
+    restart: unless-stopped
+
+volumes:
+  livre_data:
 ```
 
-Then open <http://localhost:3000>.
-
-That's it — a session secret is generated and persisted to the `livre_data` volume on first run, and your library lives in that same volume. To pin a specific secret (e.g. across multiple instances), set `JWT_SECRET` in the environment or a `.env` file before starting.
+Then `docker compose up -d` and open <http://localhost:3000>. Your library lives in the `livre_data` volume — that's the only thing to back up.
 
 ## Manual setup (development)
 
@@ -56,17 +81,6 @@ npm run dev            # types watcher + client (:5173) + server (:3001)
 ```
 
 Then open <http://localhost:5173>. The Vite dev server proxies `/api` to the backend on `:3001`.
-
-## Configuration
-
-All configuration is via environment variables, validated at startup. None are required.
-
-| Variable     | Default       | Description                                                                                                                               |
-| ------------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `JWT_SECRET` | _auto_        | Secret for signing session tokens. If unset, one is generated and persisted to `DATA_DIR/.jwt_secret` (min 32 chars when set explicitly). |
-| `DATA_DIR`   | `./data`      | Directory for the SQLite database and the generated secret. Docker uses `/data` (a mounted volume).                                       |
-| `PORT`       | `3001`        | Server port. The Docker image defaults to `3000`.                                                                                         |
-| `NODE_ENV`   | `development` | `development` · `production` · `test`.                                                                                                    |
 
 ## First run
 
@@ -84,10 +98,6 @@ Livre has no accounts system and no cloud — the **first account you create on 
 1. In Goodreads, export your library to CSV (My Books → Import/Export → Export Library).
 2. In Livre, open Settings → Import and upload the CSV.
 <!-- TODO: screenshot of import dialog (light + dark) -->
-
-## Demo mode
-
-Want to see Livre with a real library before adding your own? Open **Settings → Demo → Enter demo mode** for an isolated, pre-seeded sandbox — shelves, ratings, reviews, and reading timelines across a curated set of books. Leaving demo mode returns you to your own data untouched.
 
 ## Tech stack
 
