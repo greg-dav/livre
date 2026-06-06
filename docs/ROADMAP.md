@@ -42,8 +42,7 @@ Bringing reading data in and out, and meeting people where their books already l
 Smaller refinements to how books look and what we store about them.
 
 - [ ] **Book subtitles** — store and display a subtitle field
-- [ ] **Dynamic book cover sizing** — size covers to their actual dimensions rather than a fixed box
-- [ ] **3D book rendering** — accent-color spine banner on every library book; animated page-fan on hover
+- [ ] **Author details** — author biography + image displayed on the author detail page
 
 ## Exploring (not committed)
 
