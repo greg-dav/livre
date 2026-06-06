@@ -14,9 +14,15 @@
 
 </div>
 
-<!-- SHORT PITCH -->
+Livre is a containerized, self-hosted application for managing your digital bookshelf.
 
-Livre is a self-hosted application for managing your digital bookshelf.
+## Features
+
+- **Shelves** — want to read, reading, read, did-not-finish; status derived from your reading log
+- **Ratings & reviews** — rate and review in your own private copy of each book; add notes, quotes, and custom tags
+- **Reading timeline** — view reading progress in a gantt-style timeline
+- **Book search** — Open Library by default, Google Books when configured, other sources once built ;)
+- **Goodreads import / export** — bring your library in, take it out anytime (CSV)
 
 **📸 [See the screenshots →](docs/screenshots.md)** — library, book detail, reading timeline, and search.
 
@@ -85,14 +91,6 @@ Livre is simple. Every design decision is scrutinized, from the UI to the system
 If we do it right, Livre should feel like writing down log entries in a physical book. I've done this, and I like it, but shouldn't technology offer us a delightful alternative?
 
 — G
-
-## Features — The Brief Manifesto, Made Briefer
-
-- **Shelves** — want to read, reading, read, did-not-finish; status derived from your reading log
-- **Ratings & reviews** — rate and review in your own private copy of each book; add notes, quotes, and custom tags
-- **Reading timeline** — view reading progress in a gantt-style timeline
-- **Book search** — Open Library by default, Google Books when configured, other sources once built ;)
-- **Goodreads import / export** — bring your library in, take it out anytime (CSV)
 
 ## Contributing
 
