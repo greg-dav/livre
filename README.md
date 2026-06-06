@@ -35,16 +35,24 @@ Though restrictive by default, **Livre** provides its readers with frictionless,
 
 ## Gallery
 
-<!-- TODO: 3–4 screenshots from the demo library, light + dark pairs -->
-<!-- shelves/grid · book detail · reading timeline · import -->
+A look at the demo library, in both themes.
+
 <table>
   <tr>
-    <td><!-- ![Shelves (dark)](docs/media/shelves-dark.png) --></td>
-    <td><!-- ![Shelves (light)](docs/media/shelves-light.png) --></td>
+    <th>Dark</th>
+    <th>Light</th>
   </tr>
   <tr>
-    <td><!-- ![Detail (dark)](docs/media/detail-dark.png) --></td>
-    <td><!-- ![Timeline (light)](docs/media/timeline-light.png) --></td>
+    <td><img src="docs/media/library_roman_dark.png" alt="Library — dark" width="420" /></td>
+    <td><img src="docs/media/library_roman_light.png" alt="Library — light" width="420" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/media/book_detail_roman_dark.png" alt="Book detail — dark" width="420" /></td>
+    <td><img src="docs/media/book_detail_roman_light.png" alt="Book detail — light" width="420" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/media/log_roman_dark.png" alt="Reading log — dark" width="420" /></td>
+    <td><img src="docs/media/log_roman_light.png" alt="Reading log — light" width="420" /></td>
   </tr>
 </table>
 
