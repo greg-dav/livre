@@ -140,9 +140,9 @@ export const Library = () => {
     return sort === 'newest' ? byAdded.reverse() : byAdded;
   }, [shelfEntries, selectedTags, sort]);
 
-  // Restore the saved offset once the grid has painted, and re-apply it whenever the view changes —
-  // the session zeroes the saved value on a shelf/tag change, so a new selection lands at the top
-  // while an unchanged view returning from a detail page resumes exactly where it left off.
+  // Re-apply the saved offset once the grid has painted. The session keeps the offset across
+  // shelf/tag changes, so refining holds the user's place; returning from a detail page resumes
+  // exactly where they left off. The browser clamps if the new view is shorter than the offset.
   const dataReady = !!data;
   useLayoutEffect(() => {
     const scroller = resolveScroller(gridAnchorRef.current);

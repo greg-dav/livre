@@ -42,8 +42,8 @@ interface LibrarySessionProviderProps {
  * the route tree so it survives diving into a book or author detail and returning. This is the cure
  * for the "lose your place" problem: jumping to anything reachable from the library leaves the
  * session intact, and only navigating to a sibling section (Log, Search, Settings) resets it.
- * Changing the view (shelf or tags) zeroes the saved scroll so each new selection starts at the top,
- * while an unchanged view restores exactly where the user left off. Scoped inside AuthGuard.
+ * Changing the view (shelf or tags) keeps the current scroll offset so refining stays in place;
+ * returning from a detail page restores exactly where the user left off. Scoped inside AuthGuard.
  */
 export const LibrarySessionProvider = ({ children }: LibrarySessionProviderProps) => {
   const { pathname } = useLocation();
@@ -51,13 +51,14 @@ export const LibrarySessionProvider = ({ children }: LibrarySessionProviderProps
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const scrollRef = useRef(0);
 
+  // Shelf/tag changes deliberately leave scrollRef alone, so the current offset is held and refining
+  // a view keeps the user in place instead of jumping. Only a full session reset (leaving to a
+  // sibling section, below) zeroes the scroll.
   const setActiveShelf = useCallback((shelf: ShelfStatus) => {
-    scrollRef.current = 0;
     setActiveShelfState(shelf);
   }, []);
 
   const toggleTag = useCallback((tag: string) => {
-    scrollRef.current = 0;
     setSelectedTags((prev) => {
       const next = new Set(prev);
       if (next.has(tag)) next.delete(tag);
@@ -67,7 +68,6 @@ export const LibrarySessionProvider = ({ children }: LibrarySessionProviderProps
   }, []);
 
   const clearTags = useCallback(() => {
-    scrollRef.current = 0;
     // Keep the same empty Set instance when already clean so a no-op clear doesn't re-render.
     setSelectedTags((prev) => (prev.size === 0 ? prev : new Set()));
   }, []);
