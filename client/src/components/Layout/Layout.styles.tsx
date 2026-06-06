@@ -106,7 +106,7 @@ export const Body = styled('div')<{ $fullWidth?: boolean }>(({ theme, $fullWidth
     display: 'block',
     overflowX: 'hidden',
     overflowY: 'auto',
-    paddingBottom: `calc(${theme.spacing(16)} + env(safe-area-inset-bottom))`,
+    paddingBottom: `calc(${theme.spacing(12)} + env(safe-area-inset-bottom))`,
   },
 }));
 
