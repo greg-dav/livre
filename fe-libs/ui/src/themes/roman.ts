@@ -12,6 +12,9 @@ const shared = {
     md: '8px',
     lg: '12px',
     full: '999px',
+    // Asymmetric book edge: tight 3px spine on the left, rounder 6px fore-edge on the right.
+    // Shared by every cover that should read as a physical book (grid card + detail page).
+    book: '3px 6px 6px 3px',
   },
   breakpoints: { mobile: MOBILE_BREAKPOINT },
   media: { mobile: `@media (max-width: ${MOBILE_BREAKPOINT}px)` },

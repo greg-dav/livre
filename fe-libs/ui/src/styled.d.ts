@@ -27,6 +27,7 @@ declare module 'styled-components' {
       md: string;
       lg: string;
       full: string;
+      book: string;
     };
     breakpoints: { mobile: number };
     media: { mobile: string };

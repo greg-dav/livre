@@ -29,7 +29,7 @@ export const Cover = styled('div')<{ $color: string; $inLibrary?: boolean }>(
     width: '100%',
     aspectRatio: '2 / 3',
     backgroundColor: $color,
-    borderRadius: '3px 6px 6px 3px',
+    borderRadius: theme.radius.book,
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
