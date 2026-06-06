@@ -9,6 +9,12 @@ export const TabRow = styled('div')(({ theme }) => ({
   // edges rather than sitting in a boxed-in strip.
   [theme.media.mobile]: {
     overflowX: 'auto',
+    // overflowX:auto alone forces overflow-y to auto too, letting the row drift/overscroll
+    // vertically on touch. Pin the vertical axis and restrict gestures to horizontal panning so
+    // the tabs only ever scroll sideways.
+    overflowY: 'hidden',
+    touchAction: 'pan-x',
+    overscrollBehaviorX: 'contain',
     marginBottom: theme.spacing(6),
     marginInline: `-${theme.spacing(4)}`,
     paddingInline: theme.spacing(4),

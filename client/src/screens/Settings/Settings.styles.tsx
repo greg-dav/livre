@@ -26,7 +26,11 @@ export const NavPanel = styled('nav')(({ theme }) => ({
     alignItems: 'center',
     width: 'auto',
     overflowX: 'auto',
-    overflowY: 'visible',
+    // Lock to horizontal panning — overflowX:auto alone re-enables vertical scroll/overscroll on
+    // touch, letting the chip row drift up and down.
+    overflowY: 'hidden',
+    touchAction: 'pan-x',
+    overscrollBehaviorX: 'contain',
     gap: theme.spacing(2),
     borderRight: 'none',
     borderBottom: `1px solid ${theme.borderSoft}`,
