@@ -35,30 +35,35 @@ Though restrictive by default, **Livre** provides its readers with frictionless,
 
 ## Gallery
 
-A look at the demo library, in both themes.
+A look at the demo library. Each shot matches your GitHub theme — light or dark.
 
-<table>
-  <tr>
-    <th>Dark</th>
-    <th>Light</th>
-  </tr>
-  <tr>
-    <td><img src="docs/media/library_roman_dark.png" alt="Library — dark" width="480" /></td>
-    <td><img src="docs/media/library_roman_light.png" alt="Library — light" width="480" /></td>
-  </tr>
-  <tr>
-    <td><img src="docs/media/book_detail_roman_dark.png" alt="Book detail — dark" width="480" /></td>
-    <td><img src="docs/media/book_detail_roman_light.png" alt="Book detail — light" width="480" /></td>
-  </tr>
-  <tr>
-    <td><img src="docs/media/log_roman_dark.png" alt="Reading timeline — dark" width="480" /></td>
-    <td><img src="docs/media/log_roman_light.png" alt="Reading timeline — light" width="480" /></td>
-  </tr>
-  <tr>
-    <td><img src="docs/media/search_roman_dark.png" alt="Search — dark" width="480" /></td>
-    <td><img src="docs/media/search_roman_light.png" alt="Search — light" width="480" /></td>
-  </tr>
-</table>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/library_roman_dark.png" />
+    <img src="docs/media/library_roman_light.png" alt="Library — browse your shelves" width="100%" />
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/book_detail_roman_dark.png" />
+    <img src="docs/media/book_detail_roman_light.png" alt="Book detail — rating, review, and reading journal" width="100%" />
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/log_roman_dark.png" />
+    <img src="docs/media/log_roman_light.png" alt="Reading timeline — your reading sessions across the year" width="100%" />
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/search_roman_dark.png" />
+    <img src="docs/media/search_roman_light.png" alt="Search — find and add books" width="100%" />
+  </picture>
+</p>
 
 ## Features
 
