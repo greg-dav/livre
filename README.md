@@ -18,7 +18,7 @@
 
 Livre is a self-hosted application for managing your digital bookshelf.
 
-**📸 [See the screenshots →](docs/screenshots.md)** — library, book detail, reading timeline, and search, in light and dark.
+**📸 [See the screenshots →](docs/screenshots.md)** — library, book detail, reading timeline, and search.
 
 ## Features
 
@@ -30,7 +30,6 @@ Livre is a self-hosted application for managing your digital bookshelf.
 - **Book search** — Open Library by default, Google Books when configured
 - **Goodreads import / export** — bring your library in, take it out anytime (CSV)
 - **Light & dark themes**
-- **Demo mode** — explore a fully seeded library without entering any data of your own
 
 ## Quick start (Docker)
 
