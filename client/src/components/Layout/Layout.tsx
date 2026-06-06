@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Icon, Text } from '@livre/primitives';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { BottomNav } from '../BottomNav/BottomNav';
+import { SafeAreaDebug } from '../SafeAreaDebug';
 import { BookSearch } from '../BookSearch/BookSearch';
 import {
   Page,
@@ -115,6 +116,7 @@ export const Layout = ({
         </Body>
       </Main>
       <BottomNav />
+      <SafeAreaDebug />
     </Page>
   );
 };
