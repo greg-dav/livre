@@ -1,7 +1,6 @@
 <!-- HERO -->
 <div align="center">
 
-<!-- TODO: real tagline baked into the hero image; swap the still for a GIF later if desired -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/media/hero_roman_dark.png" />
   <img src="docs/media/hero_roman_light.png" alt="Livre — a self-hosted reading tracker" width="100%" />
@@ -16,44 +15,10 @@
 </div>
 
 <!-- SHORT PITCH -->
-<!-- TODO: 2–3 sentence pitch (prose) — what Livre is, who self-hosts it, why -->
 
-## Privacy
+Livre is a self-hosted application for managing your digital bookshelf.
 
-**Livre** maintains that you are the sole arbiter of how your reading experiences should be shared: you are their owner; nobody else. Of course, being self-hosted, Livre's data lives on your machine, or a trusted friend's :)
-
-## Openness
-
-Though restrictive by default, **Livre** provides its readers with frictionless, opt-in methods to share their records, if they choose. (With **Livre**'s branded masthead's of course—less of a way of achieving profitability as recruiting like-minded readers to the coilition).
-
-## Simplicity
-
-**Livre** is a reading tracker, that's all. What it does, it does elegantly and without unnecessary complication. Wherever possible, **Livre** aims to simplify your reading; life is complicated enough as it is.
-
-## Gallery
-
-A closer look at the demo library. Each shot matches your GitHub theme — light or dark.
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/book_detail_roman_dark.png" />
-    <img src="docs/media/book_detail_roman_light.png" alt="Book detail — rating, review, and reading journal" width="100%" />
-  </picture>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/log_roman_dark.png" />
-    <img src="docs/media/log_roman_light.png" alt="Reading timeline — your reading sessions across the year" width="100%" />
-  </picture>
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/search_roman_dark.png" />
-    <img src="docs/media/search_roman_light.png" alt="Search — find and add books" width="100%" />
-  </picture>
-</p>
+**📸 [See the screenshots →](docs/screenshots.md)** — library, book detail, reading timeline, and search, in light and dark.
 
 ## Features
 
