@@ -1,6 +1,7 @@
 services:
   livre:
-    build: .
+    # Published multi-arch image. To build from source instead, replace this line with `build: .`.
+    image: ghcr.io/greg-dav/livre:0.1.0-alpha
     ports:
       - '3000:3000'
     volumes:
