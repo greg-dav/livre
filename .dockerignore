@@ -1,0 +1,11 @@
+**/node_modules
+.git
+.github
+.husky
+**/dist
+server/public
+**/data
+data
+.env
+*.log
+.DS_Store

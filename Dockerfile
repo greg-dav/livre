@@ -1,28 +1,26 @@
-FROM node:20-alpine AS build-client
-WORKDIR /build
-COPY client/package*.json ./client/
-RUN npm ci --prefix client
-COPY client/ ./client/
-RUN npm run build --prefix client
-# outputs to /build/server/public (vite outDir: ../server/public)
-
-FROM node:20-alpine AS build-server
-WORKDIR /build
-COPY server/package*.json ./
-RUN npm ci
-COPY server/src ./src
-COPY server/tsconfig.json ./
-RUN npm run build
-# outputs to /build/dist/
-
 FROM node:20-alpine
+# better-sqlite3 ships a native addon; compiling it on musl needs a toolchain.
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
-COPY server/package*.json ./
-RUN npm ci --omit=dev
-COPY --from=build-server /build/dist ./dist
-COPY --from=build-client /build/server/public ./public
-# schema.sql must live beside its compiled caller in dist/db/
-COPY server/src/db/schema.sql ./dist/db/schema.sql
+
+# Manifests first so the npm ci layer is cached until a dependency actually changes.
+# This is an npm-workspaces monorepo: one root lockfile installs every workspace.
+COPY package.json package-lock.json ./
+COPY shared/package.json ./shared/
+COPY fe-libs/ui/package.json ./fe-libs/ui/
+COPY fe-libs/primitives/package.json ./fe-libs/primitives/
+COPY client/package.json ./client/
+COPY server/package.json ./server/
+RUN npm ci
+
+COPY . .
+
+# Build @livre/types + client (Vite -> server/public), then the server (tsc -> server/dist).
+# schema.sql must sit beside its compiled caller in dist/db/.
+RUN npm run build \
+ && npm run build -w server \
+ && mkdir -p server/dist/db \
+ && cp server/src/db/schema.sql server/dist/db/schema.sql
 
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -31,4 +29,4 @@ ENV DATA_DIR=/data
 VOLUME ["/data"]
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "server/dist/index.js"]
