@@ -1,14 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!--
-    Source mark for PWA/icon generation: full-bleed gold tile + cream serif italic "L".
-    The glyph is drawn as vector paths (not <text>) on purpose — the assets generator rasterizes
-    via librsvg/resvg, which do not fetch the @import'd Google font, so a text node would render
-    blank. Full bleed + no transparency satisfies the apple-touch-icon rule; the L sits inside the
-    central ~70%, safe for Android's maskable mask. Colors mirror the roman-light theme tokens
-    (accent #C99C3C on bg #F4EFE3).
+    Source mark for PWA/icon generation: a bare gold serif-italic "L" on a transparent canvas — no
+    tile. The glyph is drawn as vector paths (not <text>) on purpose: the assets generator
+    rasterizes via librsvg/resvg, which do not fetch the @import'd Google font, so a text node would
+    render blank. Transparency is intentional — the apple-touch-icon is generated with a transparent
+    background so iOS composites the L onto black, matching the dark home-screen dock; the
+    transparent (favicon/Android) variants keep the alpha, and the maskable variant supplies its own
+    dark background (see pwa-assets.config.ts). Color is the roman accent (#C99C3C). The L is scaled
+    to ~80% of the canvas and centered on its own bounding box (298,261), so the per-variant padding
+    in the config controls the final margin.
   -->
-  <rect width="512" height="512" fill="#C99C3C"/>
-  <g transform="translate(-44 -4)" fill="#F4EFE3">
+  <g transform="translate(256 256) scale(1.8) translate(-298 -261)" fill="#C99C3C">
     <path d="M256 150 L312 150 L270 372 L214 372 Z"/>
     <path d="M204 340 L374 340 L374 372 L204 372 Z"/>
     <path d="M248 150 L322 150 L322 167 L248 167 Z"/>
