@@ -43,6 +43,15 @@ Smaller refinements to how books look and what we store about them.
 
 - [ ] **Book subtitles** — store and display a subtitle field
 - [ ] **Author details** — author biography + image displayed on the author detail page
+- [ ] **Local cover cache** — fetch and store every cover server-side, serving it from the instance instead of hotlinking the provider
+
+> **Design note.** Today Livre hotlinks all covers (book providers + any host pasted for a manual
+> entry), so the production CSP `img-src` allows any https host and viewing a book contacts a
+> third-party image host — a privacy leak. Caching covers locally and serving them from `'self'`
+> (the way Calibre-Web does) closes that, survives hotlink rot, and works offline — the strongest
+> form of the Privacy tenet. The cost is a server-side fetch pipeline that must be hardened against
+> SSRF (block private/loopback/link-local ranges, cap size and content-type). Done properly it
+> covers _all_ covers, not just manual entries, and lets `img-src` tighten back to `'self'`.
 
 ## Exploring (not committed)
 

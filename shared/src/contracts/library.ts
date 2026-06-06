@@ -18,6 +18,23 @@ import {
 
 const c = initContract();
 
+// A user-supplied cover URL must be a real http(s) URL — a bare string would let javascript:,
+// file:, or junk through (security baseline). https renders under the production CSP; http is
+// accepted at the data layer for plain-http LAN self-hosts, though an https origin blocks it as
+// mixed content. Upstream provider thumbnails (ISBN "apply found metadata") are well-formed URLs,
+// so this stays compatible with that shared flow.
+const coverUrlSchema = z.string().refine(
+  (value) => {
+    try {
+      const { protocol } = new URL(value);
+      return protocol === 'http:' || protocol === 'https:';
+    } catch {
+      return false;
+    }
+  },
+  { message: 'Cover URL must be a valid http(s) URL' }
+);
+
 // ── Params ──────────────────────────────────────────────────────────────────
 const libraryBookIdParams = z.object({ libraryBookId: z.coerce.number().int().positive() });
 const logEntryParams = libraryBookIdParams.extend({ logId: z.coerce.number().int().positive() });
@@ -47,7 +64,7 @@ export type AddToLibraryBody = z.infer<typeof addToLibraryBody>;
 const createManualBody = z.object({
   title: z.string().min(1),
   authors: z.array(z.string()).optional(),
-  coverUrl: z.string().optional(),
+  coverUrl: coverUrlSchema.optional(),
   isbn: z.string().optional(),
   pageCount: z.number().int().positive().optional(),
   publisher: z.string().optional(),
@@ -81,6 +98,8 @@ const updateMetadataBody = bookMetadataSchema
   .extend({
     title: z.string().min(1),
     pageCount: z.number().int().positive(),
+    thumbnail: coverUrlSchema,
+    largeThumbnail: coverUrlSchema,
   })
   .partial();
 export type UpdateMetadataBody = z.infer<typeof updateMetadataBody>;

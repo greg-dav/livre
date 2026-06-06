@@ -107,15 +107,12 @@ app.use(
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
-        'img-src': [
-          "'self'",
-          'data:',
-          'https://books.google.com',
-          'https://books.googleusercontent.com',
-          'https://covers.openlibrary.org',
-          'https://archive.org',
-          'https://*.us.archive.org',
-        ],
+        // Covers are hotlinked from their source — the book providers (Google Books, Open Library)
+        // and any host a user pastes for a manual entry's cover. Allowing any https host keeps that
+        // open without maintaining a per-source allowlist; the tradeoff is that a cover URL can act
+        // as a tracking pixel back to its host. All fetching is client-side, so there's no SSRF
+        // surface. A future cover cache (see ROADMAP) would let this tighten back to 'self'.
+        'img-src': ["'self'", 'data:', 'https:'],
       },
     },
   })
