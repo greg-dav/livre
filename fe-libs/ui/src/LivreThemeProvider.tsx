@@ -35,6 +35,11 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
   html: {
     fontSize: '16px',
     WebkitFontSmoothing: 'antialiased',
+    // Kill the mobile WebKit/Blink tap flash — by default tapping any control paints a translucent
+    // grey box over the whole element, which reads as a stuck pressed state. Set on the root so it
+    // cascades to every tappable element (buttons, links, the BookCard, the pill rows); each
+    // supplies its own :active/:hover feedback, so the UA overlay is pure noise.
+    WebkitTapHighlightColor: 'transparent',
   },
   body: {
     // bgElevated, not bg, on purpose. The body background is never visible behind app content —
