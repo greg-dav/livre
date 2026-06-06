@@ -35,20 +35,11 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
   html: {
     fontSize: '16px',
     WebkitFontSmoothing: 'antialiased',
-    // Kill the mobile WebKit/Blink tap flash — by default tapping any control paints a translucent
-    // grey box over the whole element, which reads as a stuck pressed state. Set on the root so it
-    // cascades to every tappable element (buttons, links, the BookCard, the pill rows); each
-    // supplies its own :active/:hover feedback, so the UA overlay is pure noise.
+    // Remove the mobile UA tap-flash overlay; controls supply their own active/hover feedback.
     WebkitTapHighlightColor: 'transparent',
   },
   body: {
-    // bgElevated, not bg, on purpose. The body background is never visible behind app content —
-    // the Page shell covers the whole viewport with its own theme.bg, and the in-flow Header paints
-    // the top safe-area inset. The one place the body shows through is the iOS home-indicator strip
-    // below the *fixed* BottomNav: a fixed bottom:0 bar anchors to the top of that inset and its
-    // padding grows upward, so the bar's bgElevated never reaches the strip. Painting the body
-    // bgElevated makes that strip match the nav instead of showing the lighter page cream.
-    backgroundColor: theme.bgElevated,
+    backgroundColor: theme.bg,
     color: theme.text,
     fontFamily: theme.fontUi,
     minHeight: '100dvh',
