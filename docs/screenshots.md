@@ -1,12 +1,10 @@
 # Screenshots
 
-A tour of Livre, shown with the demo library. Each shot matches your GitHub theme — light or dark.
-
-> Want to poke at it yourself? Open **Settings → Demo → Enter demo mode** in a running instance for this exact library.
+A brief tour of Livre. The shots are configured to match your GitHub theme — light or dark.
 
 ## Library
 
-Browse your shelves — currently reading, and your books grouped by status.
+Browse your books grouped by status.
 
 <p align="center">
   <picture>
@@ -39,7 +37,7 @@ See your reading sessions laid out across the year.
 
 ## Search
 
-Find books and add them to your shelves.
+Find books and add them to your library.
 
 <p align="center">
   <picture>
