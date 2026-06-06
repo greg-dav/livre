@@ -25,15 +25,21 @@ export const Header = styled('header')(({ theme }) => ({
   gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
   alignItems: 'center',
   columnGap: theme.spacing(4),
-  height: theme.spacing(13),
-  padding: `0 ${theme.spacing(7)}`,
+  // In iOS standalone the header sits under the translucent status bar; grow the bar by the top
+  // inset and pad by it so the bar fills the notch area while its content keeps its natural height.
+  // The inset is 0 in the browser and on non-notched devices, so this is a no-op there.
+  height: `calc(${theme.spacing(13)} + env(safe-area-inset-top))`,
+  paddingTop: 'env(safe-area-inset-top)',
+  paddingLeft: theme.spacing(7),
+  paddingRight: theme.spacing(7),
   borderBottom: `1px solid ${theme.borderSoft}`,
   background: theme.bg,
   [theme.media.mobile]: {
     // Search slot + trailing track are hidden on mobile, so the header is a single full-width track
     // — the contextual bar (or title) gets the whole row instead of being boxed into the left third.
     gridTemplateColumns: '1fr',
-    padding: `0 ${theme.spacing(4)}`,
+    paddingLeft: theme.spacing(4),
+    paddingRight: theme.spacing(4),
   },
 }));
 

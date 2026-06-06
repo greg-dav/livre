@@ -1,17 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="172 135 252 252">
+  <!--
+    Adaptive favicon: transparent ground, just the serif "L" mark. The fill swaps on the OS color
+    scheme so the glyph stays legible on both light and dark browser chrome (a single fixed color
+    would wash out against one of them). The browser renders this SVG live, so the media query works
+    here even though the rasterized PWA icons (livre-mark.svg) can't carry it. Gold tones track the
+    roman accent token in each mode.
+  -->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&amp;display=swap');
+    path { fill: #B07D2B; }
+    @media (prefers-color-scheme: dark) { path { fill: #E3C77D; } }
   </style>
-  <rect width="64" height="64" rx="13" fill="#C99C3C"/>
-  <text
-    x="33"
-    y="33"
-    font-family="'Cormorant Garamond', Georgia, serif"
-    font-style="italic"
-    font-weight="600"
-    font-size="46"
-    fill="#F4EFE3"
-    text-anchor="middle"
-    dominant-baseline="central"
-  >L</text>
+  <path d="M256 150 L312 150 L270 372 L214 372 Z"/>
+  <path d="M204 340 L374 340 L374 372 L204 372 Z"/>
+  <path d="M248 150 L322 150 L322 167 L248 167 Z"/>
+  <path d="M360 330 L392 330 L392 372 L360 372 Z"/>
 </svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    Source mark for PWA/icon generation: full-bleed gold tile + cream serif italic "L".
+    The glyph is drawn as vector paths (not <text>) on purpose — the assets generator rasterizes
+    via librsvg/resvg, which do not fetch the @import'd Google font, so a text node would render
+    blank. Full bleed + no transparency satisfies the apple-touch-icon rule; the L sits inside the
+    central ~70%, safe for Android's maskable mask. Colors mirror the roman-light theme tokens
+    (accent #C99C3C on bg #F4EFE3).
+  -->
+  <rect width="512" height="512" fill="#C99C3C"/>
+  <g transform="translate(-44 -4)" fill="#F4EFE3">
+    <path d="M256 150 L312 150 L270 372 L214 372 Z"/>
+    <path d="M204 340 L374 340 L374 372 L204 372 Z"/>
+    <path d="M248 150 L322 150 L322 167 L248 167 Z"/>
+    <path d="M360 330 L392 330 L392 372 L360 372 Z"/>
+  </g>
+</svg>

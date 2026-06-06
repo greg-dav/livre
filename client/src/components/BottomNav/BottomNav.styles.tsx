@@ -13,7 +13,10 @@ export const Bar = styled('nav')(({ theme }) => ({
     bottom: 0,
     zIndex: 100,
     alignItems: 'stretch',
-    height: theme.spacing(16),
+    // Grow the bar by the iOS home-indicator inset and pad by it, so the tab row keeps its full
+    // height above the indicator instead of being squeezed into it. Matches the Body's bottom
+    // clearance; the inset is 0 where there is no home indicator.
+    height: `calc(${theme.spacing(16)} + env(safe-area-inset-bottom))`,
     paddingBottom: 'env(safe-area-inset-bottom)',
     background: theme.bgElevated,
     borderTop: `1px solid ${theme.borderSoft}`,
