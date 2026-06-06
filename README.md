@@ -101,7 +101,7 @@ Want to see Livre with a real library before adding your own? Open **Settings �
 
 **Alpha.** Livre is usable and self-hostable today, but the schema and APIs may still change between releases.
 
-<!-- TODO: roadmap bullets (prose) — what works, what's rough, what's next -->
+Where it's headed — custom lists & collections, reading insights over the log, and integrations (KOReader, Calibre). See the full **[roadmap →](docs/ROADMAP.md)**.
 
 ## Contributing
 
