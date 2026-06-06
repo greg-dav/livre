@@ -43,16 +43,20 @@ A look at the demo library, in both themes.
     <th>Light</th>
   </tr>
   <tr>
-    <td><img src="docs/media/library_roman_dark.png" alt="Library — dark" width="420" /></td>
-    <td><img src="docs/media/library_roman_light.png" alt="Library — light" width="420" /></td>
+    <td><img src="docs/media/library_roman_dark.png" alt="Library — dark" width="480" /></td>
+    <td><img src="docs/media/library_roman_light.png" alt="Library — light" width="480" /></td>
   </tr>
   <tr>
-    <td><img src="docs/media/book_detail_roman_dark.png" alt="Book detail — dark" width="420" /></td>
-    <td><img src="docs/media/book_detail_roman_light.png" alt="Book detail — light" width="420" /></td>
+    <td><img src="docs/media/book_detail_roman_dark.png" alt="Book detail — dark" width="480" /></td>
+    <td><img src="docs/media/book_detail_roman_light.png" alt="Book detail — light" width="480" /></td>
   </tr>
   <tr>
-    <td><img src="docs/media/log_roman_dark.png" alt="Reading log — dark" width="420" /></td>
-    <td><img src="docs/media/log_roman_light.png" alt="Reading log — light" width="420" /></td>
+    <td><img src="docs/media/log_roman_dark.png" alt="Reading timeline — dark" width="480" /></td>
+    <td><img src="docs/media/log_roman_light.png" alt="Reading timeline — light" width="480" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/media/search_roman_dark.png" alt="Search — dark" width="480" /></td>
+    <td><img src="docs/media/search_roman_light.png" alt="Search — light" width="480" /></td>
   </tr>
 </table>
 
