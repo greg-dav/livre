@@ -6,6 +6,7 @@ server/public/
 .env
 .env.local
 .jwt_secret
+.DS_Store
 .claude/settings.local.json
 dist/
 *.tsbuildinfo

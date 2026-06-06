@@ -1,16 +1,10 @@
 <!-- HERO -->
 <div align="center">
 
-# Livre
-
-<!-- TODO: tagline (prose) -->
-
-_Your bookshelf, self-hosted._
-
-<!-- TODO: optionally swap this still for a hero GIF — browse → open a book → log a session -->
+<!-- TODO: real tagline baked into the hero image; swap the still for a GIF later if desired -->
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/media/library_roman_dark.png" />
-  <img src="docs/media/library_roman_light.png" alt="Livre — your self-hosted reading tracker" width="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/hero_roman_dark.png" />
+  <img src="docs/media/hero_roman_light.png" alt="Livre — a self-hosted reading tracker" width="100%" />
 </picture>
 
 <!-- BADGES -->
