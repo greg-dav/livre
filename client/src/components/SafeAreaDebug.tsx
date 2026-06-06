@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 
 /**
- * TEMPORARY diagnostic overlay for the bottom-nav safe-area investigation. Reads the real device
- * geometry and prints it on screen so it can be read off a screenshot (no devtools needed).
- * REMOVE once the bottom-nav spacing is settled — this is not shippable UI.
+ * TEMPORARY diagnostic overlay for the bottom-nav safe-area investigation. Grabs the *fixed* nav
+ * (the BottomNav — not the hidden full-height Sidebar rail, which is also a <nav>), outlines it, and
+ * reports whether it actually reaches the physical bottom edge plus what element sits at the very
+ * bottom pixel. Readable off a screenshot, no devtools. REMOVE once the spacing is settled.
  */
 export const SafeAreaDebug = () => {
   const [info, setInfo] = useState('measuring…');
 
   useEffect(() => {
     const read = () => {
-      // Probe the raw env() inset independently of the nav.
+      // Raw env() inset, measured independently of any element.
       const probe = document.createElement('div');
       probe.style.cssText =
         'position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom);';
@@ -18,28 +19,39 @@ export const SafeAreaDebug = () => {
       const insetEnv = probe.getBoundingClientRect().height;
       probe.remove();
 
-      const nav = document.querySelector('nav');
+      // The BottomNav is the only position:fixed <nav>; the Sidebar rail is full-height/static.
+      const navs = Array.from(document.querySelectorAll('nav'));
+      const nav = navs.find((n) => getComputedStyle(n).position === 'fixed') ?? navs.at(-1);
       if (!nav) {
-        setInfo('no <nav> found');
+        setInfo('no fixed <nav> found');
         return;
       }
       const cs = getComputedStyle(nav);
       const r = nav.getBoundingClientRect();
       const winH = window.innerHeight;
-      const vvH = window.visualViewport?.height ?? winH;
+      const winW = window.innerWidth;
       const gapBelowNav = winH - r.bottom;
+
+      // Outline the real nav so its box is visible in the screenshot.
+      (nav as HTMLElement).style.outline = '3px solid magenta';
+      (nav as HTMLElement).style.outlineOffset = '-3px';
+
+      // What element actually occupies the very bottom-centre pixel?
+      const bottomEl = document.elementFromPoint(winW / 2, winH - 2);
+      const bottomDesc = bottomEl
+        ? `${bottomEl.tagName.toLowerCase()}${bottomEl === nav ? '(=NAV)' : '(NOT nav)'}`
+        : 'none';
 
       setInfo(
         [
-          `inset(env)=${insetEnv.toFixed(1)}`,
-          `navPadBottom=${cs.paddingBottom}`,
-          `navHeight=${cs.height}`,
-          `navTop=${r.top.toFixed(1)}`,
-          `navBottom=${r.bottom.toFixed(1)}`,
-          `innerHeight=${winH}`,
-          `visualVP=${vvH.toFixed(1)}`,
-          `gapBelowNav=${gapBelowNav.toFixed(1)}`,
+          `inset(env)=${insetEnv.toFixed(0)}`,
+          `navH=${cs.height}`,
+          `navPadB=${cs.paddingBottom}`,
+          `navBottom=${r.bottom.toFixed(0)}`,
+          `innerH=${winH}`,
+          `gapBelowNav=${gapBelowNav.toFixed(0)}`,
           `reachesEdge=${Math.abs(gapBelowNav) < 1 ? 'YES' : 'NO'}`,
+          `bottomPixel=${bottomDesc}`,
         ].join('   ')
       );
     };
