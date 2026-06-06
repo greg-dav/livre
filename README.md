@@ -7,8 +7,11 @@
 
 _Your bookshelf, self-hosted._
 
-<!-- TODO: hero GIF — browse → open a book → log a session, demo library, dark theme -->
-<!-- ![Livre](docs/media/hero-dark.gif) -->
+<!-- TODO: optionally swap this still for a hero GIF — browse → open a book → log a session -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/library_roman_dark.png" />
+  <img src="docs/media/library_roman_light.png" alt="Livre — your self-hosted reading tracker" width="100%" />
+</picture>
 
 <!-- BADGES -->
 
@@ -35,14 +38,7 @@ Though restrictive by default, **Livre** provides its readers with frictionless,
 
 ## Gallery
 
-A look at the demo library. Each shot matches your GitHub theme — light or dark.
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/library_roman_dark.png" />
-    <img src="docs/media/library_roman_light.png" alt="Library — browse your shelves" width="100%" />
-  </picture>
-</p>
+A closer look at the demo library. Each shot matches your GitHub theme — light or dark.
 
 <p align="center">
   <picture>
