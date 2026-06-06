@@ -113,6 +113,8 @@ app.use(
           'https://books.google.com',
           'https://books.googleusercontent.com',
           'https://covers.openlibrary.org',
+          'https://archive.org',
+          'https://*.us.archive.org',
         ],
       },
     },
