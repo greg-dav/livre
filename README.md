@@ -22,7 +22,8 @@ Livre is a self-hosted application for managing your digital bookshelf featuring
 - **Goodreads import / export** — bring your library in, exit anytime (CSV)
 
 **📸 [See the screenshots →](docs/SCREENSHOTS.md)** — library, book detail, reading timeline, and search.
-**📸 [Read the product philosophy →](docs/PHILOSOPHY.md)**.
+
+**📖 [Read the product philosophy →](docs/PHILOSOPHY.md)**.
 
 ## Quick start (Docker)
 
