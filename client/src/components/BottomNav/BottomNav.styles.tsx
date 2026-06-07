@@ -18,7 +18,7 @@ export const Bar = styled('nav')(({ theme }) => ({
     // line anyway; the indicator strip below the bar is filled by the body's bgElevated background
     // (see LivreThemeProvider) for one continuous surface to the edge. Baking the inset into this
     // bar's height/padding too would double it and float the icons up. Body clearance matches.
-    height: theme.spacing(16),
+    height: theme.spacing(12),
     background: theme.bgElevated,
     borderTop: `1px solid ${theme.borderSoft}`,
   },
