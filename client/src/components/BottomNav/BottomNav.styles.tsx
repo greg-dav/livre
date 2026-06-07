@@ -10,16 +10,15 @@ export const Bar = styled('nav')(({ theme }) => ({
     position: 'fixed',
     left: 0,
     right: 0,
-    // Dip the bar down INTO the home-indicator safe area so the icons sit ~16px above the screen
-    // edge — like native tab bars (YouTube et al.) — instead of being stranded the full ~34px inset
-    // above it, which reads as a too-tall bar. A PWA's fixed bottom:0 is otherwise capped at the
-    // safe-area line. min(…, 0px) guards devices with no/small inset: it only ever pulls down, never
-    // floats the bar up off the edge. The body's bgElevated background (see LivreThemeProvider) still
-    // covers the thin strip left below the bar.
-    bottom: 'min(calc(16px - env(safe-area-inset-bottom)), 0px)',
+    // Sits at the bottom of the standalone layout viewport (the safe-area line). A PWA's fixed
+    // element is capped here: it can't extend into the home-indicator zone like a native tab bar,
+    // and dipping in (a negative bottom) lands tappable content in the system gesture area — which
+    // swallows touches and clips the labels at the edge. So the bar stops at the line; the body's
+    // bgElevated background (see LivreThemeProvider) fills the indicator strip below it.
+    bottom: 0,
     zIndex: 100,
     alignItems: 'stretch',
-    // Just the tab row — no safe-area inset baked into the height (the dip above handles the edge).
+    // Just the tab row — no safe-area inset baked into the height; the body strip below covers it.
     height: theme.spacing(12),
     background: theme.bgElevated,
     borderTop: `1px solid ${theme.borderSoft}`,
