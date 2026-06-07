@@ -23,7 +23,7 @@ Livre is a self-hosted application for managing your digital bookshelf featuring
 
 **📸 [See the screenshots →](docs/SCREENSHOTS.md)** — library, book detail, reading timeline, and search.
 
-**📖 [Read the product philosophy →](docs/PHILOSOPHY.md)**.
+**📖 [Read the product philosophy →](docs/PHILOSOPHY.md)** — why another reading tracker?
 
 ## Quick start (Docker)
 
