@@ -39,7 +39,10 @@ const GlobalStyle = createGlobalStyle(({ theme }) => ({
     WebkitTapHighlightColor: 'transparent',
   },
   body: {
-    backgroundColor: theme.bg,
+    // bgElevated, not bg: the Page shell paints content with theme.bg, so the only place the body
+    // shows is the iOS home-indicator strip below the bottom nav — matching it to the nav keeps that
+    // strip invisible if the bar ever falls short of the physical edge.
+    backgroundColor: theme.bgElevated,
     color: theme.text,
     fontFamily: theme.fontUi,
     minHeight: '100dvh',
