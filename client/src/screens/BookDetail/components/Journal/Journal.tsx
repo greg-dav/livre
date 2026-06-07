@@ -4,6 +4,7 @@ import { useReviewEdit } from '../../hooks/useReviewEdit';
 import { useNoteComposer } from '../../hooks/useNoteComposer';
 import { useLogEntryEdit } from '../../hooks/useLogEntryEdit';
 import { LogEntryEditDialog } from '../LogEntryEditDialog/LogEntryEditDialog';
+import { LogEntryEditInline } from '../LogEntryEditDialog/LogEntryEditInline';
 import { JournalTimeline } from '../../../../components/JournalTimeline/JournalTimeline';
 import {
   Panel,
@@ -187,15 +188,16 @@ export const Journal = ({
   );
 
   const timeline = (
-    <>
-      <JournalTimeline
-        log={log}
-        hasActiveReading={entry.status === 'reading'}
-        onEntryClick={editable ? logEntryEdit.openEdit : undefined}
-      />
-      <LogEntryEditDialog {...logEntryEdit} />
-    </>
+    <JournalTimeline
+      log={log}
+      hasActiveReading={entry.status === 'reading'}
+      onEntryClick={editable ? logEntryEdit.openEdit : undefined}
+    />
   );
+
+  // In the mobile sheet, editing an entry happens inline (swapping the composer + timeline for the
+  // editor) so we never stack a second sheet over the journal sheet. Everywhere else it's a dialog.
+  const sheetEditing = sheet && logEntryEdit.editingEntry !== null;
 
   return (
     <Panel $justAcquired={justAcquired} $focusMode={focusMode}>
@@ -236,10 +238,18 @@ export const Journal = ({
         <>
           {ratingRow}
           {reviewSection}
-          {composer}
-          {timeline}
+          {sheetEditing ? (
+            <LogEntryEditInline {...logEntryEdit} />
+          ) : (
+            <>
+              {composer}
+              {timeline}
+            </>
+          )}
         </>
       )}
+
+      {!sheet && <LogEntryEditDialog {...logEntryEdit} />}
     </Panel>
   );
 };

@@ -161,6 +161,10 @@ export const ComposerButton = styled('button')<{ $active?: boolean; $primary?: b
     border: 'none',
     cursor: 'pointer',
     padding: `${theme.spacing(1)} ${theme.spacing(2)}`,
+    // Roomier on touch so the Note/Quote/Save controls clear a comfortable tap target.
+    [theme.media.mobile]: {
+      padding: `${theme.spacing(2)} ${theme.spacing(3)}`,
+    },
     borderRadius: theme.radius.sm,
     transition: 'all 0.15s ease',
     '& span': {
@@ -169,6 +173,8 @@ export const ComposerButton = styled('button')<{ $active?: boolean; $primary?: b
     },
     '&:hover': { background: $active ? theme.accentSoft : theme.bg },
     '&:hover span': { color: $active || $primary ? theme.accent : theme.text },
+    '&:active': { background: $active ? theme.accentSoft : theme.bg },
+    '&:active span': { color: $active || $primary ? theme.accent : theme.text },
   })
 );
 

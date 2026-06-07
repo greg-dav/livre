@@ -12,7 +12,15 @@ export const TagRow = styled('div')(({ theme }) => ({
 export const RemoveButton = styled('button')(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',
-  padding: 0,
+  // Padded hit-zone with a compensating negative margin: the glyph stays visually tucked against the
+  // tag while the tap target extends past it, so it's hittable on touch without distorting the pill.
+  // Larger on mobile, where there's no cursor precision.
+  padding: theme.spacing(2),
+  margin: theme.spacing(-2),
+  [theme.media.mobile]: {
+    padding: theme.spacing(2.5),
+    margin: theme.spacing(-2.5),
+  },
   background: 'none',
   border: 'none',
   lineHeight: 1,
@@ -20,6 +28,9 @@ export const RemoveButton = styled('button')(({ theme }) => ({
   cursor: 'pointer',
   transition: 'color 0.15s',
   '&:hover': {
+    color: theme.text,
+  },
+  '&:active': {
     color: theme.text,
   },
 }));

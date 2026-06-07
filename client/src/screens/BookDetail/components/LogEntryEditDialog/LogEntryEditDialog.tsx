@@ -2,7 +2,7 @@ import { Text, Button, Input, Dialog, EditDialog } from '@livre/primitives';
 import type { useLogEntryEdit } from '../../hooks/useLogEntryEdit';
 import { DeleteButton, FooterSpacer, NoteTextarea } from './LogEntryEditDialog.styles';
 
-const EVENT_TITLES: Record<string, string> = {
+export const EVENT_TITLES: Record<string, string> = {
   note: 'Edit note',
   quote: 'Edit quote',
   shelved: 'Edit shelved date',

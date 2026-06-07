@@ -52,6 +52,10 @@ const ItemRow = styled('button')<{ $active?: boolean }>(({ theme, $active }) => 
   alignItems: 'center',
   gap: theme.spacing(2.5),
   padding: `7px ${theme.spacing(2.25)}`,
+  // Roomier rows on touch, where the pointer is a fingertip rather than a cursor.
+  [theme.media.mobile]: {
+    padding: `${theme.spacing(2.5)} ${theme.spacing(3)}`,
+  },
   borderRadius: theme.radius.md,
   border: 'none',
   cursor: 'pointer',
@@ -64,6 +68,8 @@ const ItemRow = styled('button')<{ $active?: boolean }>(({ theme, $active }) => 
   },
   '&:hover': { background: theme.accentSoft },
   '&:hover .menu-label': { color: $active ? theme.accent : theme.text },
+  '&:active': { background: theme.accentSoft },
+  '&:active .menu-label': { color: $active ? theme.accent : theme.text },
 }));
 
 /**

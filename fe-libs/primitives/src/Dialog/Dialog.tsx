@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import * as Radix from '@radix-ui/react-dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Text } from '../Text/Text';
+import { KeyboardInset } from './KeyboardInset';
 
 interface DialogProps {
   trigger?: ReactNode;
@@ -72,17 +73,20 @@ const Content = styled(Radix.Content)<{ $flush?: boolean }>(({ theme, $flush }) 
 
   // On mobile every dialog docks to the bottom as a full-width sheet — one override converts
   // Dialog, BareDialog, and ScrollDialog alike. Rounded only along the top edge where it meets the
-  // scrim; taller cap since there's no centring headroom to preserve.
+  // scrim; taller cap since there's no centring headroom to preserve. --kb-inset lifts the sheet
+  // above the soft keyboard (which otherwise overlays it) and shrinks its cap to match, so the
+  // focused field and pinned footer stay visible; it's 0 when no keyboard is open.
   [theme.media.mobile]: {
     top: 'auto',
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 'var(--kb-inset, 0px)',
     transform: 'none',
     width: '100%',
     maxWidth: '100%',
-    maxHeight: '92vh',
+    maxHeight: 'calc(92vh - var(--kb-inset, 0px))',
     borderRadius: `${theme.radius.lg} ${theme.radius.lg} 0 0`,
+    transition: 'bottom 0.18s ease',
     paddingBottom: $flush ? 0 : `calc(${theme.spacing(6)} + env(safe-area-inset-bottom))`,
   },
 }));
@@ -150,6 +154,7 @@ const DialogComponent = ({
   <Radix.Root open={open} onOpenChange={onOpenChange}>
     {trigger && <Radix.Trigger asChild>{trigger}</Radix.Trigger>}
     <Radix.Portal>
+      <KeyboardInset />
       <Overlay />
       <Content>
         <Radix.Title asChild>
@@ -181,6 +186,7 @@ const BareDialogComponent = ({ trigger, title, children, open, onOpenChange }: B
   <Radix.Root open={open} onOpenChange={onOpenChange}>
     {trigger && <Radix.Trigger asChild>{trigger}</Radix.Trigger>}
     <Radix.Portal>
+      <KeyboardInset />
       <Overlay />
       <Content>
         <Radix.Title asChild>
@@ -213,6 +219,7 @@ const ScrollDialogComponent = ({
   <Radix.Root open={open} onOpenChange={onOpenChange}>
     {trigger && <Radix.Trigger asChild>{trigger}</Radix.Trigger>}
     <Radix.Portal>
+      <KeyboardInset />
       <Overlay />
       <Content $flush>
         <ScrollHeader>
