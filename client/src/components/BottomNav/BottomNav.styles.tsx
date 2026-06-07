@@ -13,12 +13,12 @@ export const Bar = styled('nav')(({ theme }) => ({
     bottom: 0,
     zIndex: 100,
     alignItems: 'stretch',
-    // The bar is portaled to <body> so bottom:0 reaches the physical screen edge (see BottomNav.tsx).
-    // Grow it by the home-indicator inset and pad by that inset, so its background fills down to the
-    // edge while the tab row keeps its height above the indicator. Matches the Body's bottom
-    // clearance; the inset is 0 where there is no home indicator.
-    height: `calc(${theme.spacing(16)} + env(safe-area-inset-bottom))`,
-    paddingBottom: 'env(safe-area-inset-bottom)',
+    // Just the tab row — no safe-area inset baked in. In an iOS standalone PWA the layout viewport
+    // excludes the home-indicator inset, so a fixed bottom:0 element can't extend past the safe-area
+    // line anyway; the indicator strip below the bar is filled by the body's bgElevated background
+    // (see LivreThemeProvider) for one continuous surface to the edge. Baking the inset into this
+    // bar's height/padding too would double it and float the icons up. Body clearance matches.
+    height: theme.spacing(16),
     background: theme.bgElevated,
     borderTop: `1px solid ${theme.borderSoft}`,
   },
