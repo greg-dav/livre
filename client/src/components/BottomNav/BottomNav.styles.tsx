@@ -31,8 +31,12 @@ export const Tab = styled('button')<{ $active?: boolean }>(({ theme, $active }) 
   cursor: 'pointer',
   display: 'flex',
   flexDirection: 'column',
+  // Bias the icon+label toward the bottom of the row (a small breather above the safe-area strip)
+  // rather than dead-centre: gives cleaner top padding and lets the icons sit close to the
+  // home-indicator zone, the way native tab bars read.
   alignItems: 'center',
-  justifyContent: 'center',
+  justifyContent: 'flex-end',
+  paddingBottom: '3px',
   gap: theme.spacing(1),
   color: $active ? theme.accent : theme.textMuted,
   transition: 'color 0.15s',
