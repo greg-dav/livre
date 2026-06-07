@@ -149,7 +149,6 @@ export const Search = () => {
               <FieldInput
                 value={term}
                 placeholder="Search by title, author, subject…"
-                autoFocus
                 onChange={(e) => setTerm(e.target.value)}
               />
             </Field>

@@ -146,7 +146,16 @@ export const Library = () => {
   const dataReady = !!data;
   useLayoutEffect(() => {
     const scroller = resolveScroller(gridAnchorRef.current);
-    if (scroller) scroller.scrollTop = scrollRef.current;
+    if (!scroller) return;
+    const target = scrollRef.current;
+    scroller.scrollTop = target;
+    // iOS can reset the panel's scroll when the edge-swipe-back gesture settles, after this effect
+    // has already run — reassert once on the next frame so the restore sticks. `target` is captured
+    // so the reassert survives the stray scroll event that the reset itself fires.
+    const raf = requestAnimationFrame(() => {
+      if (Math.abs(scroller.scrollTop - target) > 1) scroller.scrollTop = target;
+    });
+    return () => cancelAnimationFrame(raf);
   }, [dataReady, activeShelf, selectedTags, scrollRef]);
 
   // Track the live offset into the session ref so the next remount can restore it. A ref, not state,
